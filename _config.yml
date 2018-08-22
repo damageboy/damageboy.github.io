@@ -18,26 +18,29 @@ email: dans@houmus.org
 description: >- # this means to ignore newlines until "baseurl:"
   Someplace for me to post stuff I think could be intereting for other people
 baseurl: /
-url: https://damageboy.github.io
+url: https://bits.houmus.org
 twitter_username: damageboy
 github_username: damageboy
 minimal_mistakes_skin: air #"aqua", "contrast", "dark", "dirt", "neon", "mint", "plum" "sunrise"
+google_site_verification: "wcrvaF3e88-Vb6y-9eUTqYaXDMOukzl4c-IdKByS0Xc"
+bing_site_verification: "6D5AE23298671D95A20FAD7FA3430ABB"
 
 # Build settings
 markdown: kramdown
 remote_theme: mmistakes/minimal-mistakes
 # Outputting
-permalink: /:categories/:title/
+permalink: /:year-:month-:day/:title
+breadcrumbs: true
 paginate: 5 # amount of posts to show
 paginate_path: /page:num/
 timezone: # https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-
 
 # Plugins (previously gems:)
 plugins:
   - jekyll-paginate
   - jekyll-sitemap
   - jekyll-gist
+  - jekyll-relative-links
   - jekyll-feed
   - jemoji
   - jekyll-remote-theme
@@ -47,7 +50,7 @@ author:
   avatar : "/assets/images/atari.svg"
   bio    : "Bored when not wreaking havoc"
   email  : dans@houmus.org
-  uri    : "https://mademistakes.com"
+  uri    : "https://bits.houmus.org"
 
 # Exclude from processing.
 # The following items will not be processed, by default. Create a custom list
@@ -61,6 +64,21 @@ author:
 #   - vendor/gems/
 #   - vendor/ruby/
 
+comments:
+  provider: "disqus"
+  disqus:
+    shortname: "damageboy-github-io"
+
+analytics:
+  provider: "google-gtag"
+  google:
+    tracking_id: "UA-124434205-1"
+    anonymize_ip: false # default
+
+relative_links:
+  enabled: true
+  collections: true
+
 defaults:
   # _posts
   - scope:
@@ -73,3 +91,10 @@ defaults:
       comments: true
       share: true
       related: true
+
+head_scripts:
+ - //ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js
+ - /assets/scripts/inlineDisqussions.js
+
+footer_scripts:
+ - /assets/scripts/applyInlineDisqussions.js
