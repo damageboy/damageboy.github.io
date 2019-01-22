@@ -24,6 +24,7 @@ group :jekyll_plugins do
    gem "jekyll-sitemap"
    gem "jemoji"
    gem "jekyll-gist"
+   gem "jekyll-include-cache"
    gem "jekyll-relative-links"
 end
 
