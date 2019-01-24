@@ -137,17 +137,17 @@ For those in the know, I'm NOT using BDN's `OperationsPerInvoke()` to normalize 
 
 Running this gives us the following results:
 
-| Method | N     |                  Mean |
-| ------ | ----- | --------------------: |
-| Naive  | 1     |              1.185 ns |
-| Naive  | 4     |             35.308 ns |
-| Naive  | 16    |            605.021 ns |
-| Naive  | 64    |          6,368.355 ns |
-| Naive  | 256   |         99,448.636 ns |
-| Naive  | 1024  |      2,057,984.353 ns |
-| Naive  | 4096  |     68,728,413.667 ns |
-| Naive  | 16384 |  1,365,698,984.333 ns |
-| Naive  | 65536 | 22,669,217,647.333 ns |
+| Method | N     |          Mean (ns) |
+| ------ | ----- | -----------------: |
+| Naive  | 1     |              1.185 |
+| Naive  | 4     |             35.308 |
+| Naive  | 16    |            605.021 |
+| Naive  | 64    |          6,368.355 |
+| Naive  | 256   |         99,448.636 |
+| Naive  | 1024  |      2,057,984.353 |
+| Naive  | 4096  |     68,728,413.667 |
+| Naive  | 16384 |  1,365,698,984.333 |
+| Naive  | 65536 | 22,669,217,647.333 |
 
 A couple of comments about these results:
 
@@ -270,17 +270,17 @@ Our new approach to solving this goes like this (comments correspond to blocks o
 
 Let's take a look at how this version fairs:
 
-| Method      | N     |               Mean | Scaled to "Naive" |
-| ----------- | ----- | -----------------: | ----------------: |
-| NoIntrisics | 1     |           5.247 ns |              4.19 |
-| NoIntrisics | 4     |          43.919 ns |              0.79 |
-| NoIntrisics | 16    |         429.974 ns |              0.58 |
-| NoIntrisics | 64    |       2,986.498 ns |              0.44 |
-| NoIntrisics | 256   |      16,492.408 ns |              0.16 |
-| NoIntrisics | 1024  |     112,049.075 ns |              0.06 |
-| NoIntrisics | 4096  |   1,058,565.813 ns |              0.02 |
-| NoIntrisics | 16384 |  13,714,191.734 ns |             0.010 |
-| NoIntrisics | 65536 | 206,236,218.000 ns |             0.009 |
+| Method      | N     |       Mean (ns) | Scaled to "Naive" |
+| ----------- | ----- | --------------: | ----------------: |
+| NoIntrisics | 1     |           5.247 |              4.19 |
+| NoIntrisics | 4     |          43.919 |              0.79 |
+| NoIntrisics | 16    |         429.974 |              0.58 |
+| NoIntrisics | 64    |       2,986.498 |              0.44 |
+| NoIntrisics | 256   |      16,492.408 |              0.16 |
+| NoIntrisics | 1024  |     112,049.075 |              0.06 |
+| NoIntrisics | 4096  |   1,058,565.813 |              0.02 |
+| NoIntrisics | 16384 |  13,714,191.734 |             0.010 |
+| NoIntrisics | 65536 | 206,236,218.000 |             0.009 |
 
 Quite an improvement already! To be fair, our starting point being so low helped a lot, but still an improvement.
 As a side note, this is, essentially, the code I'm running on our own bitmaps in production right now, since I don't have intrinsics right now.
@@ -353,17 +353,17 @@ That's it!  We're using intrinsics, all done!
 If you are having a hard time trusting me, here's a [link to the complete code](https://github.com/damageboy/bitgoo/blob/master/csharp/BitGoo/GetNthBitOffset.POPCNTAndBMI1.cs).
 Here are the results, this time scaled to the `NoIntrinsics()` version:
 
-| Method        | N     |              Mean | Scaled to "NoIntrinsics"` |
-| ------------- | ----- | ----------------: | ------------------------: |
-| POPCNTAndBMI1 | 1     |          2.358 ns |                      0.44 |
-| POPCNTAndBMI1 | 4     |         15.318 ns |                      0.35 |
-| POPCNTAndBMI1 | 16    |        128.712 ns |                      0.31 |
-| POPCNTAndBMI1 | 64    |        916.033 ns |                      0.27 |
-| POPCNTAndBMI1 | 256   |      5,005.190 ns |                      0.30 |
-| POPCNTAndBMI1 | 1024  |     44,606.327 ns |                      0.39 |
-| POPCNTAndBMI1 | 4096  |    408,871.712 ns |                      0.39 |
-| POPCNTAndBMI1 | 16384 |  5,205,533.285 ns |                      0.39 |
-| POPCNTAndBMI1 | 65536 | 76,186,499.286 ns |                      0.37 |
+| Method        | N     |      Mean (ns) | Scaled to "NoIntrinsics"` |
+| ------------- | ----- | -------------: | ------------------------: |
+| POPCNTAndBMI1 | 1     |          2.358 |                      0.44 |
+| POPCNTAndBMI1 | 4     |         15.318 |                      0.35 |
+| POPCNTAndBMI1 | 16    |        128.712 |                      0.31 |
+| POPCNTAndBMI1 | 64    |        916.033 |                      0.27 |
+| POPCNTAndBMI1 | 256   |      5,005.190 |                      0.30 |
+| POPCNTAndBMI1 | 1024  |     44,606.327 |                      0.39 |
+| POPCNTAndBMI1 | 4096  |    408,871.712 |                      0.39 |
+| POPCNTAndBMI1 | 16384 |  5,205,533.285 |                      0.39 |
+| POPCNTAndBMI1 | 65536 | 76,186,499.286 |                      0.37 |
 
 OK, now we're talking...  
 There can be no doubt that we have SOMETHING working: we can see a very substantial improvement across the board for every value of `N`!.   

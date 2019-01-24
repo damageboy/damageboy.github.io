@@ -111,17 +111,17 @@ public static unsafe int POPCNTAndBMI2(ulong* bits, int numBits, int n)
 
 With the code out of the way, time to see if the whole thing paid off?
 
-Method           |     N |              Mean | Scaled to "POPCNTAndBMI1" 
+Method           |     N |         Mean (ns) | Scaled to "POPCNTAndBMI1" 
 ---------------- |------ |------------------:|-------:
-   POPCNTAndBMI2 |     1 |          2.232 ns |   0.95 
-   POPCNTAndBMI2 |     4 |          9.497 ns |   0.62 
-   POPCNTAndBMI2 |    16 |         40.259 ns |   0.34 
-   POPCNTAndBMI2 |    64 |        193.253 ns |   0.19 
-   POPCNTAndBMI2 |   256 |      1,581.082 ns |   0.32 
-   POPCNTAndBMI2 |  1024 |     23,174.989 ns |   0.51 
-   POPCNTAndBMI2 |  4096 |    341,087.341 ns |   0.82 
-   POPCNTAndBMI2 | 16384 |  4,979,229.288 ns |   0.95 
-   POPCNTAndBMI2 | 65536 | 76,144,935.381 ns |   0.98 
+   POPCNTAndBMI2 |     1 |          2.232 |   0.95 
+   POPCNTAndBMI2 |     4 |          9.497 |   0.62 
+   POPCNTAndBMI2 |    16 |         40.259 |   0.34 
+   POPCNTAndBMI2 |    64 |        193.253 |   0.19 
+   POPCNTAndBMI2 |   256 |      1,581.082 |   0.32 
+   POPCNTAndBMI2 |  1024 |     23,174.989 |   0.51 
+   POPCNTAndBMI2 |  4096 |    341,087.341 |   0.82 
+   POPCNTAndBMI2 | 16384 | 4,979,229.288 |   0.95 
+   POPCNTAndBMI2 | 65536 | 76,144,935.381 |   0.98 
 
 Oh boy did it! results are much better for the lower counts of `N`:
 
@@ -181,17 +181,17 @@ public static unsafe int POPCNTAndBMI2Unrolled(ulong* bits, int numBits, int n)
 
 We had to change the code flow to account for the unrolled loop, but all in all this is pretty straight forward, so let's see how this performs:
 
-| Method             | N     |              Mean | Scaled to POPCNTAndBMI2 |
+| Method             | N     |         Mean (ns) | Scaled to POPCNTAndBMI2 |
 | ------------------ | ----- | ----------------: | -------------------: |
-| POPCNTAndBMI2Unrolled | 1     |          2.249 ns |                 1.04 |
-| POPCNTAndBMI2Unrolled | 4     |         10.904 ns |                 1.15 |
-| POPCNTAndBMI2Unrolled | 16    |         50.368 ns |                 1.11 |
-| POPCNTAndBMI2Unrolled | 64    |        208.272 ns |                 1.13 |
-| POPCNTAndBMI2Unrolled | 256   |      1,580.026 ns |                 0.99 |
-| POPCNTAndBMI2Unrolled | 1024  |     21,282.905 ns |                 0.92 |
-| POPCNTAndBMI2Unrolled | 4096  |    255,186.977 ns |                 0.74 |
-| POPCNTAndBMI2Unrolled | 16384 |  3,730,420.068 ns |                 0.77 |
-| POPCNTAndBMI2Unrolled | 65536 | 56,939,817.593 ns |                 0.76 |
+| POPCNTAndBMI2Unrolled | 1     |          2.249 |                 1.04 |
+| POPCNTAndBMI2Unrolled | 4     |         10.904 |                 1.15 |
+| POPCNTAndBMI2Unrolled | 16    |         50.368 |                 1.11 |
+| POPCNTAndBMI2Unrolled | 64    |        208.272 |                 1.13 |
+| POPCNTAndBMI2Unrolled | 256   |      1,580.026 |                 0.99 |
+| POPCNTAndBMI2Unrolled | 1024  |     21,282.905 |                 0.92 |
+| POPCNTAndBMI2Unrolled | 4096  |    255,186.977 |                 0.74 |
+| POPCNTAndBMI2Unrolled | 16384 |  3,730,420.068 |                 0.77 |
+| POPCNTAndBMI2Unrolled | 65536 | 56,939,817.593 |                 0.76 |
 
 There are a few interesting things going on here:
 
