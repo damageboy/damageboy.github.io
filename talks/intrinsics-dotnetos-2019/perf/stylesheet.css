@@ -1,0 +1,14 @@
+@font-face {
+    font-family: "Terminal Nerdfont";
+    src: url('terminal-nerdfont.ttf') format("truetype"),
+         url('terminal-nerdfont.woff2') format('woff2'),
+         url('terminal-nerdfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+
+.asciinema-terminal {
+    font-family: 'Terminal Nerdfont', monospace, 'Powerline Symbols';
+}
+
