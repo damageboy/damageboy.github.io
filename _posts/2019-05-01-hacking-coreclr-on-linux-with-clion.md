@@ -1,7 +1,7 @@
 ---
 title: "Hacking CoreCLR on Linux with CLion"
 header:
-  image: /assets/images/intrinsics.jpg
+  image: /assets/images/coreclr-clion-header.jpg
 date: 2018-05-01 08:26:28 +0300
 #categories: coreclr ide setup	
 ---

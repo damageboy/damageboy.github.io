@@ -3,7 +3,7 @@ title: ".NET Core 3.0 Intrinsics"
 published: true
 comments: true
 header:
-  image: /assets/images/intrinsics.jpg
+  image: /assets/images/intrinsics-header.jpg
 title: .NET Core 3.0 Intrinsics in Real Life - 3/3
 date: 2018-08-20 18:26:28 +0300
 #categories: coreclr instrinsics
