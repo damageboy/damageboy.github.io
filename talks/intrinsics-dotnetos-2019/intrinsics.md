@@ -24,14 +24,14 @@ verticalSeparator: '^\r?\n--\r?\n$'
 
 <small>dmg:*:666:666:Dan Shechter:/home/dmg:/usr/bin/zsh</small>
 
-<span class="fragment fade-in-then-out">
+<p class="fragment fade-in-then-out">
 I'm a CTO of a high-frequency trading* firm that trades global markets from inside exchanges.
-</span>
+</p>
 
-<span class="fragment">
+<p class="fragment">
 Also, *nix programmer that likes <span class="fragment highlight-blue">low-level & perf</span> and whose been around the block:
 <span class="fragment highlight-blue">Windows/Linux kernel programming, </span><span class="fragment highlight-red">Hypervisors</span>
-</span>
+</p>
 
 <table>
 <tr>
@@ -70,7 +70,7 @@ Also, *nix programmer that likes <span class="fragment highlight-blue">low-level
 
 [Intrinsic function](https://en.wikipedia.org/wiki/Intrinsic_function)
 
-<blockquote>...an intrinsic function is a function available for use in a given programming language whose implementation is <span class="fragment highlight-red" data-fragment-index="0">handled specially by the 
+<blockquote>...an intrinsic function is a function available for use in a given programming language whose implementation is <span class="fragment highlight-red" data-fragment-index="0">handled specially by the
 <span class="fragment fade-in" style="position:inline; margin-left: auto; margin-right: auto; left: 0; right: 0;" data-fragment-index="1">JIT.</span>
 <span class="fragment fade-out" style="position:relative; margin-left: auto; margin-right: auto; left: -60px; right: 0;" data-fragment-index="1">compiler.</span>
 </span>
@@ -85,7 +85,7 @@ Traditionally, used to expose processor functionality that *doesn't* map well to
 <span class="fragment"><li>System-Programming (e.g. kernel mode)</li></span>
 <span class="fragment"><li>Crypto instructions</li></span>
 <span class="fragment"><li>Niche instructions</li></span>
-<span class="fragment"><span class="fragment highlight-blue"><span class="fragment highlight-green"><span class="fragment highlight-red"><li>**Vectorization**</li></span></span></span></span>
+<span class="fragment"><span class="fragment highlight-blue"><span class="fragment highlight-green"><span class="fragment highlight-red"><li><b>Vectorization</b></li></span></span></span></span>
 </ul>
 
 --
@@ -122,17 +122,17 @@ grep '&gt;intrinsic ' intrinsics-guide/intrinsics_files/data-3.4.4.xml | wc -l
 <span class="fragment fade-up">
 <li>Not new! (since .NET 1.1)
 <ul>
-<li>Almost all of [`Interlocked.*`](https://docs.microsoft.com/en-us/dotnet/api/system.threading.interlocked?view=netframework-4.8#methods) & more</li>
+<li>Almost all of <a href="https://docs.microsoft.com/en-us/dotnet/api/system.threading.interlocked?view=netframework-4.8#methods"><code>Interlocked.*</code></a> & more</li>
 </ul>
 </li>
 </span>
 <span class="fragment fade-up"><li>Very limited until CoreCLR 3.0 came along...</li>
 <ul>
-<li>x86/x64 now has <span class="fragment highlight-red">226</span> new intrinsics in [15 classes](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.x86?view=netcore-3.0&viewFallbackFrom=dotnet-plat-ext-3.0)</li>
+<li>x86 now has <span class="fragment highlight-red">226</span> intrinsics in <a href="https://docs.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.x86?view=netcore-3.0&viewFallbackFrom=dotnet-plat-ext-3.0">15 classes</a></li>
 <ul>
 <li>Up to AVX2</li>
 </ul>
-<li>arm64 now has <span class="fragment highlight-red">24</span> new intrinsics in [5 classes](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.arm.arm64?view=dotnet-plat-ext-3.0)</li>
+<li>arm64 now has <span class="fragment highlight-red">24</span> intrinsics in <a href="https://docs.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.arm.arm64?view=dotnet-plat-ext-3.0">5 classes</a></li>
 </ul>
 </span>
 </ul>
@@ -161,12 +161,15 @@ Should mention that AVX2 is relatively old and widespread:
 ## Detection
 
 - Each class / group has a:
+
 ```csharp
   public static bool IsSupported { get; }
 ```  
+
   that tests availability on CPU @ runtime
-- Special check recognized during code-gen (JIT!)     <!-- .element: class="fragment" -->
-- So in reality: ZERO cost                               <!-- .element: class="fragment" -->
+
+- Special check recognized during code-gen (JIT!)<!-- .element: class="fragment" -->
+- So in reality: ZERO cost<!-- .element: class="fragment" -->
 - Already nicer than C++... <!-- .element: class="fragment" -->
 
 ---
@@ -216,7 +219,7 @@ We're going to redo **QuickSort**, with intrinsics/vectorization.
 <ul>
 <span class="fragment"><li>Universally known</li></span>
 <span class="fragment"><li>Non-trivial use of intrinsics/vectorization</li></span>
-<span class="fragment"><li>It's pretty close to `Array.Sort`<sup>*</sup></li></span>
+<span class="fragment"><li>It's pretty close to <code>Array.Sort</code><sup>*</sup></li></span>
 </ul>
 
 --
@@ -343,17 +346,20 @@ We'll write `Partition` to use AVX+AVX2 Vectorization/SIMD.
 
 ## SIMD
 
-<span class="fragment">
+<p class="fragment">
 We've mentioned that CPUs have 1000s of instructions that have to do with vectorization.
-</span>
+</p>
 
-<span class="fragment">
+<p class="fragment">
 Also referred to as SIMD instructions / intrinsics:
-</span>
+</p>
 
-<span class="fragment">
-**S**ingle **I**nstruction **M**ultiple **D**ata
-</span>
+<p class="fragment">
+<span style="color: black"><b>S</b></span>ingle
+<span style="color: black"><b>I</b></span>nstruction
+<span style="color: black"><b>M</b></span>ultiple
+<span style="color: black"><b>D</b></span>ata
+</p>
 
 --
 
@@ -369,17 +375,17 @@ Does it operate on memory?
 
 ## SIMD Vectors
 
-<span class="fragment">
+<p class="fragment">
 SIMD instructions operate on vector types that are supported at the CPU level: <span class="fragment">registers</span>
-</span>
+</p>
 
-<span class="fragment">
+<p class="fragment">
 SIMD registers have constant size in bits.
-</span>
+</p>
 
-<span class="fragment">
+<p class="fragment">
 CoreCLR 3.0 supports SIMD instructions that use 64/128/256 bit wide registers.
-</span>
+</p>
 
 --
 
@@ -780,7 +786,7 @@ var P = Vector256.Create(pivot);
 var current = Avx2.LoadDquVector256(nextPtr);
 var mask = (uint) Avx.MoveMask(
     Avx2.CompareGreaterThan(current, P).AsSingle()));
-current = Avx2.PermuteVar8x32(current, 
+current = Avx2.PermuteVar8x32(current,
     LoadDquVector256(PermTablePtr + mask * 8));
 Avx.Store(writeLeft, current);
 Avx.Store(writeRight, current);
@@ -802,7 +808,6 @@ writeLeft  += 8 - popCount;
 <span class="code-presenting-annotation fragment current-only" data-code-focus="10">Count 1 bits ➡ How many are elemenets are > than pivot.</span>
 <span class="code-presenting-annotation fragment current-only" data-code-focus="11">Advance right by popCount.</span>
 <span class="code-presenting-annotation fragment current-only" data-code-focus="12">Advance left by 8 - popCount.</span>
-
 
 --
 
@@ -908,7 +913,7 @@ static ReadOnlySpan<int> PermTable => new[] {
 ```csharp
 while (readRight >= readLeft) {
     int *nextPtr;
-    if (readLeft   - writeLeft <= 
+    if (readLeft   - writeLeft <=
         writeRight - readRight) {
         nextPtr = readLeft;
         readLeft += 8;
@@ -929,7 +934,6 @@ while (readRight >= readLeft) {
 --
 
 ## Yeah yeah, are we fast yet?
-
 
 --
 
@@ -957,7 +961,7 @@ while (readRight >= readLeft) {
 
 - x86 supports conditional mov, or `cmov`
 - Only good for simple branches
-  - Execute the same code but with different data 
+  - Execute the same code but with different data
 - CoreCLR JIT <span style="color: red">does not</span> support this
 - But we can imagine:
 
@@ -967,7 +971,7 @@ while (readRight >= readLeft) {
 
 ```csharp
     // Current
-    if (readLeft   - writeLeft <= 
+    if (readLeft   - writeLeft <=
         writeRight - readRight) {
         nextPtr = readLeft;
         readLeft += 8;
@@ -977,7 +981,7 @@ while (readRight >= readLeft) {
     }
 
     // With cmov
-    var goLeft = readLeft   - writeLeft <= 
+    var goLeft = readLeft   - writeLeft <=
                  writeRight - readRight;
     var nextPtr = goLeft ? readLeft : readRight;
     readLeft   += goLeft ? 8 : 0;
@@ -1013,7 +1017,7 @@ while (readRight >= readLeft) {
 ```csharp
 while (readRight >= readLeft) {
     int *nextPtr;
-    if (readLeft   - writeLeft <= 
+    if (readLeft   - writeLeft <=
         writeRight - readRight) {
         nextPtr = readLeft;
         readLeft += 8*4;
@@ -1089,6 +1093,8 @@ while (readRight >= readLeft) {
 
 <iframe data-src="perf/avx2doublepumpedunrolled-perf.html" width="1600" height="600" frameborder="0" marginwidth="0" marginheight="0" scrolling="" style="border:0px solid #666; margin-bottom:5px; max-width: 100%;" allowfullscreen="">
 </iframe>
+
+<!--
 
 --
 ## Vector256&lt;T&gt;
@@ -1213,3 +1219,4 @@ Example: If we use more `Vector`*nnn* vars *in C#* than what our CPU has in one 
 the JIT will add special code to spill+load registers to the stack...
 
 ---
+-->
