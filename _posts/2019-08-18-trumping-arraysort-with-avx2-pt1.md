@@ -1,5 +1,5 @@
 ---
-title: "Trumping Array.Sort with AVX2 Intrinsics (Part 1/5)"
+title: "Trumping Array.Sort with AVX2 Intrinsics (Part 1/6)"
 header:
   image: /assets/images/coreclr-clion-header.jpg
 hidden: true
@@ -32,11 +32,12 @@ While the title sounded very promising, it wasn’t good enough as a drop-in rep
 
 Since there’s a lot to over go over here, I’ll split it up into a few parts:
 
-1. The rest of this part (part 1), will be a short refresher on `QuickSort` and how it compares to `Array.Sort()`. If you don’t need any refresher, you can skip over it and get right down to part 2, although I really recommend skimming through, mostly because I’ve got really good visualizations for that should be in the back of everyone’s mind as we’ll be dealing with vectorization & optimization later.
-2. In [part 2](2019-08-08-trumping-arraysort-with-avx2-pt2.md), I’ll focus on the basic of Vectorized HW Intrinsics, Go into vector types, and a handful of vectorized instructions we’ll actually be using in part 3, but we still won’t be sorting.
-3. In [part 3](2019-08-08-trumping-arraysort-with-avx2-pt3.md) I’ll present the initial code for the vectorized code and we’ll finally start seeing some payoff. We’ll also experience agony from the CPU’s Branch Predictor and try to overcome it with the limited tools we have in C# in 2019.
-4. In part 4, we’ll see how we can almost get rid of 100% of the remaining scalar code, by implementing small-constant size array sorting. We’ll use, drum roll…, yet more AVX2 vectorization and gain a considerable amount of performance / efficiency in the process.
-5. Finally, in part 5, I’ll list the outstanding stuff / ideas I have for getting more juice and functionality out of my vectorized code.
+1. In this part, we do a short refresher on `QuickSort` and how it compares to `Array.Sort()`. If you don’t need any refresher, you can skip over it and get right down to part 2 and onwards , although I really recommend skimming through, mostly because I’ve got really good visualizations for that should be in the back of everyone’s mind as we’ll be dealing with vectorization & optimization later.
+2. In [part 2]({% post_url 2019-08-19-trumping-arraysort-with-avx2-pt2 %}), we go over the basics of Vectorized HW Intrinsics, discussed vector types, and a handful of vectorized instructions we’ll actually be using in part 3, but we still weren't sorting anything.
+3. In [part 3]({% post_url 2019-08-20-trumping-arraysort-with-avx2-pt3 %}) we go through the initial code for the vectorized sorting and we’ll finally start seeing some payoff. We’ll finish with some agony courtesy of CPU’s Branch Predictor, just so we don't get too cocky.
+4. In [part 4]({% post_url 2019-08-21-trumping-arraysort-with-avx2-pt4 %}), we go over a handful of optimization approaches that I attempted trying to get the vectorized partition to run faster, we'll see what worked and what didn't.
+5. In part 5, we’ll see how we can almost get rid of 100% of the remaining scalar code, by implementing small-constant size array sorting. We’ll use, drum roll…, yet more AVX2 vectorization and gain a considerable amount of performance / efficiency in the process.
+6. Finally, in part 6, I’ll list the outstanding stuff / ideas I have for getting more juice and functionality out of my vectorized code.
 
 ## QuickSort Crash Course
 
@@ -50,7 +51,7 @@ Before we’ll discuss any of that let’s put quicksort in words, then in code:
 
 - QuickSort uses a *divide-and-conquer* approach.
   - In other words, it's recursive.
-- Has an average of $$\mathcal{O}(n\log{}n)$$ comparisons for *n* items.
+  - Has an average of $$\mathcal{O}(n\log{}n)$$ comparisons for *n* items.
 - Performs an in-place sort.
 
 That last point, referring to in-place sorting, sounds simple and neat, and it sure is from the perspective of the user: no additional memory allocation needs to occur regardless of how much data is being sorted.  
@@ -79,6 +80,8 @@ Bonus trivia points for those who are still here with me: [Tony Hoare](https://e
 ### In code
 
 ```csharp
+void QuickSort(int[] items) => QuickSort(items, 0, items.Length - 1);
+
 void QuickSort(int[] items, int left, int right)
 {
     if (left == right) return;
@@ -90,10 +93,10 @@ void QuickSort(int[] items, int left, int right)
 
 int PickPivot(int[] items, int left, int right)
 {
-    var mid = lo + ((hi - lo) / 2);
-    SwapIfGreater(ref items[lo],  ref items[mid]);
-    SwapIfGreater(ref items[lo],  ref items[hi]);
-    SwapIfGreater(ref items[mid], ref items[hi]);
+    var mid = left + ((right - left) / 2);
+    SwapIfGreater(ref items[left],  ref items[mid]);
+    SwapIfGreater(ref items[left],  ref items[right]);
+    SwapIfGreater(ref items[mid], ref items[right]);
     var pivot = items[mid];                                       
 }
 
@@ -182,4 +185,4 @@ As mentioned, I’ll end up borrowing this idea with my code as the issues aroun
 
 We've spent quite some time polishing our foundations with respect to QuickSort. I know long introductions are somewhat boring, but I think time spent on this post will pay off when we next encounter our actual implementation in the 3<sup>rd</sup> post…
 
-But before that, we need to pick up some knowledge that is specific to vectorized intrinsics and introduce a few select intrinsics we’ll be actually using, so this is a good time to break off this post, grab a fresh cup of coffee and head to the [next post](2019-08-08-trumping-arraysort-with-avx2-pt2.md).
+But before that, we need to pick up some knowledge that is specific to vectorized intrinsics and introduce a few select intrinsics we’ll be actually using, so this is a good time to break off this post, grab a fresh cup of coffee and head to the [next post]({% post_url 2019-08-19-trumping-arraysort-with-avx2-pt2 %}).

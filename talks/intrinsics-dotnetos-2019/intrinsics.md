@@ -20,12 +20,12 @@ verticalSeparator: '^\r?\n--\r?\n$'
 
 ---
 
-## getent passwd $(whoami)
+## getent passwd $USER
 
 <small>dmg:*:666:666:Dan Shechter:/home/dmg:/usr/bin/zsh</small>
 
 <p class="fragment fade-in-then-out">
-I'm a CTO of a high-frequency trading* firm that trades global markets from inside exchanges.
+CTO of a high-frequency trading* firm that trades global markets from inside exchanges.
 </p>
 
 <p class="fragment">
@@ -37,17 +37,17 @@ Also, *nix programmer that likes <span class="fragment highlight-blue">low-level
 <tr>
 <td style="border-right: 1px solid black; padding-top: 0px; padding-bottom: 0px">
 <a href="https://bits.houmus.org">
-<object style="margin: auto;pointer-events: none;" type="image/svg+xml" width="48"  data="logos/atari.svg"/>
+<object style="margin: auto;pointer-events: none;" type="image/svg+xml" width="48"  data="logos/atari.svg"></object>
 </a>
 </td>
 <td style="border-right: 1px solid black; padding-top: 0px; padding-bottom: 0px">
 <a href="http://twitter.com/damageboy">
-<object style="margin: auto;pointer-events: none;" type="image/svg+xml" width="48"  data="logos/twitter.svg" />
+<object style="margin: auto;pointer-events: none;" type="image/svg+xml" width="48"  data="logos/twitter.svg"></object>
 </a>
 </td>
 <td style="padding-top: 0px; padding-bottom: 0px">
 <a href="https://github.com/damageboy">
-<object style="margin: auto;pointer-events: none;" type="image/svg+xml" width="48"  data="logos/github.svg" />
+<object style="margin: auto;pointer-events: none;" type="image/svg+xml" width="48"  data="logos/github.svg"></object>
 </td>
 </tr>
 </table>
@@ -56,9 +56,9 @@ Also, *nix programmer that likes <span class="fragment highlight-blue">low-level
 
 ## Today
 
-- What is it?
-- Why / Why Now?
-- Describe a well known algorithm
+- What?
+- Why (now)?
+- Take something we all respect
 - (Re)build it together using intrinsics
   - Oh yeah, learn intrinsics while at it <!-- .element: class="fragment" data-fragment-index="3"-->
 - Profit! <!-- .element: class="fragment" data-fragment-index="1" -->
@@ -629,7 +629,7 @@ vpbroadcastd ymm0, xmm0   ; 3 cycle latency
                           ; 1 cycle throughput
 ```
 
-<object style="margin: auto" type="image/svg+xml" data="inst-animations/vbroadcast.svg" />
+<object style="margin: auto" type="image/svg+xml" data="inst-animations/vbroadcast.svg"></object>
 
 --
 
@@ -655,7 +655,7 @@ vlddqu ymm1, ymmword ptr [rdi] ; 5 cycle latency +
                                ; 0.5 cycle throughput
 ```
 
-<object stle="margin: auto" type="image/svg+xml" data="inst-animations/lddqu.svg" />
+<object stle="margin: auto" type="image/svg+xml" data="inst-animations/lddqu.svg"></object>
 
 --
 
@@ -683,7 +683,7 @@ vpcmpgtd ymm2, ymm1, ymm0 ; 1 cycle latency
                           ; 0.5 cycle throughput
 ```
 
-<object stle="margin: auto" type="image/svg+xml" data="inst-animations/vpcmpgtd.svg" />
+<object stle="margin: auto" type="image/svg+xml" data="inst-animations/vpcmpgtd.svg"></object>
 
 --
 
@@ -708,7 +708,7 @@ vmovmskps rax, ymm2  ; 5 cycle latency
                      ; 1 cycle throughput
 ```
 
-<object stle="margin: auto" type="image/svg+xml" data="inst-animations/vmovmskps.svg" />
+<object stle="margin: auto" type="image/svg+xml" data="inst-animations/vmovmskps.svg"></object>
 
 --
 
@@ -754,14 +754,14 @@ vpermd ymm1, ymm2, ymm1 ; 3 cycles latency
                         ; 1 cycles throughput
 ```
 
-<object stle="margin: auto" type="image/svg+xml" data="inst-animations/vpermd.svg" />
+<object stle="margin: auto" type="image/svg+xml" data="inst-animations/vpermd.svg"></object>
 
 --
 
 ## Vectorized Partition Block
 
 <ul>
-<li>We're going to partition 8 x `int`s at a time</li>
+<li>We're going to partition 8 x <code>int</code>s at a time</li>
 <span class="fragment fade-up">
 <ul>
 <li>inside a Vector256</li>
@@ -907,6 +907,18 @@ static ReadOnlySpan<int> PermTable => new[] {
 </ul>
 </span>
 </ul>
+
+
+
+--
+
+<object style="margin: auto" type="image/svg+xml" data="double-pumped-loop.svg"></object>
+
+<br/>
+
+<object style="margin: auto" type="image/svg+xml" data="double-pumped-loop-legend.svg"></object>
+
+
 
 --
 

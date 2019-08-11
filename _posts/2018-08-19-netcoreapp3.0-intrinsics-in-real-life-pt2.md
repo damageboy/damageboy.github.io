@@ -4,7 +4,7 @@ published: true
 comments: true
 header:
   image: /assets/images/intrinsics-header.jpg
-title: .NET Core 3.0 Intrinsics in Real Life - 2/3
+title: .NET Core 3.0 Intrinsics in Real Life - (Part 2/3)
 date: 2018-08-19 18:26:28 +0300
 classes: wide
 #categories: coreclr instrinsics
@@ -15,9 +15,9 @@ If you've not read part 1 yet, I suggest you do so, since we continue right wher
 
 As a reminder, this series is made in 3 parts:
 
-* [The data-structure/operation that we'll optimize and basic usage of intrinsics](2018-08-18-netcoreapp3.0-instrinsics-in-real-life-pt1.md).
+* [The data-structure/operation that we'll optimize and basic usage of intrinsics]({% post_url 2018-08-18-netcoreapp3.0-intrinsics-in-real-life-pt1 %}).
 * Using intrinsics more effectively (this post).
-* The C++ version(s) of the corresponding C# code, and what I learned from them.
+* [The C++ version(s) of the corresponding C# code, and what I learned from them]({% post_url 2018-08-20-netcoreapp3.0-intrinsics-in-real-life-pt3 %}).
 
 All of the code (C# & C++) is published under the [bitgoo github repo](https://github.com/damageboy/bitgoo).
 
@@ -227,4 +227,4 @@ With the positive things, we must also not forget there are some negative sides 
 
 All of these are considerations to be taken seriously, especially if you work outside of Microsoft (where there are considerably more resources for testing, and greater impact for using intrinsics at the same time), while considering intrinsics.
 
-In the next and final post, we'll explore the performance bug I uncovered, and how generally C# compares to C++ for this sort of code...
+In the [next and final post]({% post_url 2018-08-20-netcoreapp3.0-intrinsics-in-real-life-pt3 %}), we'll explore the performance bug I uncovered, and how generally C# compares to C++ for this sort of code...

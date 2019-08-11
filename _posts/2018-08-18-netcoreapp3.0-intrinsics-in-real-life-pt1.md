@@ -4,7 +4,7 @@ published: true
 comments: true
 header:
   image: /assets/images/intrinsics-header.jpg
-title: .NET Core 3.0 Intrinsics in Real Life - 1/3
+title: .NET Core 3.0 Intrinsics in Real Life - (Part 1/3)
 date: 2018-08-18 18:26:28 +0300
 classes: wide
 #categories: coreclr instrinsics
@@ -15,8 +15,8 @@ What follows is sort of a travel log of what I did and how the new CoreCLR funct
 This series  will contain 3 parts:
 
 * The data-structure/operation that we'll optimize and basic usage of intrinsics (this post).
-* [Using intrinsics more effectively](2018-08-19-netcoreapp3.0-instrinsics-in-real-life-pt2.md).
-* The C++ version(s) of the corresponding C# code, and what I learned from them.
+* [Using intrinsics more effectively]({% post_url 2018-08-19-netcoreapp3.0-intrinsics-in-real-life-pt2 %}).
+* [The C++ version(s) of the corresponding C# code, and what I learned from them]({% post_url 2018-08-20-netcoreapp3.0-intrinsics-in-real-life-pt3 %}).
 
 All of the code (C# & C++) is published under the [bitgoo github repo](https://github.com/damageboy/bitgoo), with build/run scripts in case someone wants to play with it and/or use it as a starting point for humiliating me with better versions.
 
@@ -377,7 +377,7 @@ For those with a need to see assembly code to feel convinced, I've uploaded JITD
 We've reached pretty far, and I hope it was interesting even if a bit introductory.  
 In the next post, we'll continue iterating on this task, introducing new intrinsics in the process, and encounter some "interesting" quirks.
 
-If you feel like you're up for it, the next post is [here](2018-08-19-netcoreapp3.0-instrinsics-in-real-life-pt2.md)...
+If you feel like you're up for it, the next post is [here]({% post_url 2018-08-19-netcoreapp3.0-intrinsics-in-real-life-pt2 %})...
 
 ---------
 [^1]: Worry not, I reported and [opened an issue on CoreCLR](https://github.com/dotnet/coreclr/issues/19555) before even starting to write this post and plan to do a deep-dive into this on the 3rd post
