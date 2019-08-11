@@ -116,6 +116,7 @@ defaults:
 head_scripts:
  - //ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js
  - /assets/scripts/inlineDisqussions.js
+ - //cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML
 
 
 footer_scripts:
