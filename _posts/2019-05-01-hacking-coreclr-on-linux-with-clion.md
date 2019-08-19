@@ -3,6 +3,7 @@ title: "Hacking CoreCLR on Linux with CLion"
 header:
   image: /assets/images/coreclr-clion-header.jpg
 date: 2019-05-01 08:26:28 +0300
+classes: wide
 #categories: coreclr ide setup	
 ---
 
@@ -79,7 +80,7 @@ Here's what I did to get everything working:
 
    This 99% percent of what we need... The only remaining missing piece is that the build script runs the whole thing inside the `bin/obj` folder, as you can see in the first line of the bash -x output, so we'll make note of this too:
    ```bash
-   + pushd /home/dans/projects/public/coreclr/bin/obj/Linux.x64.Debug
+   + pushd /home/dmg/projects/public/coreclr/bin/obj/Linux.x64.Debug
    ```
 
 4. Now it's time to open up CLion and get this show on the road:

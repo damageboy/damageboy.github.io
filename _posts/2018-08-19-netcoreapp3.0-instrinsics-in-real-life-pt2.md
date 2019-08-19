@@ -6,6 +6,7 @@ header:
   image: /assets/images/intrinsics-header.jpg
 title: .NET Core 3.0 Intrinsics in Real Life - 2/3
 date: 2018-08-19 18:26:28 +0300
+classes: wide
 #categories: coreclr instrinsics
 ---
 As I've described in [part 1](2018-08-18-netcoreapp3.0-instrinsics-in-real-life-pt1.md) of this series, I've recently overhauled an internal data structure we use at Work<sup>&reg;</sup> to start using [platform dependent intrinsics](https://github.com/dotnet/designs/blob/master/accepted/platform-intrinsics.md).

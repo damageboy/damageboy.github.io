@@ -6,6 +6,7 @@ header:
   image: /assets/images/intrinsics-header.jpg
 title: .NET Core 3.0 Intrinsics in Real Life - 1/3
 date: 2018-08-18 18:26:28 +0300
+classes: wide
 #categories: coreclr instrinsics
 ---
 I've recently overhauled an internal data structure we use at Work<sup>&reg;</sup> to start using [platform dependent intrinsics](https://github.com/dotnet/designs/blob/master/accepted/platform-intrinsics.md)- the anticipated feature (for speed junkies like me, that is) which was released in preview form as part of CoreCLR 2.1: 
