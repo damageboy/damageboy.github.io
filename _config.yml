@@ -1,39 +1,60 @@
-# Welcome to Jekyll!
-#
-# This config file is meant for settings that affect your whole blog, values
-# which you are expected to set up once and rarely edit after that. If you find
-# yourself editing this file very often, consider using Jekyll's data files
-# feature for the data you need to update frequently.
-#
-# For technical reasons, this file is *NOT* reloaded automatically when you use
-# 'bundle exec jekyll serve'. If you change this file, please restart the server process.
-
-# Site settings
-# These are used to personalize your new site. If you look in the HTML files,
-# you will see them accessed via {{ site.title }}, {{ site.email }}, and so on.
-# You can create any custom variable you would like, and they will be accessible
-# in the templates via {{ site.myvariable }}.
 title: damageboy
 email: dans@houmus.org
-description: >- # this means to ignore newlines until "baseurl:"
-  Someplace for me to post stuff I think could be intereting for other people
+description: >- 
+  damageboy's place to vent over those mean computers
 baseurl: /
 url: https://bits.houmus.org
+search: true
+search_provider: algolia
 twitter_username: damageboy
 github_username: damageboy
+repository: "damageboy/damageboy.github.io"
+words_per_minute: 200
 minimal_mistakes_skin: air #"aqua", "contrast", "dark", "dirt", "neon", "mint", "plum" "sunrise"
 google_site_verification: "wcrvaF3e88-Vb6y-9eUTqYaXDMOukzl4c-IdKByS0Xc"
 bing_site_verification: "6D5AE23298671D95A20FAD7FA3430ABB"
 
 # Build settings
 markdown: kramdown
-remote_theme: mmistakes/minimal-mistakes
+remote_theme: mmistakes/minimal-mistakes@4.16.6
 # Outputting
 permalink: /:year-:month-:day/:title
 breadcrumbs: true
 paginate: 5 # amount of posts to show
 paginate_path: /page:num/
 timezone: # https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+
+# Reading Files
+include:
+  - .htaccess
+  - _posts
+exclude:
+  - "*.sublime-project"
+  - "*.sublime-workspace"
+  - vendor
+  - .asset-cache
+  - .bundle
+  - .jekyll-assets-cache
+  - .sass-cache
+  - assets/js/plugins
+  - assets/js/_main.js
+  - assets/js/vendor
+  - Capfile
+  - CHANGELOG
+  - config
+  - Gemfile
+  - Gruntfile.js
+  - gulpfile.js
+  - LICENSE
+  - log
+  - node_modules
+  - package.json
+  - Rakefile
+  - README
+  - tmp
+keep_files:
+  - .git
+encoding: "utf-8"
 
 # Plugins (previously gems:)
 plugins:
@@ -45,25 +66,17 @@ plugins:
   - jemoji
   - jekyll-remote-theme
   - jekyll-include-cache
+  - jekyll-github-metadata
+
 
 author:
-  name   : "damageboy"
-  avatar : "/assets/images/atari.svg"
-  bio    : "Bored when not wreaking havoc"
-  email  : dans@houmus.org
-  uri    : "https://bits.houmus.org"
-
-# Exclude from processing.
-# The following items will not be processed, by default. Create a custom list
-# to override the default setting.
-# exclude:
-#   - Gemfile
-#   - Gemfile.lock
-#   - node_modules
-#   - vendor/bundle/
-#   - vendor/cache/
-#   - vendor/gems/
-#   - vendor/ruby/
+  name         : "damageboy"
+  avatar       : "/assets/images/atari.svg"
+  bio          : "What did I do this time?"
+  email        : "dans@houmus.org"
+  uri          : "https://bits.houmus.org"
+  stackoverflow: "9172/damageboy"
+  twitter      : "damageboy"
 
 comments:
   provider: "disqus"
@@ -79,6 +92,13 @@ analytics:
 relative_links:
   enabled: true
   collections: true
+
+algolia:
+  application_id: CMJJV3VL7A
+  index_name: bits.houmus.org
+  search_only_api_key: f1673463105fd4295fbbeffc415b5934
+  powered_by: true
+
 
 defaults:
   # _posts
