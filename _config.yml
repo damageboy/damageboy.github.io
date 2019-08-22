@@ -117,5 +117,6 @@ head_scripts:
  - //ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js
  - /assets/scripts/inlineDisqussions.js
 
+
 footer_scripts:
  - /assets/scripts/applyInlineDisqussions.js
