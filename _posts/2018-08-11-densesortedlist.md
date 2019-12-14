@@ -5,6 +5,7 @@ hidden: true
 title: DenseSortedList, Why & What?
 date: 2018-08-11 18:26:28 +0300
 categories: data-structures
+classes: wide
 ---
 Previously, I blogged quite extensively about some core functionality that was overhauled to use CoreCLR architecture dependent intrinsics, but I purposely didn't discuss the data-structure that was in need for those fast bitmap search functions.
 

@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Page 1 -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   x="0"
+   y="0"
+   width="873.09998"
+   height="98.597916"
+   viewBox="0 0 873.09998 98.597916"
+   version="1.1"
+   style="display:block"
+   id="svg912"
+   sodipodi:docname="1.svg"
+   inkscape:version="">
+  <metadata
+     id="metadata916">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="2560"
+     inkscape:window-height="1415"
+     id="namedview914"
+     showgrid="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:zoom="1.3421342"
+     inkscape:cx="560"
+     inkscape:cy="-153.26197"
+     inkscape:window-x="0"
+     inkscape:window-y="25"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g908" />
+  <defs
+     id="defs842">
+    <clipPath
+       id="c_1">
+      <path
+         d="M 0,0 H 1285 V 909 H 0 Z"
+         id="path834"
+         inkscape:connector-curvature="0" />
+    </clipPath>
+    <clipPath
+       id="c0">
+      <path
+         d="m 83.6,307.1 v -196 h 872 v 196 z"
+         id="path837"
+         inkscape:connector-curvature="0" />
+    </clipPath>
+    <style
+       type="text/css"
+       id="style840"><![CDATA[
+text { white-space: pre; }
+path, image { pointer-events: none; }
+
+.s1{
+font-size: 16.81px;
+font-family: DejaVuSansMono_c;
+fill: #000000;
+}
+
+.g0{
+fill: #BBE33D;
+}
+.g1{
+fill: #DB9D00;
+}
+.g2{
+fill: #C9211E;
+}
+.g3{
+}
+
+]]></style>
+  </defs>
+  <g
+     clip-path="url(#c_1)"
+     id="g908"
+     transform="translate(-82.5,-202.64012)">
+    <g
+       clip-path="url(#c0)"
+       id="g848">
+      <path
+         d="m 82.5,240.6 h 102 v 22.9 h -102 z"
+         class="g0"
+         id="path846"
+         inkscape:connector-curvature="0"
+         style="fill:#bbe33d;fill-rule:evenodd" />
+    </g>
+    <path
+       d="m 183.3,240.6 h 102 v 22.9 h -102 z"
+       class="g0"
+       id="path850"
+       inkscape:connector-curvature="0"
+       style="fill:#bbe33d;fill-rule:evenodd" />
+    <path
+       d="m 284.2,240.6 h 101.9 v 22.9 H 284.2 Z"
+       class="g0"
+       id="path852"
+       inkscape:connector-curvature="0"
+       style="fill:#bbe33d;fill-rule:evenodd" />
+    <path
+       d="m 385,240.6 h 102 v 22.9 H 385 Z"
+       class="g0"
+       id="path854"
+       inkscape:connector-curvature="0"
+       style="fill:#bbe33d;fill-rule:evenodd" />
+    <path
+       d="m 485.8,240.6 h 66.5 v 22.9 h -66.5 z"
+       class="g1"
+       id="path856"
+       inkscape:connector-curvature="0"
+       style="fill:#db9d00;fill-rule:evenodd" />
+    <path
+       d="m 551.1,240.6 h 102 v 22.9 h -102 z"
+       class="g2"
+       id="path858"
+       inkscape:connector-curvature="0"
+       style="fill:#c9211e;fill-rule:evenodd" />
+    <path
+       d="m 652,240.6 h 102 v 22.9 H 652 Z"
+       class="g2"
+       id="path860"
+       inkscape:connector-curvature="0"
+       style="fill:#c9211e;fill-rule:evenodd" />
+    <path
+       d="m 752.8,240.6 h 102 v 22.9 h -102 z"
+       class="g2"
+       id="path862"
+       inkscape:connector-curvature="0"
+       style="fill:#c9211e;fill-rule:evenodd" />
+    <path
+       d="m 853.6,240.6 h 102 v 22.9 h -102 z"
+       class="g2"
+       id="path864"
+       inkscape:connector-curvature="0"
+       style="fill:#c9211e;fill-rule:evenodd" />
+    <text
+       x="513"
+       y="214"
+       class="s1"
+       id="text866"
+       style="font-size:16.8093338px;font-family:Lato;white-space:pre;fill:#000000;-inkscape-font-specification:'Lato, Normal';font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;text-anchor:start;text-align:start;writing-mode:lr;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;">5</text>
+    <text
+       x="128"
+       y="301"
+       class="s1"
+       id="text868"
+       style="font-size:16.8093338px;font-family:Lato;white-space:pre;fill:#000000;-inkscape-font-specification:'Lato, Normal';font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;text-anchor:start;text-align:start;writing-mode:lr;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;">8</text>
+    <text
+       x="229"
+       y="301"
+       class="s1"
+       id="text870"
+       style="font-size:16.8093338px;font-family:Lato;white-space:pre;fill:#000000;-inkscape-font-specification:'Lato, Normal';font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;text-anchor:start;text-align:start;writing-mode:lr;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;">8</text>
+    <text
+       x="330"
+       y="301"
+       class="s1"
+       id="text872"
+       style="font-size:16.8093338px;font-family:Lato;white-space:pre;fill:#000000;-inkscape-font-specification:'Lato, Normal';font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;text-anchor:start;text-align:start;writing-mode:lr;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;">8</text>
+    <text
+       x="430"
+       y="301"
+       class="s1"
+       id="text874"
+       style="font-size:16.8093338px;font-family:Lato;white-space:pre;fill:#000000;-inkscape-font-specification:'Lato, Normal';font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;text-anchor:start;text-align:start;writing-mode:lr;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;">8</text>
+    <text
+       x="596"
+       y="301"
+       class="s1"
+       id="text876"
+       style="font-size:16.8093338px;font-family:Lato;white-space:pre;fill:#000000;-inkscape-font-specification:'Lato, Normal';font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;text-anchor:start;text-align:start;writing-mode:lr;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;">8</text>
+    <text
+       x="697"
+       y="301"
+       class="s1"
+       id="text878"
+       style="font-size:16.8093338px;font-family:Lato;white-space:pre;fill:#000000;-inkscape-font-specification:'Lato, Normal';font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;text-anchor:start;text-align:start;writing-mode:lr;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;">8</text>
+    <text
+       x="798"
+       y="301"
+       class="s1"
+       id="text880"
+       style="font-size:16.8093338px;font-family:Lato;white-space:pre;fill:#000000;-inkscape-font-specification:'Lato, Normal';font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;text-anchor:start;text-align:start;writing-mode:lr;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;">8</text>
+    <text
+       x="899"
+       y="301"
+       class="s1"
+       id="text882"
+       style="font-size:16.8093338px;font-family:Lato;white-space:pre;fill:#000000;-inkscape-font-specification:'Lato, Normal';font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;text-anchor:start;text-align:start;writing-mode:lr;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;">8</text>
+    <path
+       d="m 82.5,240.6 h 873.1 v 1.2 H 82.5 Z"
+       class="g3"
+       id="path884"
+       inkscape:connector-curvature="0"
+       style="fill-rule:evenodd" />
+    <path
+       d="m 82.5,262.4 h 873.1 v 1.1 H 82.5 Z"
+       class="g3"
+       id="path886"
+       inkscape:connector-curvature="0"
+       style="fill-rule:evenodd" />
+    <path
+       d="m 82.5,240.6 h 1.1 v 22.9 h -1.1 z"
+       class="g3"
+       id="path888"
+       inkscape:connector-curvature="0"
+       style="fill-rule:evenodd" />
+    <path
+       d="m 183.3,240.6 h 1.2 v 22.9 h -1.2 z"
+       class="g3"
+       id="path890"
+       inkscape:connector-curvature="0"
+       style="fill-rule:evenodd" />
+    <path
+       d="m 284.2,240.6 h 1.1 v 22.9 h -1.1 z"
+       class="g3"
+       id="path892"
+       inkscape:connector-curvature="0"
+       style="fill-rule:evenodd" />
+    <path
+       d="m 385,240.6 h 1.1 v 22.9 H 385 Z"
+       class="g3"
+       id="path894"
+       inkscape:connector-curvature="0"
+       style="fill-rule:evenodd" />
+    <path
+       d="m 485.8,240.6 h 1.2 v 22.9 h -1.2 z"
+       class="g3"
+       id="path896"
+       inkscape:connector-curvature="0"
+       style="fill-rule:evenodd" />
+    <path
+       d="m 551.1,240.6 h 1.2 v 22.9 h -1.2 z"
+       class="g3"
+       id="path898"
+       inkscape:connector-curvature="0"
+       style="fill-rule:evenodd" />
+    <path
+       d="m 652,240.6 h 1.1 v 22.9 H 652 Z"
+       class="g3"
+       id="path900"
+       inkscape:connector-curvature="0"
+       style="fill-rule:evenodd" />
+    <path
+       d="m 752.8,240.6 h 1.2 v 22.9 h -1.2 z"
+       class="g3"
+       id="path902"
+       inkscape:connector-curvature="0"
+       style="fill-rule:evenodd" />
+    <path
+       d="m 853.6,240.6 h 1.2 v 22.9 h -1.2 z"
+       class="g3"
+       id="path904"
+       inkscape:connector-curvature="0"
+       style="fill-rule:evenodd" />
+    <path
+       d="m 954.5,240.6 h 1.1 v 22.9 h -1.1 z"
+       class="g3"
+       id="path906"
+       inkscape:connector-curvature="0"
+       style="fill-rule:evenodd" />
+  </g>
+  <!-- Any embedded fonts defined here -->
+  <style
+     type="text/css"
+     id="style910"><![CDATA[
+
+@font-face {
+	font-family: DejaVuSansMono_c;
+	src: url("fonts/DejaVuSansMono_c.woff") format("woff");
+}
+
+]]></style>
+</svg>

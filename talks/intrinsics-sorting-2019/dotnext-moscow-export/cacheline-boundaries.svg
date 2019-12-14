@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg:svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   id="svg2019"
+   style="display:block"
+   version="1.1"
+   viewBox="0 0 867.9 147.3531"
+   height="147.3531"
+   width="867.90002"
+   y="0"
+   x="0">
+  <svg:metadata
+     id="metadata2023">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </svg:metadata>
+  <defs>
+    <style
+       type="text/css">
+    @import url('/assets/css/cascadia.css');
+ </style>
+  </defs>
+  <svg:defs
+     id="defs1963">
+    <svg:marker
+       style="overflow:visible"
+       id="Arrow2Lstart"
+       refX="0"
+       refY="0"
+       orient="auto">
+      <svg:path
+         transform="matrix(1.1,0,0,1.1,1.1,0)"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.625;stroke-linejoin:round;stroke-opacity:1"
+         id="path2615" />
+    </svg:marker>
+    <svg:clipPath
+       id="c_2">
+      <svg:path
+         id="path1958"
+         d="M 0,0 H 1285 V 909 H 0 Z" />
+    </svg:clipPath>
+    <svg:style
+       id="style1961"
+       type="text/css"><![CDATA[
+text { white-space: pre; }
+path, image { pointer-events: none; }
+
+.s1_2{
+font-size: 16.81px;
+font-family: 'Cascadia Code';
+fill: #000000;
+}
+
+.g0_2{
+fill: #BDD7EE;
+}
+.g1_2{
+fill: #FFD966;
+}
+.g2_2{
+fill: #DDEBF7;
+}
+.g3_2{
+fill: none;
+stroke: #000000;
+stroke-width: 1.145;
+stroke-linecap: butt;
+stroke-linejoin: bevel;
+stroke-miterlimit: 2;
+stroke-dasharray: 11,4,4,4,4,4;
+}
+.g4_2{
+fill: none;
+stroke: #000000;
+stroke-width: 1.145;
+stroke-linecap: butt;
+stroke-linejoin: bevel;
+stroke-miterlimit: 2;
+stroke-dasharray: 11,4,4,4;
+}
+.g5_2{
+}
+
+]]></svg:style>
+  </svg:defs>
+  <svg:path
+     d="M 11.1,64.324036 H 112 v 24.1 H 11.1 Z"
+     class="g0_2"
+     id="path1967"
+     style="fill:#bdd7ee;fill-rule:evenodd" />
+  <svg:path
+     d="m 110.8,64.324036 h 100.9 v 24.1 H 110.8 Z"
+     class="g0_2"
+     id="path1969"
+     style="fill:#bdd7ee;fill-rule:evenodd" />
+  <svg:path
+     d="m 210.5,64.324036 h 100.8 v 24.1 H 210.5 Z"
+     class="g0_2"
+     id="path1971"
+     style="fill:#bdd7ee;fill-rule:evenodd" />
+  <svg:path
+     d="m 310.2,64.324036 h 32.1 v 24.1 h -32.1 z"
+     class="g0_2"
+     id="path1973"
+     style="fill:#bdd7ee;fill-rule:evenodd" />
+  <svg:path
+     d="m 341.1,64.324036 h 32.1 v 24.1 h -32.1 z"
+     class="g0_2"
+     id="path1975"
+     style="fill:#bdd7ee;fill-rule:evenodd" />
+  <svg:path
+     d="m 372.1,64.324036 h 32.1 v 24.1 h -32.1 z"
+     class="g0_2"
+     id="path1977"
+     style="fill:#bdd7ee;fill-rule:evenodd" />
+  <svg:path
+     d="m 403,64.324036 h 32.1 v 24.1 H 403 Z"
+     class="g1_2"
+     id="path1979"
+     style="fill:#ffd966;fill-rule:evenodd" />
+  <svg:path
+     d="M 433.9,64.324036 H 466 v 24.1 h -32.1 z"
+     class="g1_2"
+     id="path1981"
+     style="fill:#ffd966;fill-rule:evenodd" />
+  <svg:path
+     d="M 464.9,64.324036 H 497 v 24.1 h -32.1 z"
+     class="g1_2"
+     id="path1983"
+     style="fill:#ffd966;fill-rule:evenodd" />
+  <svg:path
+     d="m 495.8,64.324036 h 32.1 v 24.1 h -32.1 z"
+     class="g1_2"
+     id="path1985"
+     style="fill:#ffd966;fill-rule:evenodd" />
+  <svg:path
+     d="m 526.8,64.324036 h 32 v 24.1 h -32 z"
+     class="g2_2"
+     id="path1987"
+     style="fill:#ddebf7;fill-rule:evenodd" />
+  <svg:path
+     d="m 557.7,64.324036 h 100.8 v 24.1 H 557.7 Z"
+     class="g2_2"
+     id="path1989"
+     style="fill:#ddebf7;fill-rule:evenodd" />
+  <svg:path
+     d="m 657.4,64.324036 h 100.8 v 24.1 H 657.4 Z"
+     class="g2_2"
+     id="path1991"
+     style="fill:#ddebf7;fill-rule:evenodd" />
+  <svg:path
+     d="m 757.1,64.324036 h 100.8 v 24.1 H 757.1 Z"
+     class="g2_2"
+     id="path1993"
+     style="fill:#ddebf7;fill-rule:evenodd" />
+  <svg:text
+     x="338.2851"
+     y="22.380074"
+     dx="0 -0.30000001 0 -0.1 0.80000001 0 -0.1 -0.1 0.80000001 0 0.40000001 -0.1 0 0.80000001 0.80000001 0.80000001 0 0"
+     class="s1_2"
+     id="text1995"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:16.8093338px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;white-space:pre;fill:#000000">Cacheline Boundary</svg:text>
+  <svg:path
+     d="m 404.2,65.424036 v 21.8"
+     class="g3_2"
+     id="path1997"
+     style="fill:none;stroke:#000000;stroke-width:1.14499998;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:2;stroke-dasharray:11, 4, 4, 4, 4, 4" />
+  <svg:path
+     d="m 433.87408,25.653108 v 44.1 m 0,24.1 V 137.3531"
+     class="g4_2"
+     id="path1999"
+     style="fill:none;stroke:#000000;stroke-width:1.14499998;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:2;stroke-dasharray:11, 4, 4, 4" />
+  <svg:path
+     d="m 527.9,65.424036 v 21.8"
+     class="g3_2"
+     id="path2001"
+     style="fill:none;stroke:#000000;stroke-width:1.14499998;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:2;stroke-dasharray:11, 4, 4, 4, 4, 4" />
+  <svg:path
+     d="m 12.3,63.224036 h 845.6 v 2.2 H 12.3 Z"
+     class="g5_2"
+     id="path2003"
+     style="fill-rule:evenodd" />
+  <svg:path
+     d="m 12.3,86.124036 h 420.5 v 2.3 H 12.3 Z"
+     class="g5_2"
+     id="path2005"
+     style="fill-rule:evenodd" />
+  <svg:path
+     d="m 435.1,86.124036 h 420.5 v 2.3 H 435.1 Z"
+     class="g5_2"
+     id="path2007"
+     style="fill-rule:evenodd" />
+  <svg:path
+     d="m 10,63.224036 h 2.3 v 25.2 H 10 Z"
+     class="g5_2"
+     id="path2009"
+     style="fill-rule:evenodd" />
+  <svg:path
+     d="m 432.8,64.324036 h 2.3 v 24.1 h -2.3 z"
+     class="g5_2"
+     id="path2011"
+     style="fill-rule:evenodd" />
+  <svg:path
+     d="m 855.6,64.324036 h 2.3 v 24.1 h -2.3 z"
+     class="g5_2"
+     id="path2013"
+     style="fill-rule:evenodd" />
+  <!-- Any embedded fonts defined here -->
+  <svg:path
+     id="path2595"
+     d="m 421.57407,108.6494 -128.7037,9.25926"
+     style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#Arrow2Lstart)" />
+  <svg:flowRoot
+     transform="translate(34.53704,12.314819)"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.66666603px;line-height:1.25;font-family:monospace;-inkscape-font-specification:'monospace, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none"
+     id="flowRoot2967"
+     xml:space="preserve"><svg:flowRegion
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.66666603px;font-family:monospace;-inkscape-font-specification:'monospace, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start"
+       id="flowRegion2969"><svg:rect
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.66666603px;font-family:monospace;-inkscape-font-specification:'monospace, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start"
+         y="95.87162"
+         x="108.7963"
+         height="22.685184"
+         width="145.83333"
+         id="rect2971" /></svg:flowRegion><svg:flowPara
+       id="flowPara2973" /></svg:flowRoot>  <svg:text
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:16.8093338px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;white-space:pre;fill:#000000"
+     id="text2975"
+     class="s1_2"
+     y="124.38007"
+     x="154.52583">ptr % 64 == 0</svg:text>
+</svg:svg>

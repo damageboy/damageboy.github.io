@@ -1,74 +1,89 @@
-# Welcome to Jekyll!
-#
-# This config file is meant for settings that affect your whole blog, values
-# which you are expected to set up once and rarely edit after that. If you find
-# yourself editing this file very often, consider using Jekyll's data files
-# feature for the data you need to update frequently.
-#
-# For technical reasons, this file is *NOT* reloaded automatically when you use
-# 'bundle exec jekyll serve'. If you change this file, please restart the server process.
-
-# Site settings
-# These are used to personalize your new site. If you look in the HTML files,
-# you will see them accessed via {{ site.title }}, {{ site.email }}, and so on.
-# You can create any custom variable you would like, and they will be accessible
-# in the templates via {{ site.myvariable }}.
 title: damageboy
 email: dans@houmus.org
-description: >- # this means to ignore newlines until "baseurl:"
-  Someplace for me to post stuff I think could be intereting for other people
-baseurl: /
+description: >- 
+  damageboy's place to vent over those mean computers
+incremental: true
+baseurl:
 url: https://bits.houmus.org
+show_dir_listing: false
+search: true
+search_provider: algolia
 twitter_username: damageboy
 github_username: damageboy
+repository: "damageboy/damageboy.github.io"
+words_per_minute: 200
 minimal_mistakes_skin: air #"aqua", "contrast", "dark", "dirt", "neon", "mint", "plum" "sunrise"
 google_site_verification: "wcrvaF3e88-Vb6y-9eUTqYaXDMOukzl4c-IdKByS0Xc"
 bing_site_verification: "6D5AE23298671D95A20FAD7FA3430ABB"
 
 # Build settings
 markdown: kramdown
-remote_theme: mmistakes/minimal-mistakes
+remote_theme: mmistakes/minimal-mistakes@4.16.6
 # Outputting
 permalink: /:year-:month-:day/:title
-breadcrumbs: true
+breadcrumbs: false
 paginate: 5 # amount of posts to show
 paginate_path: /page:num/
-timezone: # https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+timezone: UTC
+
+kramdown:
+  math_engine: nil
+
+# Reading Files
+include:
+  - .htaccess
+  - _posts
+  - _pages
+exclude:
+  - talks/*/*.md
+  - "*.sublime-project"
+  - "*.sublime-workspace"
+  - vendor
+  - .asset-cache
+  - .bundle
+  - .jekyll-assets-cache
+  - .sass-cache
+  - assets/js/plugins
+  - assets/js/_main.js
+  - assets/js/vendor
+  - Capfile
+  - CHANGELOG
+  - config
+  - Gemfile
+  - Gruntfile.js
+  - gulpfile.js
+  - LICENSE
+  - log
+  - node_modules
+  - package.json
+  - Rakefile
+  - README.md
+  - tmp
+  - tests
+keep_files:
+  - .git
+encoding: "utf-8"
 
 # Plugins (previously gems:)
 plugins:
+  - jekyll-relative-links
   - jekyll-paginate
   - jekyll-sitemap
   - jekyll-gist
-  - jekyll-relative-links
   - jekyll-feed
   - jemoji
   - jekyll-remote-theme
   - jekyll-include-cache
+  - jekyll-code-tabs
 
 author:
-  name   : "damageboy"
-  avatar : "/assets/images/atari.svg"
-  bio    : "Bored when not wreaking havoc"
-  email  : dans@houmus.org
-  uri    : "https://bits.houmus.org"
-
-# Exclude from processing.
-# The following items will not be processed, by default. Create a custom list
-# to override the default setting.
-# exclude:
-#   - Gemfile
-#   - Gemfile.lock
-#   - node_modules
-#   - vendor/bundle/
-#   - vendor/cache/
-#   - vendor/gems/
-#   - vendor/ruby/
-
-comments:
-  provider: "disqus"
-  disqus:
-    shortname: "damageboy-github-io"
+  name         : "damageboy"
+  avatar       : "/assets/images/atari.svg"
+  bio          : "What did I do this time?"
+  email        : "dans@houmus.org"
+  uri          : "https://bits.houmus.org"
+  stackoverflow: "9172/damageboy"
+  twitter      : "damageboy"
 
 analytics:
   provider: "google-gtag"
@@ -80,6 +95,12 @@ relative_links:
   enabled: true
   collections: true
 
+algolia:
+  application_id: CMJJV3VL7A
+  index_name: bits.houmus.org
+  search_only_api_key: f1673463105fd4295fbbeffc415b5934
+  powered_by: true
+
 defaults:
   # _posts
   - scope:
@@ -89,13 +110,15 @@ defaults:
       layout: single
       author_profile: true
       read_time: true
-      comments: true
+      comments: false
       share: true
       related: true
-
-head_scripts:
- - //ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js
- - /assets/scripts/inlineDisqussions.js
-
-footer_scripts:
- - /assets/scripts/applyInlineDisqussions.js
+ # _pages
+  - scope:
+      path: "_pages"
+      type: pages
+    values:
+      layout: single
+      author_profile: true
+      comments: false
+      read_time: false

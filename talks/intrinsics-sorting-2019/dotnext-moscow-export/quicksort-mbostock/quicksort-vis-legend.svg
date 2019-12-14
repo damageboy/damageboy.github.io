@@ -1,0 +1,1650 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="1920"
+   height="300"
+   version="1.1"
+   id="svg2083"
+   sodipodi:docname="quicksort-vis-legend.svg"
+   inkscape:version="0.92.4 (5da689c313, 2019-01-14)">
+  <metadata
+     id="metadata2089">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs2087">
+    <marker
+       inkscape:stockid="Arrow1Lend"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="marker2657"
+       style="overflow:visible;"
+       inkscape:isstock="true">
+      <path
+         id="path2655"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1;fill:#000000;fill-opacity:1"
+         transform="scale(0.8) rotate(180) translate(12.5,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Lend"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow1Lend"
+       style="overflow:visible;"
+       inkscape:isstock="true">
+      <path
+         id="path2098"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1;fill:#000000;fill-opacity:1"
+         transform="scale(0.8) rotate(180) translate(12.5,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Lstart"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow1Lstart"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         id="path2095"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1;fill:#000000;fill-opacity:1"
+         transform="scale(0.8) translate(12.5,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Lstart"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Lstart-0"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         inkscape:connector-curvature="0"
+         id="path2095-0"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.00000003pt;stroke-opacity:1"
+         transform="matrix(0.8,0,0,0.8,10,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Lstart"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Lstart-0-7"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         inkscape:connector-curvature="0"
+         id="path2095-0-5"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.00000003pt;stroke-opacity:1"
+         transform="matrix(0.8,0,0,0.8,10,0)" />
+    </marker>
+  </defs>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="1"
+     inkscape:pageshadow="2"
+     inkscape:window-width="2560"
+     inkscape:window-height="1385"
+     id="namedview2085"
+     showgrid="false"
+     inkscape:zoom="1.040625"
+     inkscape:cx="792.79279"
+     inkscape:cy="42.5"
+     inkscape:window-x="0"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg2083" />
+  <style
+     id="style1677">
+@import url('https://fonts.googleapis.com/css?family=Lato');
+
+body {
+  padding: 10px 0;
+}
+svg {
+  float: left;
+}
+.line {
+  stroke: #000;
+  stroke-linecap: round;
+}
+.line--pivot {
+  stroke: #f00;
+  stroke-width: 3px;
+}
+.line--inactive {
+  stroke: #0f0;
+  stroke-width: 3px;
+}
+</style>
+  <g
+     transform="translate(50,217)"
+     id="g2081">
+    <g
+       class="line"
+       id="g2079"
+       style="stroke:#000000;stroke-linecap:round">
+      <line
+         transform="rotate(-41.38191,107.23133,40.5)"
+         y2="-81"
+         id="line1679"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-31.884422,146.3527,24.491606)"
+         y2="-81"
+         id="line1681"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-25.552764,187.74789,0.16797806)"
+         y2="-81"
+         id="line1683"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-43.190955,116.03351,5.8427971)"
+         y2="-81"
+         id="line1685"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-34.59799,148.33002,-18.230737)"
+         y2="-81"
+         id="line1687"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-34.145729,154.73382,-33.947078)"
+         y2="-81"
+         id="line1689"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-32.336683,167.12715,-54.134555)"
+         y2="-81"
+         id="line1691"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-35.050251,160.2635,-60.867887)"
+         y2="-81"
+         id="line1693"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-42.738693,140.0897,-52.995804)"
+         y2="-81"
+         id="line1695"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-28.266332,201.99893,-122.94753)"
+         y2="-81"
+         id="line1697"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-29.170854,201.37282,-135.23819)"
+         y2="-81"
+         id="line1699"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-38.668342,165.73062,-102.8644)"
+         y2="-81"
+         id="line1701"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-40.477387,164.72118,-108.33393)"
+         y2="-81"
+         id="line1703"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-33.693467,193.19534,-155.81988)"
+         y2="-81"
+         id="line1705"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-28.718593,222.22369,-209.57925)"
+         y2="-81"
+         id="line1707"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-26.457286,240.87814,-251.29138)"
+         y2="-81"
+         id="line1709"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-40.929648,181.69107,-155.55775)"
+         y2="-81"
+         id="line1711"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-39.120603,191.72576,-178.29521)"
+         y2="-81"
+         id="line1713"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-24.648241,267.68636,-336.2528)"
+         y2="-81"
+         id="line1715"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-39.572864,199.46114,-201.01019)"
+         y2="-81"
+         id="line1717"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-36.407035,214.61325,-237.61137)"
+         y2="-81"
+         id="line1719"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-32.788945,233.68638,-285.89872)"
+         y2="-81"
+         id="line1721"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-26.005025,275.9927,-395.17237)"
+         y2="-81"
+         id="line1723"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-27.361809,271.55452,-391.57457)"
+         class="line--pivot"
+         y2="-81"
+         id="line1725"
+         x1="0"
+         y1="0"
+         x2="0"
+         style="stroke:#ff0000;stroke-width:3px" />
+      <line
+         transform="rotate(-27.81407,273.31552,-402.7407)"
+         y2="-81"
+         id="line1727"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-36.859296,235.85909,-302.57062)"
+         y2="-81"
+         id="line1729"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-44.547739,217.7721,-249.77169)"
+         y2="-81"
+         id="line1731"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-43.643216,224.61392,-267.85306)"
+         y2="-81"
+         id="line1733"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-42.286432,232.76315,-290.58019)"
+         y2="-81"
+         id="line1735"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-33.241206,268.28939,-403.75812)"
+         y2="-81"
+         id="line1737"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-25.100503,319.11437,-575.74747)"
+         y2="-81"
+         id="line1739"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-24.19598,330.70676,-620.8589)"
+         y2="-81"
+         id="line1741"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-30.075377,297.083,-504.18379)"
+         y2="-81"
+         id="line1743"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-38.21608,267.80849,-395.08856)"
+         y2="-81"
+         id="line1745"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-31.432161,299.40565,-512.0331)"
+         y2="-81"
+         id="line1747"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-29.623116,313.21149,-564.77149)"
+         y2="-81"
+         id="line1749"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-44.095477,264.62416,-365.98109)"
+         y2="-81"
+         id="line1751"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-40.025126,280.39295,-424.04519)"
+         y2="-81"
+         id="line1753"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-35.502513,300.28125,-502.31272)"
+         y2="-81"
+         id="line1755"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-45,276.11736,-390.05497)"
+         y2="-81"
+         id="line1757"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-37.763819,301.32738,-494.30069)"
+         y2="-81"
+         id="line1759"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-30.979899,333.62526,-636.01865)"
+         y2="-81"
+         id="line1761"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-35.954774,316.87408,-551.39559)"
+         y2="-81"
+         id="line1763"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-26.909548,365.91635,-781.39356)"
+         y2="-81"
+         id="line1765"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-41.834171,307.17022,-485.93542)"
+         y2="-81"
+         id="line1767"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-30.527638,354.19011,-713.57151)"
+         y2="-81"
+         id="line1769"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-37.311558,330.30864,-582.54051)"
+         y2="-81"
+         id="line1771"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-23.743719,407.5798,-981.87881)"
+         class="line--inactive"
+         y2="-81"
+         id="line1773"
+         x1="0"
+         y1="0"
+         x2="0"
+         style="stroke:#00ff00;stroke-width:3px" />
+      <line
+         transform="rotate(16.959799,-52.146202,1512.7249)"
+         y2="-81"
+         id="line1775"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(11.532663,-176.98866,2259.3996)"
+         y2="-81"
+         id="line1777"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(32.788945,90.986991,817.63981)"
+         y2="-81"
+         id="line1779"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(6.5577889,-473.71284,4111.2949)"
+         y2="-81"
+         id="line1781"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(13.341709,-108.49121,2073.6257)"
+         y2="-81"
+         id="line1783"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-20.577889,465.4636,-1294.5952)"
+         y2="-81"
+         id="line1785"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(35.050251,118.68122,822.48084)"
+         y2="-81"
+         id="line1787"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(8.3668342,-302.1915,3479.0057)"
+         y2="-81"
+         id="line1789"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-10.628141,691.49457,-2712.612)"
+         y2="-81"
+         id="line1791"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(2.4874372,-1604.8126,12046.42)"
+         y2="-81"
+         id="line1793"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(2.9396985,-1313.1466,10376.937)"
+         y2="-81"
+         id="line1795"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(16.507538,-9.3953172,1900.4097)"
+         y2="-81"
+         id="line1797"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(45,176.59621,702.89226)"
+         y2="-81"
+         id="line1799"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(39.120603,164.95765,825.58869)"
+         y2="-81"
+         id="line1801"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-17.41206,548.0001,-1810.9925)"
+         y2="-81"
+         id="line1803"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(33.693467,154.34235,991.89635)"
+         y2="-81"
+         id="line1805"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(27.361809,126.28467,1242.7944)"
+         y2="-81"
+         id="line1807"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(26.457286,124.95101,1304.9293)"
+         y2="-81"
+         id="line1809"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(31.884422,160.02921,1097.054)"
+         y2="-81"
+         id="line1811"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(27.81407,142.81513,1277.8803)"
+         y2="-81"
+         id="line1813"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(0.67839196,-6530.0814,52565.262)"
+         y2="-81"
+         id="line1815"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(41.834171,209.56345,866.04645)"
+         y2="-81"
+         id="line1817"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(14.698492,6.0902114,2522.3482)"
+         y2="-81"
+         id="line1819"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(41.38191,217.44203,900.13353)"
+         y2="-81"
+         id="line1821"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(23.291457,132.74197,1637.9886)"
+         y2="-81"
+         id="line1823"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(36.859296,212.28162,1042.2662)"
+         y2="-81"
+         id="line1825"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(33.241206,202.71563,1174.1242)"
+         y2="-81"
+         id="line1827"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(4.7487437,-633.77796,8311.8189)"
+         y2="-81"
+         id="line1829"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(1.1306533,-3756.9988,35262.256)"
+         y2="-81"
+         id="line1831"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-2.9396985,1930.4833,-13682.011)"
+         y2="-81"
+         id="line1833"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-10.175879,811.55837,-3965.5828)"
+         y2="-81"
+         id="line1835"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(24.648241,175.88148,1694.0262)"
+         y2="-81"
+         id="line1837"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(28.266332,204.986,1493.367)"
+         y2="-81"
+         id="line1839"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(24.19598,181.45405,1768.5668)"
+         y2="-81"
+         id="line1841"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(7.9145729,-210.47379,5460.9578)"
+         y2="-81"
+         id="line1843"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(30.527638,231.13652,1431.343)"
+         y2="-81"
+         id="line1845"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(6.1055276,-375.28398,7243.0419)"
+         y2="-81"
+         id="line1847"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-9.2713568,888.1702,-4753.1628)"
+         y2="-81"
+         id="line1849"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-17.864322,650.94754,-2461.6566)"
+         y2="-81"
+         id="line1851"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(18.768844,152.78506,2447.7134)"
+         y2="-81"
+         id="line1853"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(29.170854,246.76789,1586.9961)"
+         y2="-81"
+         id="line1855"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-23.291457,603.48919,-1934.1734)"
+         y2="-81"
+         id="line1857"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(10.175879,-43.317168,4662.9032)"
+         y2="-81"
+         id="line1859"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-1.5829146,3347.8511,-30082.432)"
+         y2="-81"
+         id="line1861"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(31.432161,276.77525,1535.5896)"
+         y2="-81"
+         id="line1863"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(21.934673,216.28592,2235.0359)"
+         y2="-81"
+         id="line1865"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(40.025126,318.65228,1220.6959)"
+         y2="-81"
+         id="line1867"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(44.095477,334.42106,1113.1584)"
+         y2="-81"
+         id="line1869"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(30.075377,288.24364,1674.5514)"
+         y2="-81"
+         id="line1871"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-22.839196,644.07147,-2155.4744)"
+         y2="-81"
+         id="line1873"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(5.201005,-443.56597,9907.415)"
+         y2="-81"
+         id="line1875"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(43.190955,350.39865,1184.1877)"
+         y2="-81"
+         id="line1877"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(23.743719,264.63125,2215.7741)"
+         y2="-81"
+         id="line1879"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(10.628141,26.44513,5005.9341)"
+         y2="-81"
+         id="line1881"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(42.738693,362.92537,1232.5715)"
+         y2="-81"
+         id="line1883"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(21.482412,257.50657,2523.4345)"
+         y2="-81"
+         id="line1885"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-11.984925,861.3979,-4490.0548)"
+         y2="-81"
+         id="line1887"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-11.080402,897.6884,-4909.6486)"
+         y2="-81"
+         id="line1889"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-4.7487437,1461.4664,-11649.631)"
+         y2="-81"
+         id="line1891"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-7.4623116,1110.3367,-7462.5325)"
+         y2="-81"
+         id="line1893"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(19.673367,260.29107,2888.8247)"
+         y2="-81"
+         id="line1895"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-5.201005,1390.1489,-10933.926)"
+         y2="-81"
+         id="line1897"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-12.889447,861.55403,-4412.5988)"
+         y2="-81"
+         id="line1899"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(1.5829146,-2424.1325,36783.856)"
+         y2="-81"
+         id="line1901"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-4.2964824,1591.8308,-13612.948)"
+         y2="-81"
+         id="line1903"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(11.080402,99.196021,5367.8027)"
+         y2="-81"
+         id="line1905"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-16.959799,792.95022,-3456.0341)"
+         y2="-81"
+         id="line1907"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-21.030151,744.07742,-2792.7308)"
+         y2="-81"
+         id="line1909"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(8.8190955,5.251949,6919.3566)"
+         y2="-81"
+         id="line1911"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-18.768844,780.07926,-3196.7869)"
+         y2="-81"
+         id="line1913"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(0.22613065,-19983.724,273481.07)"
+         y2="-81"
+         id="line1915"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(11.984925,158.35084,5224.5002)"
+         y2="-81"
+         id="line1917"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(7.4623116,-72.296543,8455.1159)"
+         y2="-81"
+         id="line1919"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(2.0351759,-1726.8157,31191.981)"
+         y2="-81"
+         id="line1921"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(17.41206,293.40693,3683.7594)"
+         y2="-81"
+         id="line1923"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(38.21608,445.55835,1664.0574)"
+         y2="-81"
+         id="line1925"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-2.4874372,2432.5011,-26077.642)"
+         class="line--pivot"
+         y2="-81"
+         id="line1927"
+         x1="0"
+         y1="0"
+         x2="0"
+         style="stroke:#ff0000;stroke-width:3px" />
+      <line
+         transform="rotate(-7.9145729,1157.0567,-8222.393)"
+         y2="-81"
+         id="line1929"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(37.311558,456.22403,1747.0892)"
+         y2="-81"
+         id="line1931"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-16.507538,859.94808,-3963.0345)"
+         y2="-81"
+         id="line1933"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(39.572864,472.74992,1667.516)"
+         y2="-81"
+         id="line1935"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(20.577889,366.7977,3290.0713)"
+         y2="-81"
+         id="line1937"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(40.477387,484.62556,1652.8676)"
+         y2="-81"
+         id="line1939"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-22.386935,803.70764,-2986.7109)"
+         y2="-81"
+         id="line1941"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(42.286432,498.89514,1601.3066)"
+         y2="-81"
+         id="line1943"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-5.6532663,1428.4588,-12277.511)"
+         y2="-81"
+         id="line1945"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(19.221106,373.58136,3659.3237)"
+         y2="-81"
+         id="line1947"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-0.22613065,21140.658,-312794.05)"
+         y2="-81"
+         id="line1949"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-7.0100503,1283.127,-10113.017)"
+         y2="-81"
+         id="line1951"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-19.221106,865.66488,-3659.3421)"
+         y2="-81"
+         id="line1953"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(21.030151,412.85725,3440.3769)"
+         y2="-81"
+         id="line1955"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(29.623116,482.4669,2444.2925)"
+         y2="-81"
+         id="line1957"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(26.909548,470.91782,2716.4325)"
+         y2="-81"
+         id="line1959"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(15.603015,349.1745,4746.5431)"
+         y2="-81"
+         id="line1961"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(34.59799,519.30817,2125.4411)"
+         y2="-81"
+         id="line1963"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-2.0351759,2934.0519,-36774.887)"
+         y2="-81"
+         id="line1965"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(34.145729,526.62296,2184.5758)"
+         y2="-81"
+         id="line1967"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-20.125628,891.28886,-3695.9719)"
+         y2="-81"
+         id="line1969"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(35.954774,542.82442,2098.0418)"
+         y2="-81"
+         id="line1971"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(43.643216,571.06448,1719.3111)"
+         y2="-81"
+         id="line1973"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-0.67839196,7517.8201,-114278.1)"
+         y2="-81"
+         id="line1975"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(36.407035,558.20082,2112.4297)"
+         y2="-81"
+         id="line1977"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(12.889447,327.39069,6112.9074)"
+         y2="-81"
+         id="line1979"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-13.341709,1036.7827,-5863.3844)"
+         y2="-81"
+         id="line1981"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-19.673367,928.65365,-3968.2532)"
+         y2="-81"
+         id="line1983"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(15.150754,395.1166,5301.3649)"
+         y2="-81"
+         id="line1985"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(18.316583,453.00799,4408.6377)"
+         y2="-81"
+         id="line1987"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(37.763819,590.38116,2112.8527)"
+         y2="-81"
+         id="line1989"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(3.8442211,-493.43602,21297.121)"
+         y2="-81"
+         id="line1991"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(4.2964824,-361.73031,19179.709)"
+         y2="-81"
+         id="line1993"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(13.79397,387.69087,6013.6576)"
+         y2="-81"
+         id="line1995"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(22.839196,526.58179,3640.0869)"
+         y2="-81"
+         id="line1997"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-3.8442211,1938.4611,-21761.162)"
+         y2="-81"
+         id="line1999"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(14.246231,412.1438,5931.9372)"
+         y2="-81"
+         id="line2001"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-1.1306533,4845.3405,-75037.453)"
+         y2="-81"
+         id="line2003"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-8.3668342,1299.0759,-10149.981)"
+         y2="-81"
+         id="line2005"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(30.979899,603.81193,2746.5746)"
+         y2="-81"
+         id="line2007"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(17.864322,496.8414,4841.1494)"
+         y2="-81"
+         id="line2009"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(9.7236181,282.9544,8964.859)"
+         y2="-81"
+         id="line2011"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(35.502513,637.15593,2426.0191)"
+         y2="-81"
+         id="line2013"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(3.3919598,-599.58238,25986.634)"
+         y2="-81"
+         id="line2015"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(12.437186,401.12866,7132.9374)"
+         y2="-81"
+         id="line2017"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(40.929648,668.8617,2123.6136)"
+         y2="-81"
+         id="line2019"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(22.386935,577.29739,3992.0501)"
+         y2="-81"
+         id="line2021"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(26.005025,611.14298,3446.6658)"
+         y2="-81"
+         id="line2023"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-16.055276,1078.2728,-5568.8737)"
+         y2="-81"
+         id="line2025"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(25.100503,613.74995,3614.7353)"
+         y2="-81"
+         id="line2027"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(28.718593,642.04767,3166.4906)"
+         y2="-81"
+         id="line2029"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-9.7236181,1280.9652,-9421.471)"
+         y2="-81"
+         id="line2031"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(7.0100503,148.17955,13255.004)"
+         y2="-81"
+         id="line2033"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-21.482412,1027.4683,-4250.3965)"
+         y2="-81"
+         id="line2035"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-14.698492,1132.553,-6305.9404)"
+         y2="-81"
+         id="line2037"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-12.437186,1194.801,-7513.5754)"
+         y2="-81"
+         id="line2039"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(38.668342,712.25933,2399.4961)"
+         y2="-81"
+         id="line2041"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(32.336683,692.57134,2911.0815)"
+         y2="-81"
+         id="line2043"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(16.055276,549.66688,5974.1149)"
+         y2="-81"
+         id="line2045"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-11.532663,1242.466,-8291.6945)"
+         y2="-81"
+         id="line2047"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-18.316583,1097.193,-5206.9381)"
+         y2="-81"
+         id="line2049"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-14.246231,1174.6401,-6765.7567)"
+         y2="-81"
+         id="line2051"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-13.79397,1189.9473,-7028.9966)"
+         y2="-81"
+         id="line2053"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(9.2713568,360.22176,10642.954)"
+         y2="-81"
+         id="line2055"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(5.6532663,44.003546,17545.043)"
+         y2="-81"
+         id="line2057"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-21.934673,1077.8347,-4442.9605)"
+         y2="-81"
+         id="line2059"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-15.603015,1169.0165,-6334.3528)"
+         y2="-81"
+         id="line2061"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-15.150754,1182.5216,-6561.3696)"
+         y2="-81"
+         id="line2063"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(20.125628,654.33928,5013.8729)"
+         y2="-81"
+         id="line2065"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(25.552764,708.53352,3952.7061)"
+         y2="-81"
+         id="line2067"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-3.3919598,2259.5321,-30075.549)"
+         y2="-81"
+         id="line2069"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-6.1055276,1655.686,-16765.431)"
+         y2="-81"
+         id="line2071"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-6.5577889,1607.7832,-15683.943)"
+         y2="-81"
+         id="line2073"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(44.547739,806.54951,2251.0305)"
+         y2="-81"
+         id="line2075"
+         x1="0"
+         y1="0"
+         x2="0" />
+      <line
+         transform="rotate(-8.8190955,1435.2003,-11760.297)"
+         y2="-81"
+         id="line2077"
+         x1="0"
+         y1="0"
+         x2="0" />
+    </g>
+  </g>
+  <path
+     style="fill:none;stroke:#000000;stroke-width:0.89861536px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#Arrow1Lstart)"
+     d="M 220.9589,216.00982 185.24787,97.734758"
+     id="path2653"
+     inkscape:connector-curvature="0" />
+  <flowRoot
+     xml:space="preserve"
+     id="flowRoot1057"
+     style="fill:black;fill-opacity:1;stroke:none;font-family:sans-serif;font-style:normal;font-weight:normal;font-size:40px;line-height:1.25;letter-spacing:0px;word-spacing:0px"><flowRegion
+       id="flowRegion1059"><rect
+         id="rect1061"
+         width="212.37238"
+         height="40.360359"
+         x="79.759758"
+         y="42.462463" /></flowRegion><flowPara
+       id="flowPara1063"></flowPara></flowRoot>  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:40px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
+     x="186.42642"
+     y="40.540543"
+     id="text1067"><tspan
+       sodipodi:role="line"
+       x="186.42642"
+       y="40.540543"
+       id="tspan1069">Selected</tspan></text>
+  <path
+     style="fill:none;stroke:#000000;stroke-width:0.89861536px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#Arrow1Lstart-0)"
+     d="M 442.9589,216.00981 407.24787,97.734758"
+     id="path2653-4"
+     inkscape:connector-curvature="0" />
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:40px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
+     x="408.42642"
+     y="40.540531"
+     id="text1067-6"><tspan
+       sodipodi:role="line"
+       id="tspan4399"
+       x="408.42642"
+       y="40.540531">Previous</tspan></text>
+  <path
+     style="fill:none;stroke:#000000;stroke-width:0.89861536px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#Arrow1Lstart-0-7)"
+     d="M 920.53425,214.32759 966.6522,99.7091"
+     id="path2653-4-6"
+     inkscape:connector-curvature="0" />
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:40px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
+     x="962.42639"
+     y="40.540531"
+     id="text1067-6-9"><tspan
+       sodipodi:role="line"
+       id="tspan6547"
+       x="962.42639"
+       y="40.540531">Angle (-45°..+45°) represents</tspan><tspan
+       sodipodi:role="line"
+       id="tspan6549"
+       x="962.42639"
+       y="90.540527" /></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:40px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+     x="781.98694"
+     y="94.354355"
+     id="text6553"><tspan
+       sodipodi:role="line"
+       id="tspan6551"
+       x="781.98694"
+       y="94.354355">items in the array</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:40px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+     x="334.01236"
+     y="90.510513"
+     id="text6559"><tspan
+       sodipodi:role="line"
+       id="tspan6557"
+       x="334.01236"
+       y="90.510513">Pivot(s)</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:40px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+     x="110.53775"
+     y="90.576614"
+     id="text6559-2"><tspan
+       sodipodi:role="line"
+       id="tspan6557-8"
+       x="110.53775"
+       y="90.576614">Pivot(s)</tspan></text>
+</svg>

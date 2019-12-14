@@ -1,0 +1,2011 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+
+  <meta property="og:type" content="article">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:site_name" content="damageboy">
+  <meta property="og:title" content="Decimating Array.Sort() with CoreCLR 3.0 Intrinsics">
+  <meta property="og:url" content="https://bits.houmus.org/talks/intrinsics-sorting-2019/dotnext-moscow-export/#/">
+  <link rel="canonical" href="https://bits.houmus.org/talks/intrinsics-sorting-2019/dotnext-moscow-export/#/">
+
+  <meta property="og:description" content="Decimating Array.Sort() with CoreCLR 3.0 Intrinsics">
+  <meta property="og:image" content="https://bits.houmus.org/assets/images/atari.svg">
+  <meta name="google-site-verification" content="wcrvaF3e88-Vb6y-9eUTqYaXDMOukzl4c-IdKByS0Xc" />
+  <meta name="msvalidate.01" content="6D5AE23298671D95A20FAD7FA3430ABB">
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="damageboy Feed">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicons/favicon-16x16.png">
+  <link rel="manifest" href="/assets/favicons/site.webmanifest">
+  <link rel="mask-icon" href="/assets/favicons/safari-pinned-tab.svg" color="#ba0000">
+  <link rel="shortcut icon" href="/assets/favicons/favicon.ico">
+  <meta name="apple-mobile-web-app-title" content="damageboy">
+  <meta name="application-name" content="damageboy">
+  <meta name="msapplication-TileColor" content="#ba0000">
+  <meta name="msapplication-config" content="/assets/favicons/browserconfig.xml">
+  <meta name="theme-color" content="#ba0000ff">
+  <title>CoreCLR 3.0 Intrinsics</title>
+
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- REVEAL CSS-->
+  <link rel="stylesheet" href="libs/reveal.js/font-awesome-4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="libs/reveal.js/3.8.0/css/reveal.css">
+  
+  <link rel="stylesheet" href="libs/reveal.js/3.8.0/css/theme/solarized.css" id="theme">
+  
+  
+  <link rel="stylesheet" href="libs/reveal.js/3.8.0/plugin/title-footer/title-footer-mod.css" />
+
+  <!-- MERMAID-->
+  <script src="libs/reveal.js/3.8.0/plugin/mermaid/mermaid.min.js"></script>
+  <style>
+  .mermaid {
+    font-size: 0.5em;
+  }
+  </style>
+
+  <style>
+    [class*=task-list-item] {
+    min-height: 22px;
+    margin-top: 6px!important;
+    margin-bottom: 6px!important;
+    padding-left: 0;
+    list-style: none;
+}
+
+[class*=task-list-item]>input:first-child {
+    position: absolute!important;
+    opacity: 0;
+    margin: 0;
+}
+[class*=task-list-item]>label {
+    padding-left: 29px!important;
+    min-height: 22px;
+    line-height: 22px;
+    display: inline-block;
+    position: relative;
+    vertical-align: top;
+    margin-bottom: 0;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.task-list-item>input:first-child:checked+input[type=hidden]+label::before, .task-list-item>input:first-child:checked+label::before {
+    background-color: #ecf0f1;
+    border-color: #ecf0f1;
+}
+
+[class*=task-list-item]>input:first-child+input[type=hidden]+label::before, [class*=task-list-item]>input:first-child+label::before {
+    content: "";
+    display: inline-block;
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border: 1px solid #D3CFC8;
+    border-radius: 0;
+    margin-left: -29px;
+}
+
+
+[class*=task-list-item]>input:first-child:checked+input[type=hidden]+label::after, [class*=task-list-item]>input:first-child:checked+label::after {
+    content: "";
+    display: inline-block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 7px;
+    height: 10px;
+    border: 2px solid #fff;
+    border-left: none;
+    border-top: none;
+    transform: translate(7.75px,4.5px) rotate(45deg);
+    -ms-transform: translate(7.75px,4.5px) rotate(45deg);
+}
+
+
+.task-list-item>input:first-child:checked+input[type=hidden]+label::after, .task-list-item>input:first-child:checked+label::after {
+    border-bottom-color: #95a5a6;
+    border-right-color: #95a5a6;
+}
+  </style>
+
+  <!-- Theme used for syntax highlighting of code -->
+  
+  <link rel="stylesheet" href="libs/highlight.js/9.15.10/androidstudio.css">
+  
+
+  
+  
+  <!-- Printing and PDF exports -->
+  <script>
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = window.location.search.match(/print-pdf/gi) ? 'libs/reveal.js/3.8.0/css/print/pdf.css' : 'libs/reveal.js/3.8.0/css/print/paper.css';
+    document.getElementsByTagName('head')[0].appendChild(link);
+  </script>
+
+  <style>
+     .line {
+      display: block;
+    }
+    
+
+    .line.focus {
+      background: #fdf6e3;
+      color: #657b83;
+    }
+
+    .reveal .slides section .fragment.current-only {
+      visibility: visible;
+      display: none;
+    }
+
+    .reveal .slides section .fragment.current-only.current-fragment {
+      display: block;
+    }
+
+    .line.focus {
+       opacity: 1.0;
+    } 
+
+    @media (device-width: 100vw) and (device-height: 100vh) {
+      .reveal pre code {
+        max-height: 50vh !important;
+      }
+    }
+
+    #logo img {
+      max-height: 3.5em;
+      max-width: none;
+      min-width: 50px;
+    }
+
+    .reveal .slides section .code-presenting-annotation {
+      color: white;
+      background: black;
+      padding: 0px 15px;
+      border-radius: 15px;
+      opacity: 0.75 !important;
+      font-size: 50% !important;
+    }
+  </style>
+  <script>
+    if (window.location.search.match(/print-pdf-now/gi)) {
+      window.print();
+    }
+  </script>
+</head>
+
+<body>
+  
+<div id="logo" style="position: fixed; top: 20px; left: 20px; z-index: 1">
+    <img src="dotnet-core.svg" />
+</div>
+
+
+  <div class="reveal">
+
+    <!-- Any section element inside of this container is displayed as a slide -->
+    <div class="slides">
+
+      
+
+
+    
+        <section >
+            
+            <h1><a id="user-content-coreclr-30-intrinsics" class="anchor" href="#coreclr-30-intrinsics" aria-hidden="true"></a>CoreCLR 3.0 Intrinsics</h1>
+<aside class="notes">
+Hi Everyone,
+This is CoreCLR 3.0 Intrinsics
+</aside>
+            </section>
+        
+            <section >
+                <h2><a id="user-content-guide" class="anchor" href="#guide" aria-hidden="true"></a>Guide</h2>
+
+                <p>When you see the following thingy, you can touch/hover above it to trigger animations that are 
+                   part of this deck:
+                </p>
+
+                <p><object style="margin: auto;" type="image/svg+xml" data="play.svg"></object></p>
+            </section>
+
+    
+    <section>
+    
+        <section >
+            
+            <h1><a id="user-content-why-youre-here" class="anchor" href="#why-youre-here" aria-hidden="true"></a>Why You’re Here</h1>
+<aside class="notes">
+<p>So you know those talks where the person on stage has these hopeful messages filled with positivity?
+So I want to do the eastern-european version of my anscestors of that: Where a total stranger walks up
+to you and tells you that everything is horrible and everything is falling apart…
+And then offers you a small glimpse of hope.</p>
+</aside>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <img style="background: #FFF" width="150%" class="plain" src="single-threaded-perf-computer-arch.svg" />
+<p><span style="font-size: small;">From: &quot;Computer Architecture: A Quantitative Approach, 6<sup>th</sup> Edition</span></p>
+<aside class="notes">
+<p>So: Here is the last 40 years of single threaded performance improvemnets.
+After a first happy couple of decades, at 2003, we’re start seeing an ever increasing
+slowdown in this rate, even thogh transistor density has been doubling all the way
+till 2015 until we reach our current time, which is the dark ages at 3.5% per year.</p>
+<p>Now, no one knows for sure what the future holds,
+But I think we can all agree that the present sucks.</p>
+<ul>
+<li>
+<p>Dennard observes that transistor dimensions are scaled by 30% (0.7x) every technology generation, thus reducing their area by 50%. This reduces the delay by 30% (0.7x) and therefore increases operating frequency by about 40% (1.4x). Finally, to keep the electric field constant, voltage is reduced by 30%, reducing energy by 65% and power (at 1.4x frequency) by 50%.[note 1] Therefore, in every technology generation the transistor density doubles, the circuit becomes 40% faster, and power consumption (with twice the number of transistors) stays the same.</p>
+</li>
+<li>
+<p>Amdahl’s law can be formulated in the following way:
+${\displaystyle S_{\text{latency}}(s)={\frac {1}{(1-p)+{\frac {p}{s}}}}}$</p>
+<p>where:</p>
+<ul>
+<li>$S_{\text{latency}}$ is the theoretical speedup of the execution of the whole task;</li>
+<li>s is the speedup of the part of the task that benefits from improved system resources;</li>
+<li>p is the proportion of execution time that the part benefiting from improved resources originally occupied.</li>
+</ul>
+</li>
+</ul>
+</aside>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <blockquote>
+<span class="fragment fade-down">
+"The reason processor performance is sub-linear with transistor count is <span class="fragment fade-down">[because] it's limited by <b>unpredictability</b>:</span>
+<span class="fragment fade-in" style="color: red;">Branch predictability,</span><span class="fragment fade-in" style="color: blue;"> Data-predictability,</span> <span class="fragment fade-in" style="color: green;"> Instruction predictability."</span>
+</span>
+</blockquote>
+<p><a href="https://en.wikipedia.org/wiki/Jim_Keller_(engineer)">Jim Keller</a>
+From: <a href="https://youtu.be/oIG9ztQw2Gc?t=1788">Moore’s Law is Not Dead</a></p>
+<aside class="notes">
+But I did say I also have some hope to offer you:
+<p>This is a quote by Jim Keller who is a famous CPU architecht,
+Who gave this ironically titled talk: “Moore’s law is not dead”, where he says
+that the reason for this slowdown, is unpredictability:
+branch, data, and instrunction unpredictability.</p>
+<p>So the flip-side of this, is my message of hope to you: that by providing the CPU with predictability
+we can definitely improve our odds at running code faster, and a very effective
+way of doing this is with intrinsics…</p>
+</aside>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-branch-prediction" class="anchor" href="#branch-prediction" aria-hidden="true"></a>Branch Prediction</h2>
+<ul>
+<li>A single core executes hundreds of instructions at any given moment…</li>
+<li class="fragment">To do this, CPUs guess the target of branches!          
+<ul>
+<li class="fragment">It usually does a good job                            </li>
+</ul>
+</li>
+<li class="fragment fade-up">But when it fails we get penalized                      
+<ul>
+<li class="fragment fade-up">~15 cycles for a single mis-prediction!               </li>
+</ul>
+</li>
+</ul>
+<aside class="notes">
+<p>A modern CPU is processing hundreds of instructions in some form or another
+at any given moment.</p>
+<p>To pull this crazy feat, it has to guess the result of the conditions in our code.
+So every if, while etc. has to be predicted, for the CPU not to be out of work.</p>
+<p>Normally, it can do a pretty good job at this.
+But it can’t always be successful.
+I magine that we feed it with purely random data.
+It won’t do any better than flipping a coin.</p>
+<p>Every time it fails, the penalty is huge: 15 cycles on a modern Intel CPU for example.
+To make it worse, in many cases, the code behind that branch is 1-2 cycles long…</p>
+</aside>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <p>Now that I’ve got you <s>scared</s> motivated enough…</p>
+<p>Let’s get busy!</p>
+<aside class="notes">
+So now that you're scared...
+</aside>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-intrinsics-in--english" class="anchor" href="#intrinsics-in--english" aria-hidden="true"></a>Intrinsics in  English</h2>
+<p>A way to directly embed <strong>specific</strong> CPU instructions via special, <em>fake</em> method calls that the JIT replaces at code-generation time</p>
+<aside class="notes">
+What are these intrinsics we're going to fix the world with?
+<p>Simply speaking, intrinsics are fake functions we call in our code, that the JIT
+will replace, for us, with a very specific 1-2 CPU instructions. So you can think of a
+bit like writing assembly code through function calls…</p>
+<p>But why do we need it?</p>
+</aside>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <p>Used to expose processor functionality that <em>doesn’t</em> map well to the language:</p>
+<ul>
+<span class="fragment"><li>Atomic operations</li></span>
+<span class="fragment"><li>System-Programming (e.g. kernel mode)</li></span>
+<span class="fragment"><li>Crypto instructions</li></span>
+<span class="fragment"><li>Niche instructions</li></span>
+<span class="fragment"><span class="fragment highlight-blue"><span class="fragment highlight-green"><span class="fragment highlight-red"><li><b>Vectorization</b></li></span></span></span></span><span class="fragment"> - Instructions that work on vectors</span>
+</ul>
+<aside class="notes">
+Traditionally, CPUs always had lot of functionality that can't be mapped easily
+into our programming languages, There are about 1,200 intrinsics in Intel CPUs alone, and
+they cover this entire gamut, but if we're honest, it all comes down to vectorization.
+That's about 96% of those 1,200 on Intel CPUs!
+</aside>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-vectorization-101" class="anchor" href="#vectorization-101" aria-hidden="true"></a>Vectorization 101</h2>
+<p><object style="margin: auto" type="image/svg+xml" data="vec101-with-hint.svg"></object></p>
+<p class="fragment">Usually 1-3 CPU cycles!</p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-math-is-hard-lets-go-sorting" class="anchor" href="#math-is-hard-lets-go-sorting" aria-hidden="true"></a>Math is hard, let’s go sorting!</h2>
+<p>I needed to sort numbers, and really fast.</p>
+<p class="fragment zoom" data-fragment-index="1">
+"Eh, I'll rewrite <span class="fragment fade-in" style="position:inline; margin-left: auto; margin-right: auto; left: 0; right: 0;" data-fragment-index="2">Array.Sort<sup>*</sup>.</span>
+<span class="fragment fade-out" style="position:relative; margin-left: auto; margin-right: auto; left: -200px; right: 0;" data-fragment-index="2">QuickSort.</span>
+<span class="fragment fade-down" style="position:relative; margin-left: auto; margin-right: auto; left: -200px; right: 0;" data-fragment-index="3">With intrinsics...</span>
+<span class="fragment fade-down" data-fragment-index="4">How bad could it be?"</span>
+</p>
+<p class="fragment zoom" data-fragment-index="5">
+<i>6 months later, and I'm still at it...</i>
+</p>
+<span class="fragment fade-up" data-fragment-index="6">
+<b>But,</b>
+</span>
+<aside class="notes">
+Let's go and sort some numbers!
+<p>So, a while back I decided I’d tackle a problem that both close to my heart
+and my line of work…</p>
+<p>I thought to my self, &quot;I’ll re-write quicksort, or really Array.Sort, because they’re
+very close to eachother. With intrinsics! I mean, really, how bad could it be?</p>
+<p>So, that was 5 months ago! And I’m still having way too much fun with this…</p>
+<p>But, I can share here something with you, thats…</p>
+</aside>
+            </section>
+    
+
+
+
+    
+        <section data-transition="none" data-background-transition="none" data-background="cats/t2.gif">
+            
+            <!-- .slide: data-transition="none" data-background-transition="none" data-background="cats/t2.gif" -->
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h1><a id="user-content-its-9x-faster" class="anchor" href="#its-9x-faster" aria-hidden="true"></a>It’s 9x faster</h1>
+<aside class="notes">
+6x faster!
+</aside>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <img class="plain" style="position: relative; left:  400px; top:-075px; width: 50%; height: 50%" src="cats/cat1.gif"/>
+<img class="plain" style="position: relative; left: -500px; top:-500px; width: 50%; height: 50%" src="cats/cat2.gif"/>
+<img class="plain" style="position: relative; left: -300px; top:-600px; width: 75%; height: 75%" src="cats/cat3.gif"/>
+<img class="plain" style="position: relative; left: -075px; top:-1400px; width: 50%; height: 50%" src="cats/cat4.gif"/>
+<img class="plain" style="position: relative; left:  200px; top:-1350px; width: 75%; height: 75%" src="cats/cat5.gif"/>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-why-quicksort" class="anchor" href="#why-quicksort" aria-hidden="true"></a>Why QuickSort?</h2>
+<ul>
+<li class="fragment">Universally known                                   </li>
+<li class="fragment fade-down">Non-trivial use of intrinsics                       </li>
+<li class="fragment fade-up">Pretty close to <code>Array.Sort</code><sup>*</sup> </li>
+</ul>
+<aside class="notes">
+Now if you think you kind of remember how quicksort works, could you raise your hand and keep it up?
+<p>Great, now those of you who’ve implemented it, even if you were drunk and it was 20 years ago, can you keep you hand up?</p>
+<p>OK!</p>
+<p>So, as you can see, it’s universally known.</p>
+<p>Also, as we’ll see, this will be a non-trivial use of intrinsics.
+It’s not one of those &quot;Let’s sum all the numbers in a array in 5 lines of code, then pat ourselves on the shoulder to say “good job” and move on…</p>
+<p>And finally, as I’ve mentioned, our baseline for comparison isn’t something we copy-pasted from stack-overflow, it’s the actual
+code we all rely on in the class libraries for .NET</p>
+</aside>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-refresher" class="anchor" href="#refresher" aria-hidden="true"></a>Refresher</h2>
+<ul>
+<li>QuickSort uses a <em>divide-and-conquer</em> approach
+<ul>
+<li class="fragment">It’s recursive                                        </li>
+</ul>
+</li>
+<li class="fragment fade-down">Has average O(<em>n</em> log <em>n</em>) comparisons for <em>n</em> items    </li>
+<li class="fragment fade-up">Performs an in-place sort                               </li>
+</ul>
+<aside class="notes">
+So, a quick refresher about quicksort:
+<p>It uses a divide an conquer approach. So it’s recursive
+Has n*log(n) comparisons to sort N items</p>
+<p>And most importantly, it’s an in-place sort, so we don’t need to allocate more memory
+to sort numbers.
+This last point, as we’ll see, it great for users, but is going to haunt me…</p>
+</aside>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <ol>
+<li>Pick a <em>pivot</em> value</li>
+<li class="fragment highlight-red">Partition the array around the pivot value</li>
+<li>Recurse on the left side of the pivot</li>
+<li>Recurse on the right side of the pivot</li>
+</ol>
+<aside class="notes">
+So in quicksort we:
+<ol>
+<li>Pick a pivot: which really means pick some number from the array. can really be anything</li>
+<li>Re-arrange the array so that all the numbers on the left are smaller than the pivot,
+Then we have the pivot, in its final resting place, and then all the numbers larger that
+the pivot! This is really the big thing we will be working on, since other than that we simple:</li>
+<li>Recurse on the left hand side of the new pivot position</li>
+<li>And finally recurse on the right hand side.</li>
+</ol>
+<p>It’s that simple!</p>
+</aside>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <pre><code class="language-csharp">int Partition(int[] array, int pivot, int left, int right)
+{
+    while (left &lt;= right) {
+        while (array[left] &lt; pivot) left++;
+        while (array[right] &gt; pivot) right--;
+
+        if (left &lt;= right) {
+            var t = array[left];
+            array[left++]  = array[right];
+            array[right--] = t;
+        }
+    }
+    return left;
+}
+</code></pre>
+<p><span class="code-presenting-annotation fragment current-only" data-code-focus="3-7">Branches, Branches Everywhere! </span>
+<span class="code-presenting-annotation fragment current-only" data-code-focus="4-5">👎 Unpredictable 👎</span>
+<span class="code-presenting-annotation fragment current-only" data-code-focus="3,7">👍 Predictable 👍</span></p>
+<aside class="notes">
+Finally, before moving on to intrinsics: Here's the code for a pretty standard partition function.
+<p>We can see that it scan the array from left to right, comparing and swapping elements.</p>
+<p>It’s easy to see there are 4 branches in this function.
+But’s they’re not the same.
+These two, are pretty horrible, as we’re branching based on actual, unsorted, so called random data
+that we were tasked to sort… So these are pretty bad for the CPU to predict, if we remember our observation
+about unpredictability!</p>
+<p>On the other hand, these two branches are rather easy to predict, since they’re simply
+true, 99% of the time.</p>
+</aside>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-by-the-numbers" class="anchor" href="#by-the-numbers" aria-hidden="true"></a>By the numbers</h2>
+<small>
+<table>
+<thead>
+<tr>
+<th>Stat</th>
+<th style="text-align:left">100</th>
+<th style="text-align:left">1K</th>
+<th style="text-align:left">10K</th>
+<th style="text-align:left">100K</th>
+<th style="text-align:left"><strong>1M</strong></th>
+<th style="text-align:left">10M</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Max Depth</td>
+<td style="text-align:left">8</td>
+<td style="text-align:left">14</td>
+<td style="text-align:left">21</td>
+<td style="text-align:left">28</td>
+<td style="text-align:left"><strong>35</strong></td>
+<td style="text-align:left">42</td>
+</tr>
+<tr>
+<td># Partitions</td>
+<td style="text-align:left">33</td>
+<td style="text-align:left">342</td>
+<td style="text-align:left">3,428</td>
+<td style="text-align:left">34,285</td>
+<td style="text-align:left"><strong>342,812</strong></td>
+<td style="text-align:left">3,428,258</td>
+</tr>
+<tr>
+<td># Comparisons</td>
+<td style="text-align:left">422</td>
+<td style="text-align:left">6,559</td>
+<td style="text-align:left">89,198</td>
+<td style="text-align:left">1,128,145</td>
+<td style="text-align:left"><strong>13,698,171</strong></td>
+<td style="text-align:left">155,534,152</td>
+</tr>
+</tbody>
+</table>
+</small>
+<aside class="notes">
+I also collected some stats from running quick-sort,
+And for example, for 1M elements, in this table you can see
+how deep the recursion is, how many calls to the partition function there are
+and how many comparisons are involved, and it's clear there is a lot of work involved here.
+</aside>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-plan" class="anchor" href="#plan" aria-hidden="true"></a>Plan</h2>
+<p>Redo <code>Partition</code> with vectorized intrinsics.</p>
+<ul>
+<li>What intrinsics do we use?</li>
+<li>How do they work?</li>
+</ul>
+<aside class="notes">
+So our plan, is obviously to use vectorized or SIMD intrinsics to
+rewrite the partition function we saw before.
+<p>But what are those? How to they work?</p>
+</aside>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-how" class="anchor" href="#how" aria-hidden="true"></a>How?</h2>
+<p>How can an instruction operate on a vector?</p>
+<p class="fragment fade-down">Does it operate <i>directly</i> on memory?</p>
+<p class="fragment fade-up">Generally: <b>No!</b>                     </p>
+<aside class="notes">
+What does it really mean vectorized instruction?
+<p>Do these instruction simply take a pointer to memory?</p>
+<p>So, in general: No!</p>
+<p>Instead:</p>
+</aside>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-vectors-types--registers" class="anchor" href="#vectors-types--registers" aria-hidden="true"></a>Vectors Types / Registers</h2>
+<p>
+These intructions operate on <i>special</i> vector types that are supported at the CPU level: <span class="fragment">registers</span>
+</p>
+<p class="fragment">
+Vector registers have constant size (in bits).
+</p>
+<aside class="notes">
+All of these instruction accept and/or return special vector types, at the CPU level.
+So really: registers!
+<p>The registers have a constant width in bits, let’s look at what’s there:</p>
+</aside>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-simd-registers-in-coreclr-30" class="anchor" href="#simd-registers-in-coreclr-30" aria-hidden="true"></a>SIMD registers in CoreCLR 3.0</h2>
+<p>C# vectorized intrinsics accept and return these types:</p>
+<table><thead><tr>
+<th style="text-align:left;"  ><span class="fragment" data-fragment-index="1"><code>CoreCLR</code></span></th>
+<th style="text-align:right;" ><span class="fragment" data-fragment-index="2"><code>Intel</code></span></th>
+</tr></thead>
+<tbody><tr>
+<td style="text-align:left;border:none">
+<span class="fragment" data-fragment-index="1"><a href="https://github.com/dotnet/coreclr/blob/master/src/System.Private.CoreLib/shared/System/Runtime/Intrinsics/Vector64_1.cs"><code>Vector64&lt;T&gt;</code></a></span>
+</td>
+<td style="text-align:right;border:none">
+<span class="fragment" data-fragment-index="2"><code>mm0-mm7</code></span>
+</td></tr><tr>
+<td style="text-align:left;border:none">
+<span class="fragment" data-fragment-index="1"><a href="https://github.com/dotnet/coreclr/blob/master/src/System.Private.CoreLib/shared/System/Runtime/Intrinsics/Vector128_1.cs" ><code>Vector128&lt;T&gt;</code></a></span>
+</td>
+<td style="text-align:right;border:none">
+<span class="fragment" data-fragment-index="2"><code>xmm0-xmm15</code></span>
+</td></tr><tr>
+<td style="text-align:left;border:none">
+<span class="fragment" data-fragment-index="1"><a href="https://github.com/dotnet/coreclr/blob/master/src/System.Private.CoreLib/shared/System/Runtime/Intrinsics/Vector256_1.cs"><code>Vector256&lt;T&gt;</code></a></span>
+</td>
+<td style="text-align:right;border:none">
+<span class="fragment" data-fragment-index="2"><code>ymm0-ymm15</code></span>
+</td></tr></tbody></table>
+<p class="fragment">Where <code>T</code> is some primitive type.</p>
+<aside class="notes">
+So in CoreCLR, we have these 3 vector types: Vector 64, 128, and 256 of T.
+These are special types recognized by the JIT, just like int or double are special.
+</aside>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-example" class="anchor" href="#example" aria-hidden="true"></a>Example:</h2>
+<p><code>Vector256&lt;T&gt;</code> can be:</p>
+<table class="fragment">
+<tr><td style="text-align:center;border: none"><code>byte / sbyte</code></td>  <td style="border: none">⮚</td> <td style="border: none">32 x 8b</td><td style="border: none"> == 256b</td></tr>
+<tr><td style="border: none"><code>short / ushort</code></td><td style="border: none">⮚</td> <td style="border: none">16 x 16b</td><td style="border: none"> == 256b</td></tr>
+<tr>
+<td style="text-align:center;border: none; color: blue"><code>int / uint</code></td>
+<td style="border: none; color: blue">⮚</td> <td style="border: none; color: blue">8 x 32b</td>
+<td style="border: none; color: blue">== 256b</span></td></tr>  
+<tr><td style="text-align:center;border: none"><code>long / ulong</code></td>  <td style="border: none">⮚</td> <td style="border: none">4 x 64b</td><td style="border: none"> == 256b</td></tr>
+<tr><td style="text-align:center;border: none"><code>float</code></td>         <td style="border: none">⮚</td> <td style="border: none">8 x 32b</td><td style="border: none"> == 256b</td></tr>
+<tr><td style="text-align:center;border: none"><code>double</code></td>        <td style="border: none">⮚</td> <td style="border: none">4 x 64b</td><td style="border: none"> == 256b</td></tr>
+</table>
+<aside class="notes">
+Let's take 256 as an example, since we'll use it for the rest of the talk:
+<p>As you can see, we can use all these various primitive types instead of T, and then we get anywhere
+from 32 down to 4 elements per such vector! But in all cases, we will end up with 256 bits in total
+which is the size of the vector.</p>
+</aside>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-vectorized-partition-block" class="anchor" href="#vectorized-partition-block" aria-hidden="true"></a>Vectorized Partition Block</h2>
+<ul>
+<li>We're going to partition 8 x <code>int</code>s at a time</li>
+<span class="fragment fade-up">
+<ul>
+<li>inside a Vector256</li>
+</ul>
+</span>
+<span class="fragment fade-up"><li>Load <span class="fragment fade-up">⮚ Compare <span class="fragment fade-up">⮚ Permute <span class="fragment fade-up">⮚ Store</span></span></span></li>
+<span class="fragment fade-up"><li>With no branching<span class="fragment fade-up"><span style="color: blue">(!)</span></span></li></span>
+</ul>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <p><object style="margin: auto" type="image/svg+xml" data="block1-with-hint.svg"></object></p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-now-what" class="anchor" href="#now-what" aria-hidden="true"></a>Now what?</h2>
+<ul>
+<li><code>mask</code> tells us which element goes where!</li>
+<li class="fragment fade-down">We could loop over the bits in the mask      
+<ul>
+<li class="fragment fade-down">Back to square one: 8-branches             </li>
+</ul>
+</li>
+<li class="fragment fade-up">I did not fly all the way to Moscow for this!</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-famous-quote" class="anchor" href="#famous-quote" aria-hidden="true"></a>Famous Quote</h2>
+<blockquote>
+<p>Give me a lever long enough and a fulcrum on which to place it, and I shall move the world</p>
+</blockquote>
+<p style="font-size: x-large; text-align: right">
+- Synagoge, Book VIII, 340 A.D.
+</p>
+<img src="archimedes.jpg"/>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-less-famous-quote" class="anchor" href="#less-famous-quote" aria-hidden="true"></a>Less Famous Quote</h2>
+<blockquote>
+<p>Give me vectorized intrinsics and a large enough look-up table, and I can make anything 4x faster</p>
+</blockquote>
+<p style="font-size: x-large; text-align: right">
+- Intel Software Optimization Guide, 2003 A.D.
+</p>
+<img src="archimedes.jpg"/>
+<p class="fragment fade-up">
+<object class="plain" style="position: relative; left:  -30px; top:-400px; width: 7%; height: 7%" data="troll-face.svg"></object>
+<object class="plain" style="position: relative; left:  90px; top:-270px; width: 20%; height: 20%" data="intel-inside.svg"></object>
+</p>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-permutation-tables" class="anchor" href="#permutation-tables" aria-hidden="true"></a>Permutation Tables</h2>
+<ul>
+<li>There are 256 possible mask values (2<sup>8</sup>)</li>
+<li class="fragment fade-down">We can precompute all permutations in a table        </li>
+<li class="fragment fade-down">Each permutation entry will provide the correct order
+for a given mask                                     </li>
+<li class="fragment fade-up">The table is simply part of the source code          </li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-8-way-permute" class="anchor" href="#8-way-permute" aria-hidden="true"></a>8-Way Permute</h2>
+<p style="font-size: x-large;text-align: left;">C#:</p>
+<pre><code class="language-csharp">Vector256&lt;int&gt; data, perm;
+Vector256&lt;int&gt; result = Avx2.PermuteVar8x32(data, perm);
+</code></pre>
+<p style="font-size: x-large;text-align: left;">asm:</p>
+<pre><code class="language-x86asm">vpermd ymm1, ymm2, ymm1 ; 3 cycle latency, 1 cycle throughput
+</code></pre>
+<p><object style="margin: auto" type="image/svg+xml" data="inst-animations/vpermd-with-hint.svg"></object></p>
+<aside class="notes">
+<ul>
+<li>There’s little to say here on the C#</li>
+<li>Or the assembly</li>
+<li>But this is a clear “one picture is worth 1000 words” type of situation.</li>
+</ul>
+</aside>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <pre><code class="language-csharp">static int[] PermTable =&gt; new[] {
+    0, 1, 2, 3, 4, 5, 6, 7,     // 0   =&gt; 0b00000000
+    // ...
+    3, 4, 5, 6, 7, 0, 1, 2,     // 7   =&gt; 0b00000111
+    // ...
+    0, 2, 4, 6, 1, 3, 5, 7,     // 170 =&gt; 0b10101010
+    // ...
+    0, 1, 2, 3, 4, 5, 6, 7,     // 255 =&gt; 0b11111111
+};
+</code></pre>
+<p><span class="code-presenting-annotation fragment current-only" data-code-focus="2,8">Everything stays in place</span>
+<span class="code-presenting-annotation fragment current-only" data-code-focus="4">Move 3 from left to right</span>
+<span class="code-presenting-annotation fragment current-only" data-code-focus="6">4/4 split</span></p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <p><object style="margin: auto" type="image/svg+xml" data="block2-with-hint.svg"></object></p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <pre><code class="language-csharp">var P = Vector256.Create(pivot);
+...
+var current = Avx2.LoadDquVector256(nextPtr);
+var mask = (uint) Avx.MoveMask(
+    Avx2.CompareGreaterThan(current, P).AsSingle()));
+current = Avx2.PermuteVar8x32(current,
+    LoadDquVector256(PermTablePtr + mask * 8));
+Avx.Store(writeLeft, current);
+Avx.Store(writeRight, current);
+var popCount = PopCnt.PopCount(mask);
+writeRight -= popCount;
+writeLeft  += 8 - popCount;
+</code></pre>
+<p><span class="code-presenting-annotation fragment current-only" data-code-focus="1">We generate a vectorized pivot, once per partition</span>
+<span class="code-presenting-annotation fragment current-only" data-code-focus="3">Load 8 elements from somewhere.</span>
+<span class="code-presenting-annotation fragment current-only" data-code-focus="5">Compare to pivot, cast to <code>Vector256&lt;float&gt;</code> (because <code>¯\<em>(ツ)</em>/¯</code>)</span>
+<span class="code-presenting-annotation fragment current-only" data-code-focus="4">Generate an 8-bit mask from the comparison result</span>
+<span class="code-presenting-annotation fragment current-only" data-code-focus="7">Load permutation vector from table</span>
+<span class="code-presenting-annotation fragment current-only" data-code-focus="6">Permute data (partition)</span>
+<span class="code-presenting-annotation fragment current-only" data-code-focus="8">Store 8 elements to the left.</span>
+<span class="code-presenting-annotation fragment current-only" data-code-focus="9">Store 8 elements to the right.</span>
+<span class="code-presenting-annotation fragment current-only" data-code-focus="10">Count 1 bits ⮚ How many are elemenets are &gt; than pivot.</span>
+<span class="code-presenting-annotation fragment current-only" data-code-focus="11">Advance right by popCount.</span>
+<span class="code-presenting-annotation fragment current-only" data-code-focus="12">Advance left by 8 - popCount.</span>
+<span class="code-presenting-annotation fragment current-only" data-code-focus="3-12">8.5 cycle throughput</span></p>
+<aside class="notes">
+From the top:
+<ul>
+<li>We start with creating a vectorized pivot value, once per partition call</li>
+<li>Somewhere, insdie a loop body we will shortly discuss, we continue to:
+<ul>
+<li>Load data</li>
+<li>Compare it to the vectorized pivot 8-elements at a time</li>
+<li>Compress the result back to a regular integer</li>
+<li>Use that to load a pre-fabricate permutation entry! (which we will discuss)</li>
+<li>Call the permutation intrinsic with our data and new order</li>
+<li>Store all 8 elements to the left side</li>
+<li>Store them again(!) to the right side</li>
+<li>Call PopCount() to get the number of elements INSIDE our vector that belonged to the right!</li>
+<li>Update the next write pointers using that pop count value!</li>
+</ul>
+</li>
+</ul>
+</aside>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-ok-so-now-the-vector-is-partitioned-whats-next" class="anchor" href="#ok-so-now-the-vector-is-partitioned-whats-next" aria-hidden="true"></a>OK, So now the vector is partitioned, what’s next?</h2>
+<aside class="notes">
+<p>So we finally have enough explosive to blow this joint!</p>
+<p>We are going to read and partition 8 elements, at a time, within a vector256 inside the CPU!</p>
+<p>Load, Compare, Permute, Write</p>
+<p>But once we finish partitioning, we have, in our vector both elements larger and smaller,
+So we write the resulting vector to BOTH sides of our original array!</p>
+<p>We’ll see that in a moment, but let’s look at the code first</p>
+</aside>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <img src="fire.gif" width="350%" />
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-stackalloc-to-the-rescue" class="anchor" href="#stackalloc-to-the-rescue" aria-hidden="true"></a>stackalloc to the rescue</h2>
+<ul>
+<li>We “cheat” just a bit: <code>¯\<em>(ツ)</em>/¯</code></li>
+<li class="fragment fade-down"><code>stackalloc Vector256&lt;int&gt;[3]</code>  </li>
+<li class="fragment fade-down">Total temp memory: 96 bytes     
+<ul>
+<li class="fragment fade-up">Constant                      </li>
+<li class="fragment fade-up">No matter how much we sort    </li>
+</ul>
+</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-outer-loop" class="anchor" href="#outer-loop" aria-hidden="true"></a>Outer loop</h2>
+<p><object style="margin: auto" type="image/svg+xml" data="double-pumped-loop-with-hint.svg"></object>
+<object style="margin: auto" type="image/svg+xml" data="double-pumped-loop-legend.svg"></object></p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-yeah-yeah-are-we-fast-yet" class="anchor" href="#yeah-yeah-are-we-fast-yet" aria-hidden="true"></a>Yeah yeah, are we fast yet?</h2>
+<canvas data-chart="line">
+<p>N,100,1K,10K,100K,1M,10M
+ArraySort,              1   ,  1    , 1,   1    , 1   , 1
+AVX2DoublePumpedNaive,  1.149425287,	1.666666667,	1.724137931,	2.564102564,	2.702702703,	2.702702703,</p>
+<!-- 
+{ 
+ "data" : {
+  "datasets" : [
+    { "borderColor": "#3e95cd", "borderDash": [], "fill": false },
+    { "borderColor": "#8e5ea2", "borderDash": [], "fill": false }
+  ]
+ },
+ "options": {
+    "title": { "text": "Scalar Sorting - Scaled to Array.Sort", "fontColor": "#666666", "display": true },
+    "scales": { 
+      "yAxes": [{ 
+        "ticks": { "min": 0.3, "fontColor": "#666666" },
+        "scaleLabel": { "display": true, "labelString": "Scaling (%)", "fontColor": "#666666" },
+        "gridLines": { "color": "#666666" }
+      }],
+      "xAxes": [{ 
+          "ticks": { "fontColor": "#666666" },
+          "scaleLabel": { "display": true, "labelString": "N (elements)", "fontColor": "#666666" },
+          "gridLines": { "color": "#666666" }
+          }]
+    },
+    "legend": { "display": true, "position": "bottom", "labels": { "fontSize": 14, "fontColor": "#666666" } },
+    "title": { "position": "top" }
+  }
+}
+-->
+</canvas>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-whats-the-speed-limit" class="anchor" href="#whats-the-speed-limit" aria-hidden="true"></a>What’s the Speed Limit?</h2>
+<p>There’s tons of stuff we could still do:</p>
+<ul>
+<li class="fragment fade-down">Inspect MSIL                  </li>
+<li class="fragment fade-down">Inspect asm code              </li>
+<li class="fragment fade-down">Use HW counters               </li>
+<li class="fragment fade-up">Vectorization Tweaks          </li>
+<li class="fragment fade-up">Special code for small arrays </li>
+</ul>
+<p class="fragment"><object class="plain" style="position: relative; left:  0px; top:-480px; width: 75%; height: 75%" data="speed-limit-50-ns.svg"></object></p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-msil" class="anchor" href="#msil" aria-hidden="true"></a>MSIL</h2>
+<ul>
+<li>C# compiler uses definite assignment analysis
+<ul>
+<li class="fragment fade-down">CS0165: Use of unassigned local variable…</li>
+</ul>
+</li>
+<li class="fragment fade-up">But tells JIT to initialize locals regardless</li>
+<li class="fragment fade-up">a.k.a .locals init                           </li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <pre><code class="language-x86asm">  .method private hidebysig static int32*
+    VectorizedPartitionInPlace(
+      int32* left,
+      int32* right,
+      int32* tmp
+    ) cil managed
+  {
+    .maxstack 3
+    .locals init (
+      [0] int32 pivot,
+      ...
+      [22] int32 v,
+      [23] valuetype [System.Runtime]System.ReadOnlySpan`1&lt;int32&gt; V_23
+    )
+</code></pre>
+<p><span class="code-presenting-annotation fragment current-only" data-code-focus="9">Why?</span></p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <ul>
+<li>There’s a bunch of ways to remove this</li>
+<li class="fragment fade-down">I chose <a href="https://github.com/ltrzesniewski/LocalsInit.Fody">Fody.LocalsInit</a><br>
+by <a href="https://twitter.com/Lucas_Trz">@Lucas_Trz</a> 
+<ul>
+<li class="fragment fade-down">Checkout Fody!                                                                                                        </li>
+</ul>
+</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-5min-hack" class="anchor" href="#5min-hack" aria-hidden="true"></a>5min hack</h2>
+<h1><a id="user-content-2-3-improvement" class="anchor" href="#2-3-improvement" aria-hidden="true"></a>2-3% Improvement</h1>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-inspecting-asm" class="anchor" href="#inspecting-asm" aria-hidden="true"></a>Inspecting ASM</h2>
+<pre><code class="language-csharp">while (readRight &gt;= readLeft) {
+    int *nextPtr;
+    if (readLeft   - writeLeft &lt;=
+        writeRight - readRight) {
+        nextPtr = readLeft;
+        readLeft += 8;
+    } else {
+        nextPtr = readRight;
+        readRight -= 8;
+    }
+    var current = Avx.LoadDquVector256(nextPtr);
+    //...
+}
+</code></pre>
+<p><span class="code-presenting-annotation fragment current-only" data-code-focus="1">Anything left to partition?</span>
+<span class="code-presenting-annotation fragment current-only" data-code-focus="3-4">Which side is closer to being overwritten?</span>
+<span class="code-presenting-annotation fragment current-only" data-code-focus="5-6">Pick left</span>
+<span class="code-presenting-annotation fragment current-only" data-code-focus="8-9">Pick right</span></p>
+<aside class="notes">
+We already saw the assmebly code for the vectorized block,
+but what about the rest of the code around it?
+</aside>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-asm-code" class="anchor" href="#asm-code" aria-hidden="true"></a>ASM Code</h2>
+<pre><code class="language-x86asm">mov rcx, rdi    ; rdi -&gt; readLeft
+sub rcx, r12    ; r12 -&gt; writeLeft
+mov r8, rcx
+sar r8, 0x3f
+and r8, 0x3
+add rcx, r8
+sar rcx, 0x2
+mov r9, rsi     ; rsi -&gt; writeRight
+sub r9, r13     ; r13 -&gt; readRight
+mov r10, r9
+sar r10, 0x3f
+and r10, 0x3
+add r9, r10
+sar r9, 0x2
+cmp rcx, r9
+</code></pre>
+<p><span class="code-presenting-annotation fragment current-only" data-code-focus="1-2,8-9">Load, Subtract…</span>
+<span class="code-presenting-annotation fragment current-only" data-code-focus="15">Compare</span>
+<span class="code-presenting-annotation fragment current-only" data-code-focus="3-7,10-14">What the…?</span></p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <p>Look at all that arithmetic… Why?</p>
+<p class="fragment">
+The JIT is <b>not</b> optimizing the <code>int</code> pointer math
+when comparing <i>differences</i>...
+</p>
+<p class="fragment">
+We can get past this!
+</p>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <p>Before:</p>
+<pre><code class="language-csharp">if (readLeft   - writeLeft &lt;=
+    writeRight - readRight) {
+    // ...
+} else {
+    // ...
+}
+</code></pre>
+<p>After:</p>
+<pre><code class="language-csharp">if ((byte *) readLeft   - (byte *) writeLeft) &lt;=
+    (byte *) writeRight - (byte *) readRight)) {
+    // ...
+} else {
+    // ...
+}
+</code></pre>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-much-better" class="anchor" href="#much-better" aria-hidden="true"></a>Much better</h2>
+<pre><code class="language-x86asm">mov rcx, rdi    ; rdi -&gt; readLeft
+sub rcx, r12    ; r12 -&gt; writeLeft
+mov r9, rsi     ; rsi -&gt; writeRight
+sub r9, r13     ; r13 -&gt; readRight
+cmp rcx, r9
+</code></pre>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-ugly-but-effective" class="anchor" href="#ugly-but-effective" aria-hidden="true"></a>Ugly, But Effective</h2>
+<h1><a id="user-content-6-9-improvement" class="anchor" href="#6-9-improvement" aria-hidden="true"></a>6-9% Improvement!</h1>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-hw-counters" class="anchor" href="#hw-counters" aria-hidden="true"></a>HW Counters</h2>
+<p>CPUs have HW counters that give stats!</p>
+<pre><code class="language-bash">$ perf stat -a --topdown ...
+ Performance counter stats for 'system wide':
+        retiring   bad speculation   frontend bound  backend bound
+S0-C3 1    37.6%             37.3%            16.9%      13.2%
+</code></pre>
+<p><span class="code-presenting-annotation fragment current-only" data-code-focus="4">Almost 40% of all branches are mis-predicted</span></p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-bad-speculation-is-bad" class="anchor" href="#bad-speculation-is-bad" aria-hidden="true"></a>Bad Speculation is Bad</h2>
+<ul>
+<li>That “pick a side” logic is super bad for perf
+<ul>
+<li class="fragment fade-down">We snuck in branch unpredictability!   </li>
+<li class="fragment fade-down">100% random data ⮚ Flip a coin         </li>
+<li class="fragment fade-down">Every mis-prediction costs us 15 cycles</li>
+<li class="fragment fade-up">Remember our block is 8 cycles!        </li>
+<li class="fragment fade-up">We’re doing nothing 50% of the time!   </li>
+</ul>
+</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-branch-⮚-arithmetic" class="anchor" href="#branch-⮚-arithmetic" aria-hidden="true"></a>Branch ⮚ Arithmetic</h2>
+<p>What if we can make the CPU run the same code, for both branches?</p>
+<p>Turn the branch into a data dependency!</p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <p>Before:</p>
+<pre><code class="language-csharp">int x, y;
+if (x &gt; y) {
+    ptr += 8;
+}
+</code></pre>
+<p>After:</p>
+<pre><code class="language-csharp">int x, y;
+// + =&gt; 0, - =&gt; 0xFFFFFFFF
+var condAsMask = (y - x) &gt;&gt; 31;
+//Always perform the addition, sometimes with 0!
+ptr += 8 &amp; condAsMask;
+</code></pre>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-poor-mans-cmov" class="anchor" href="#poor-mans-cmov" aria-hidden="true"></a>Poor-man’s CMOV</h2>
+<p>This is a age-old technique of replacing badly speculated branches
+with simple arithmetic.</p>
+<p class="fragment fade-down">It only works for <b>simple</b> branches.</p>
+<p class="fragment fade-up">CoreCLR will hopefully learn to <code>cmov</code> in the future.</p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-unroll-the-code" class="anchor" href="#unroll-the-code" aria-hidden="true"></a>Unroll the code</h2>
+<ul>
+<li>Change the ratio between work/branches predicted</li>
+<li class="fragment fade-up" data-fragment-index="1">CPU prediction will continue to suck            
+<ul>
+<li class="fragment fade-up" data-fragment-index="1">But once every N partitioning operations      </li>
+</ul>
+</li>
+<li class="fragment fade-up" data-fragment-index="2">We need to allocate more temporary space:       
+<ul>
+<li class="fragment fade-up" data-fragment-index="2"><code>2*N*Vector256&lt;int&gt;</code>                          </li>
+<li class="fragment fade-up" data-fragment-index="2"><code>2*4*8*4 == 256 bytes</code>                        </li>
+</ul>
+</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <pre><code class="language-csharp">while (readRight &gt;= readLeft) {
+    int *nextPtr;
+    if (readLeft   - writeLeft &lt;=
+        writeRight - readRight) {
+        nextPtr = readLeft;
+        readLeft += 8*4;
+    } else {
+        nextPtr = readRight;
+        readRight -= 8*4;
+    }
+    var L0 = LoadDquVector256(nextPtr + 0*8);
+    var L1 = LoadDquVector256(nextPtr + 1*8);
+    var L2 = LoadDquVector256(nextPtr + 2*8);
+    var L3 = LoadDquVector256(nextPtr + 3*8);
+
+    var m0 = (uint) MoveMask(CompareGreaterThan(L0, P).AsSingle());
+    var m1 = (uint) MoveMask(CompareGreaterThan(L1, P).AsSingle());
+    var m2 = (uint) MoveMask(CompareGreaterThan(L2, P).AsSingle());
+    var m3 = (uint) MoveMask(CompareGreaterThan(L3, P).AsSingle());
+
+    L0 = PermuteVar8x32(L0, GetIntPermutation(pBase, m0));
+    L1 = PermuteVar8x32(L1, GetIntPermutation(pBase, m1));
+    L2 = PermuteVar8x32(L2, GetIntPermutation(pBase, m2));
+    L3 = PermuteVar8x32(L3, GetIntPermutation(pBase, m3));
+
+    var pc0 = PopCount(m0);
+    var pc1 = PopCount(m1);
+    var pc2 = PopCount(m2);
+    var pc3 = PopCount(m3);
+
+    Store(writeRight, L0);
+    writeRight -= pc0;
+    Store(writeRight, L1);
+    writeRight -= pc1;
+    Store(writeRight, L2);
+    writeRight -= pc2;
+    Store(writeRight, L3);
+    writeRight -= pc3;
+
+    pc0 = 8 - pc0;
+    pc1 = 8 - pc1;
+    pc2 = 8 - pc2;
+    pc3 = 8 - pc3;
+
+    Store(writeLeft, L0);
+    writeLeft +=  pc0);
+    Store(writeLeft, L1);
+    writeLeft += pc1);
+    Store(writeLeft, L2);
+    writeLeft += pc2);
+    Store(writeLeft, L3);
+    writeLeft += pc3);
+}
+
+
+</code></pre>
+<p><span class="code-presenting-annotation fragment current-only" data-code-focus="1-10">Can you spot the difference?</span>
+<span class="code-presenting-annotation fragment current-only" data-code-focus="11-14">Load x4</span>
+<span class="code-presenting-annotation fragment current-only" data-code-focus="16-19">Compare+MoveMask x4</span>
+<span class="code-presenting-annotation fragment current-only" data-code-focus="21-24">Permute x4</span>
+<span class="code-presenting-annotation fragment current-only" data-code-focus="26-29">PopCount x4</span>
+<span class="code-presenting-annotation fragment current-only" data-code-focus="31-38">Store on the right x4</span>
+<span class="code-presenting-annotation fragment current-only" data-code-focus="40-43">8 - PopCount x4</span>
+<span class="code-presenting-annotation fragment current-only" data-code-focus="45-52">Store Left x4</span></p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-show-me-the-money" class="anchor" href="#show-me-the-money" aria-hidden="true"></a>Show me the money!</h2>
+<ul>
+<li>Do we have less branch mis-predictions now?
+<ul>
+<li class="fragment fade-down" data-fragment-index="1">Not really!               </li>
+<li class="fragment fade-down" data-fragment-index="1">(Not in percent)          </li>
+<li class="fragment fade-down" data-fragment-index="2">But less branches in total</li>
+</ul>
+</li>
+<li class="fragment fade-up" data-fragment-index="3">Does it run faster though?  </li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-sure-does" class="anchor" href="#sure-does" aria-hidden="true"></a>Sure Does!</h2>
+<h1><a id="user-content-20-30-improvement" class="anchor" href="#20-30-improvement" aria-hidden="true"></a>20-30% Improvement!</h1>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-vectorization-tweaks" class="anchor" href="#vectorization-tweaks" aria-hidden="true"></a>Vectorization Tweaks</h2>
+<p>Let’s kill two perf hogs with one crazy opt!</p>
+<p>But what are we fixing?</p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-the-remainder-problem" class="anchor" href="#the-remainder-problem" aria-hidden="true"></a>The Remainder problem</h2>
+<p>All vectorized code needs to deal with remainders.</p>
+<p><code>length % 8 != 0</code></p>
+<p><object style="margin: auto" type="image/svg+xml" data="remainder.svg"></object></p>
+<p>Between 1-7 elements, handled with pure scalar code!</p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-cacheline-boundaries" class="anchor" href="#cacheline-boundaries" aria-hidden="true"></a>Cacheline Boundaries</h2>
+<p>When reading memory, we really read from cache.</p>
+<p class="fragment fade-up">Single int ⮚ full cacheline: 64 bytes</p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <p>What if our data is across two cachelines?</p>
+<p class="fragment fade-up"><object style="margin: auto" type="image/svg+xml" data="cacheline-boundaries.svg"></object></p>
+<p class="fragment fade-up">The CPU needs to ask for 2<span style="color: red">(!)</span> cache-lines</p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-alignment" class="anchor" href="#alignment" aria-hidden="true"></a>Alignment</h2>
+<p>Normally, we shouldn’t care!</p>
+<ul>
+<li class="fragment fade-down" data-fragment-index="1">The JIT &amp; allocator work to minimize this!         
+<ul>
+<li class="fragment fade-down" data-fragment-index="2">“Stuff” is aligned to pointer size: 4/8 bytes    </li>
+<li class="fragment fade-down" data-fragment-index="3">When not: <sup>4</sup>⁄<sub>64</sub> ⮚ 6.25% rate<br>
+of cross-cacheline reads                         </li>
+</ul>
+</li>
+<li class="fragment fade-up" data-fragment-index="4">But what about Vector256? (32-bytes)               </li>
+<li class="fragment fade-up" data-fragment-index="4">Is this true for partitioning?                     </li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-no-love" class="anchor" href="#no-love" aria-hidden="true"></a>No love!</h2>
+<p class="fragment fade-down">Not a single pointer is naturally aligned to Vector256.</p>
+<p class="fragment fade-down">With partitioning, the data dictates the alignment</p>
+<p class="fragment fade-up">50% of our reads are reading 2 cachelines!!!</p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-two-birds--one-stone" class="anchor" href="#two-birds--one-stone" aria-hidden="true"></a>Two birds,  one stone</h2>
+<p>Let’s fix both of these issues!</p>
+<p class="fragment">By doing <strong>more</strong> work!</p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <p><object style="margin: auto" type="image/svg+xml" data="overlap-partition-with-hint.svg"></object></p>
+<ul>
+<li class="fragment fade-down" data-fragment-index="1">The safe approach is to align inward   
+<ul>
+<li class="fragment fade-down" data-fragment-index="1">Align with scalar code               </li>
+<li class="fragment fade-down" data-fragment-index="1">No more remainder at the end         </li>
+<li class="fragment fade-down" data-fragment-index="2">But this means more scalar work:<br>
+1-7 elements on each side!           </li>
+</ul>
+</li>
+<li class="fragment fade-down" data-fragment-index="3">But what if we align outwards?         
+<ul>
+<li class="fragment fade-down" data-fragment-index="3">It’s legal (But not trivial!)        </li>
+<li class="fragment fade-down" data-fragment-index="4">100% vectorized<sup>*</sup>!!!       </li>
+</ul>
+</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-totally-worth-it" class="anchor" href="#totally-worth-it" aria-hidden="true"></a>Totally worth it!</h2>
+<h1><a id="user-content-10-20-improvement" class="anchor" href="#10-20-improvement" aria-hidden="true"></a>10%-20% improvement</h1>
+<h2 class="fragment fade-up"><a id="user-content--when-in-cache" class="anchor" href="#-when-in-cache" aria-hidden="true"></a><sup>*</sup>When in cache     </h2>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-small-array-sorting" class="anchor" href="#small-array-sorting" aria-hidden="true"></a>Small array sorting</h2>
+<p>Another common trick is to sort very small partitions directly without quicksort.</p>
+<p class="fragment fade-down">Array.Sort uses this.</p>
+<p class="fragment fade-up">Can we? With Vectors?</p>
+<p class="fragment fade-up">Yes we can!</p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-bitonic-sort" class="anchor" href="#bitonic-sort" aria-hidden="true"></a>Bitonic Sort</h2>
+<ul>
+<li class="fragment fade-down" data-fragment-index="1">Parallel Sorting Algorithm            
+<ul>
+<li class="fragment fade-down" data-fragment-index="1">Used a lot in GPUs                  </li>
+</ul>
+</li>
+<li class="fragment fade-down" data-fragment-index="2">O(n * log<sup>2</sup>(n)) comparisons </li>
+<li class="fragment fade-up" data-fragment-index="3">Generates 2 monotonic series          
+<ul>
+<li class="fragment fade-up" data-fragment-index="3">Increasing/Decreasing               </li>
+<li class="fragment fade-up" data-fragment-index="3">Bitonic                             </li>
+</ul>
+</li>
+<li class="fragment fade-up" data-fragment-index="4">No branches                           </li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <p><object style="margin: auto" type="image/svg+xml" width="80%" data="bitonic-sort-animated-with-hint.svg"></object></p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-final-speedup" class="anchor" href="#final-speedup" aria-hidden="true"></a>Final Speedup</h2>
+<canvas data-chart="line">
+<p>N,100,1K,10K,100K,1M,10M
+ArraySort,              1   ,  1    , 1,   1    , 1   , 1
+AVX2DoublePumpedOverlinedUnrolledWithBitonicSort,  2.04,	4.80,	7.67,	8.73,	9.02,	8.93,</p>
+<!-- 
+{ 
+ "data" : {
+  "datasets" : [
+    { "borderColor": "#3e95cd", "borderDash": [], "fill": false },
+    { "borderColor": "#8e5ea2", "borderDash": [], "fill": false }
+  ]
+ },
+ "options": {
+    "title": { "text": "Scalar Sorting - Scaled to Array.Sort", "fontColor": "#666666", "display": true },
+    "scales": { 
+      "yAxes": [{ 
+        "ticks": { "min": 0.3, "fontColor": "#666666" },
+        "scaleLabel": { "display": true, "labelString": "Scaling (%)", "fontColor": "#666666" },
+        "gridLines": { "color": "#666666" }
+      }],
+      "xAxes": [{ 
+          "ticks": { "fontColor": "#666666" },
+          "scaleLabel": { "display": true, "labelString": "N (elements)", "fontColor": "#666666" },
+          "gridLines": { "color": "#666666" }
+          }]
+    },
+    "legend": { "display": true, "position": "bottom", "labels": { "fontSize": 14, "fontColor": "#666666" } },
+    "title": { "position": "top" }
+  }
+}
+-->
+</canvas>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h2><a id="user-content-in-summary" class="anchor" href="#in-summary" aria-hidden="true"></a>In summary</h2>
+<p>We can and <em>should</em> re-approach even on age old problems to find ways
+to increase the predictablity of our code by using instrinsics!</p>
+<p class="fragment">This is now available to us in C#/.NET as part of CoreCLR 3.0.</p>
+<p class="fragment">Be nice to your CPUs!</p>
+<aside class="notes">
+<p>Also, while I could not possible show it in this talk, there are many more optimizations
+that I ended up , and probably more in the future all had to do with fighting this
+monster that is hiding in plain sight insid our code.</p>
+</aside>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <section>
+<h2><a id="user-content-links" class="anchor" href="#links" aria-hidden="true"></a>Links</h2>
+<h3><a href="https://github.com/damageboy">github.com/damageboy</a></h3>
+<h3><a href="https://twitter.com/damageboy">Twitter: @damageboy</a></h3>
+<h3><a href="https://bits.houmus.org">Blog</a></h3>
+</section>
+            </section>
+    
+
+
+    </div>
+
+
+  </div>
+
+  <script src="libs/reveal.js/3.8.0/lib/js/head.min.js"></script>
+  <script src="libs/reveal.js/3.8.0/js/reveal.js"></script>
+
+  <script>
+
+    // More info https://github.com/hakimel/reveal.js#configuration
+    Reveal.initialize({
+
+        controls: true,
+        controlsTutorial: true,
+        controlsLayout: 'bottom-right',
+        controlsBackArrows: 'faded',
+        progress: true,
+        slideNumber: true,
+        history: true,
+        keyboard: true,
+        overview: true,
+        center: true,
+        touch: true,
+        loop: false,
+        rtl: false,
+        shuffle: false,
+        fragments: true,
+        fragmentInURL: false,
+        embedded: false,
+        help: true,
+        showNotes: false,
+        autoPlayMedia: false,
+        autoSlide: 0,
+        autoSlideStoppable: true,
+        autoSlideMethod: Reveal.navigateNext,
+        defaultTiming: 120,
+        mouseWheel: true,
+        hideAddressBar: true,
+        previewLinks: false,
+        transition: 'zoom',
+        transitionSpeed: 'default',
+        backgroundTransition: 'default',
+        viewDistance: 3,
+        parallaxBackgroundImage: 'die-shot-slice-1.webp',
+        parallaxBackgroundSize: '',
+        parallaxBackgroundHorizontal: 200,
+        parallaxBackgroundVertical: 200,
+        display: 'block',
+
+        // More info https://github.com/hakimel/reveal.js#dependencies
+        dependencies: [
+            // { src: 'libs/reveal.js/3.8.0/lib/js/classList.js', condition: function () { return !document.body.classList; } },
+            // { src: 'libs/reveal.js/3.8.0/plugin/markdown/marked.js', condition: function () { return !!document.querySelector('[data-markdown]'); } },
+            // { src: 'libs/reveal.js/3.8.0/plugin/markdown/markdown.js', condition: function () { return !!document.querySelector('[data-markdown]'); } },
+            { src: 'libs/reveal.js/3.8.0/plugin/notes/notes.js', async: true },
+            { src: 'libs/reveal.js/3.8.0/plugin/chart/Chart.min.js' },
+            { src: 'libs/reveal.js/3.8.0/plugin/chart/csv2chart.js' },
+            { src: 'libs/reveal.js/3.8.0/plugin/embed-tweet/embed-tweet.js' },
+            { src: 'libs/reveal.js/3.8.0/plugin/math/math.js', async: true },
+            { src: 'libs/highlight.js/9.15.10/highlight.js', async: true },
+            { src: 'libs/reveal.js/3.8.0/plugin/anything/anything.js' },
+            { src: 'libs/reveal.js/3.8.0/plugin/mermaid/mermaid.min.js', async: true, callback: function() {mermaid.initialize({startOnLoad:false})} },	
+
+           
+        { src: 'libs/reveal.js/3.8.0/plugin/search/search.js', async: true },
+           
+
+           
+        { src: 'libs/reveal.js/3.8.0/plugin/zoom-js/zoom.js', async: true },
+            
+
+            
+        { src: 'libs/reveal.js/3.8.0/plugin/chalkboard/chalkboard.js' },
+            
+
+            
+        { src: 'libs/reveal.js/3.8.0/plugin/menu/menu.js' },
+            
+
+            
+
+        {
+            src: 'libs/highlight.js/9.15.10/reveal-code-focus-1.0.0-mod.js',
+            async: true,
+            callback: function () {
+                RevealCodeFocus();
+            }
+        },
+           // {src: 'libs/reveal.js/3.8.0/plugin/line-numbers/line-numbers.js'}
+        ]
+        ,
+    keyboard: {
+        67: function () { RevealChalkboard.toggleNotesCanvas() },	// toggle notes canvas when 'c' is pressed
+        66: function () { RevealChalkboard.toggleChalkboard() },	// toggle chalkboard when 'b' is pressed
+        46: function () { RevealChalkboard.clear() },	// clear chalkboard when 'DEL' is pressed
+        8: function () { RevealChalkboard.reset() },	// reset chalkboard data on current slide when 'BACKSPACE' is pressed
+        68: function () { RevealChalkboard.download() },	// downlad recorded chalkboard drawing when 'd' is pressed
+    },
+    math: {
+       // mathjax: 'libs/reveal.js/3.8.0/plugin/math/MathJax.js',
+             mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js',
+            config: 'TeX-AMS_HTML-full'
+    },
+    chart: {
+        defaults: {
+            global: {
+                title: { fontColor: "#FFF" },
+                legend: {
+                    position: "bottom",
+                        labels: { fontColor: "#FFF" },
+                },
+                tooltips: {
+                    labels: { fontColor: "#FFF" },
+                },
+            },
+            scale: {
+                scaleLabel: { fontColor: "#FFF" },
+                gridLines: { color: "#FFF", zeroLineColor: "#FFF" },
+                ticks: { fontColor: "#FFF" },
+            }
+        },
+        line: { borderColor: ["rgba(20,220,220,.8)", "rgba(220,120,120,.8)", "rgba(20,120,220,.8)"], "borderDash": [[5, 10], [0, 0]] },
+        bar: { backgroundColor: ["rgba(20,220,220,.8)", "rgba(220,120,120,.8)", "rgba(20,120,220,.8)"] },
+        pie: { backgroundColor: [["rgba(0,0,0,.8)", "rgba(220,20,20,.8)", "rgba(20,220,20,.8)", "rgba(220,220,20,.8)", "rgba(20,20,220,.8)"]] },
+        radar: { borderColor: ["rgba(20,220,220,.8)", "rgba(220,120,120,.8)", "rgba(20,120,220,.8)"] },
+    },
+    anything: [ 
+	 {
+	  className: "mermaid"
+	 },
+	 // ...
+	],
+    menu: {
+        // Specifies which side of the presentation the menu will 
+        // be shown. Use 'left' or 'right'.
+        side: 'left',
+
+            // Specifies the width of the menu.
+            // Can be one of the following:
+            // 'normal', 'wide', 'third', 'half', 'full', or
+            // any valid css length value
+            width: 'normal',
+
+                // Add slide numbers to the titles in the slide list.
+                // Use 'true' or format string (same as reveal.js slide numbers)
+                numbers: false,
+
+                    // Specifies which slide elements will be used for generating
+                    // the slide titles in the menu. The default selects the first
+                    // heading element found in the slide, but you can specify any
+                    // valid css selector and the text from the first matching
+                    // element will be used.
+                    // Note: that a section data-menu-title attribute or an element
+                    // with a menu-title class will take precedence over this option
+                    titleSelector: 'h1, h2, h3, h4, h5, h6',
+
+                        // If slides do not have a matching title, attempt to use the
+                        // start of the text content as the title instead
+                        useTextContentForMissingTitles: false,
+
+                            // Hide slides from the menu that do not have a title.
+                            // Set to 'true' to only list slides with titles.
+                            hideMissingTitles: false,
+
+                                // Adds markers to the slide titles to indicate the 
+                                // progress through the presentation. Set to 'false'
+                                // to hide the markers.
+                                markers: true,
+
+                                    // Specify custom panels to be included in the menu, by
+                                    // providing an array of objects with 'title', 'icon'
+                                    // properties, and either a 'src' or 'content' property.
+                                    // custom: false,
+                                    custom: [],
+                                        // Specifies the themes that will be available in the themes
+                                        // menu panel. Set to 'true' to show the themes menu panel
+                                        // with the default themes list. Alternatively, provide an
+                                        // array to specify the themes to make available in the
+                                        // themes menu panel, for example...
+                                        // [
+                                        //     { name: 'Black', theme: 'css/theme/black.css' },
+                                        //     { name: 'White', theme: 'css/theme/white.css' },
+                                        //     { name: 'League', theme: 'css/theme/league.css' }
+                                        // ]
+                                        themes: false,
+
+                                            // Specifies the path to the default theme files. If your
+                                            // presentation uses a different path to the standard reveal
+                                            // layout then you need to provide this option, but only
+                                            // when 'themes' is set to 'true'. If you provide your own 
+                                            // list of themes or 'themes' is set to 'false' the 
+                                            // 'themesPath' option is ignored.
+                                            themesPath: 'css/theme/',
+
+                                                // Specifies if the transitions menu panel will be shown.
+                                                // Set to 'true' to show the transitions menu panel with
+                                                // the default transitions list. Alternatively, provide an
+                                                // array to specify the transitions to make available in
+                                                // the transitions panel, for example...
+                                                // ['None', 'Fade', 'Slide']
+                                                transitions: false,
+
+                                                    // Adds a menu button to the slides to open the menu panel.
+                                                    // Set to 'false' to hide the button.
+                                                    openButton: true,
+
+                                                        // If 'true' allows the slide number in the presentation to
+                                                        // open the menu panel. The reveal.js slideNumber option must 
+                                                        // be displayed for this to take effect
+                                                        openSlideNumber: false,
+
+                                                            // If true allows the user to open and navigate the menu using
+                                                            // the keyboard. Standard keyboard interaction with reveal
+                                                            // will be disabled while the menu is open.
+                                                            keyboard: true,
+
+                                                                // Normally the menu will close on user actions such as
+                                                                // selecting a menu item, or clicking the presentation area.
+                                                                // If 'true', the sticky option will leave the menu open
+                                                                // until it is explicitly closed, that is, using the close
+                                                                // button or pressing the ESC or m key (when the keyboard 
+                                                                // interaction option is enabled).
+                                                                sticky: false,
+
+                                                                    // If 'true' standard menu items will be automatically opened
+                                                                    // when navigating using the keyboard. Note: this only takes 
+                                                                    // effect when both the 'keyboard' and 'sticky' options are enabled.
+                                                                    autoOpen: true,
+
+                                                                        // If 'true' the menu will not be created until it is explicitly
+                                                                        // requested by calling RevealMenu.init(). Note this will delay
+                                                                        // the creation of all menu panels, including custom panels, and
+                                                                        // the menu button.
+                                                                        delayInit: false,
+
+                                                                            // If 'true' the menu will be shown when the menu is initialised.
+                                                                            openOnInit: false,
+
+                                                                                // By default the menu will load it's own font-awesome library
+                                                                                // icons. If your presentation needs to load a different
+                                                                                // font-awesome library the 'loadIcons' option can be set to false
+                                                                                // and the menu will not attempt to load the font-awesome library.
+                                                                                loadIcons: false
+    },
+    chalkboard: {
+        toggleChalkboardButton: { left: "60px", bottom: "30px", top: "auto", right: "auto" },
+        toggleNotesButton: { left: "90px", bottom: "30px", top: "auto", right: "auto" },
+
+    }
+    });
+
+
+
+</script>
+</body>
+
+</html>

@@ -3,20 +3,21 @@ title: ".NET Core 3.0 Intrinsics"
 published: true
 comments: true
 header:
-  image: /assets/images/intrinsics.jpg
-title: .NET Core 3.0 Intrinsics in Real Life - 3/3
+  image: /assets/images/intrinsics-header.jpg
+title: .NET Core 3.0 Intrinsics in Real Life - (Part 3/3)
 date: 2018-08-20 18:26:28 +0300
-#categories: coreclr instrinsics
+classes: wide
+#categories: coreclr intrinsics
 ---
 
-As I've described in [part 1](2018-08-18-netcoreapp3.0-instrinsics-in-real-life-pt1.md) & [part 2](2018-08-19-netcoreapp3.0-instrinsics-in-real-life-pt2.md) of this series, I've recently overhauled an internal data structure we use at Work<sup>&reg;</sup> to start using [platform dependent intrinsics](https://github.com/dotnet/designs/blob/master/accepted/platform-intrinsics.md).
+As I've described in [part 1]({% post_url 2018-08-18-netcoreapp3.0-intrinsics-in-real-life-pt1 %} ) & [part 2]( {% post_url 2018-08-19-netcoreapp3.0-intrinsics-in-real-life-pt2 %}) of this series, I've recently overhauled an internal data structure we use at Work<sup>&reg;</sup> to start using [platform dependent intrinsics](https://github.com/dotnet/designs/blob/master/accepted/platform-intrinsics.md).
 
 If you've not read the previous posts, I suggest you do so, as a lot of what is discussed here relies on the code and issues presented there...
 
 As a reminder, this series is made in 3 parts:
 
-- [The data-structure/operation that we'll optimize and basic usage of intrinsics](2018-08-18-netcoreapp3.0-instrinsics-in-real-life-pt1.md).
-- [Using intrinsics more effectively](2018-08-19-netcoreapp3.0-instrinsics-in-real-life-pt2.md)
+- [The data-structure/operation that we'll optimize and basic usage of intrinsics]({% post_url 2018-08-18-netcoreapp3.0-intrinsics-in-real-life-pt1 %}).
+- [Using intrinsics more effectively]({% post_url 2018-08-19-netcoreapp3.0-intrinsics-in-real-life-pt2 %})
 - The C++ version(s) of the corresponding C# code, and what I learned from them (this post).
 
 All of the code (C# & C++) is published under the [bitgoo github repo](https://github.com/damageboy/bitgoo).
