@@ -622,8 +622,8 @@
                     ]
             },
             inline_chart: {
-                height: 35,
-                max_width: 200,
+                height: 25,
+                max_width: 180,
                 colors: {
                     default: '#cdcdcd',
                     on: '#008000',
@@ -6848,7 +6848,7 @@ function valueFormatter_numeric_with_interval(value, row, index, precision, mute
         // We have data in format [value] ([interval1] - [interval2])
         var item = parseNumericErrorInterval(value, precision);
         if(typeof muted !== 'undefined' && muted) {
-            return item.value + '<br/><small class="text-muted">(' + item.value_min + ' - ' + item.value_max + ')</small>';
+            return item.value + ' <small class="text-muted">(' + item.value_min + ' - ' + item.value_max + ')</small>';
         }else{
             return item.value + ' (' + item.value_min + ' - ' + item.value_max + ')';
         }

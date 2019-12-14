@@ -48,7 +48,6 @@ $type-size-8: 0.685em !default; // ~10px
       border-radius: 5%;
 }
 
-
 .author__urls a {
     border-bottom-color: rgb(227, 44, 25);
     border-bottom-width: 2px;
@@ -94,4 +93,12 @@ html {
 small,
 .small {
   font-size: 80%;
+}
+
+.stickemup {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  background-color: rgba(238, 238, 238, 1);
+  z-index: 666;
 }

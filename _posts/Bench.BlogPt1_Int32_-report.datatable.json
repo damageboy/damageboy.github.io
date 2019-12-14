@@ -61,12 +61,12 @@
       "RatioDataTable":"(100:45);100.00%;#aaaaaa"
    },{
       "FullName":"Bench.BlogPt1<Int32>.Scalar(N: 100)",
-      "MethodName":"Scalar(N: 100)",
+      "MethodName":"Managed(N: 100)",
       "Mean":4510.6790123456785,
       "MeanDataTable":"4510.6790 (2918.0846 - 6103.2734)",
       "TimePerNDataTable":"45.1068 (29.1808 - 61.0327)",
       "Median":3582.6666666666665,
-      "TargetMethodColumn.Method":"Scalar",
+      "TargetMethodColumn.Method":"Managed",
       "Job.Id":"Default",
       "Job.AnalyzeLaunchVariance":"False",
       "Job.EvaluateOverhead":"Default",
@@ -241,12 +241,12 @@
       "RatioDataTable":"(100:45);100.00%;#aaaaaa"
    },{
       "FullName":"Bench.BlogPt1<Int32>.Scalar(N: 1000)",
-      "MethodName":"Scalar(N: 1000)",
+      "MethodName":"Managed(N: 1000)",
       "Mean":58766.563218390795,
       "MeanDataTable":"58766.5632 (54777.1939 - 62755.9325)",
       "TimePerNDataTable":"58.7666 (54.7772 - 62.7559)",
       "Median":57706.5,
-      "TargetMethodColumn.Method":"Scalar",
+      "TargetMethodColumn.Method":"Managed",
       "Job.Id":"Default",
       "Job.AnalyzeLaunchVariance":"False",
       "Job.EvaluateOverhead":"Default",
@@ -421,12 +421,12 @@
       "RatioDataTable":"(100:45);100.00%;#aaaaaa"
    },{
       "FullName":"Bench.BlogPt1<Int32>.Scalar(N: 10000)",
-      "MethodName":"Scalar(N: 10000)",
+      "MethodName":"Managed(N: 10000)",
       "Mean":680009.1722222224,
       "MeanDataTable":"680009.1722 (668866.7402 - 691151.6043)",
       "TimePerNDataTable":"68.0009 (66.8867 - 69.1152)",
       "Median":680270.9166666667,
-      "TargetMethodColumn.Method":"Scalar",
+      "TargetMethodColumn.Method":"Managed",
       "Job.Id":"Default",
       "Job.AnalyzeLaunchVariance":"False",
       "Job.EvaluateOverhead":"Default",
@@ -601,12 +601,12 @@
       "RatioDataTable":"(100:45);100.00%;#aaaaaa"
    },{
       "FullName":"Bench.BlogPt1<Int32>.Scalar(N: 100000)",
-      "MethodName":"Scalar(N: 100000)",
+      "MethodName":"Managed(N: 100000)",
       "Mean":6678107.805555555,
       "MeanDataTable":"6678107.8056 (6640220.2406 - 6715995.3705)",
       "TimePerNDataTable":"66.7811 (66.4022 - 67.1600)",
       "Median":6667085,
-      "TargetMethodColumn.Method":"Scalar",
+      "TargetMethodColumn.Method":"Managed",
       "Job.Id":"Default",
       "Job.AnalyzeLaunchVariance":"False",
       "Job.EvaluateOverhead":"Default",
@@ -781,12 +781,12 @@
       "RatioDataTable":"(100:45);100.00%;#aaaaaa"
    },{
       "FullName":"Bench.BlogPt1<Int32>.Scalar(N: 1000000)",
-      "MethodName":"Scalar(N: 1000000)",
+      "MethodName":"Managed(N: 1000000)",
       "Mean":76603615.95679013,
       "MeanDataTable":"76603615.9568 (76513374.9852 - 76693856.9283)",
       "TimePerNDataTable":"76.6036 (76.5134 - 76.6939)",
       "Median":76586329.5,
-      "TargetMethodColumn.Method":"Scalar",
+      "TargetMethodColumn.Method":"Managed",
       "Job.Id":"Default",
       "Job.AnalyzeLaunchVariance":"False",
       "Job.EvaluateOverhead":"Default",
@@ -961,12 +961,12 @@
       "RatioDataTable":"(100:45);100.00%;#aaaaaa"
    },{
       "FullName":"Bench.BlogPt1<Int32>.Scalar(N: 10000000)",
-      "MethodName":"Scalar(N: 10000000)",
+      "MethodName":"Managed(N: 10000000)",
       "Mean":882212364.4444445,
       "MeanDataTable":"882212364.4444 (876222102.6283 - 888202626.2606)",
       "TimePerNDataTable":"88.2212 (87.6222 - 88.8203)",
       "Median":877367485.6666667,
-      "TargetMethodColumn.Method":"Scalar",
+      "TargetMethodColumn.Method":"Managed",
       "Job.Id":"Default",
       "Job.AnalyzeLaunchVariance":"False",
       "Job.EvaluateOverhead":"Default",

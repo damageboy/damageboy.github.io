@@ -69,7 +69,8 @@ input:focus {
 <div id="vis">
   <span>Problem Size:</span>
   <input type="number" id="numSticks" value="200" style="width: 64px"/>
-  <button id="reload-button" type="submit">Reload</button>
+  <button id="reload-button" type="submit">Reload</button><br/>
+  <span id="ios_safari_sucks">(Hit reload after re-orienting on iOS Safari, because Ait sucks)</span>
 </div>
 
 <div id="sticks">
@@ -77,12 +78,18 @@ input:focus {
 
 <script>
 
+let isIOS = (/iPad|iPhone|iPod/.test(navigator.platform) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) &&
+  !window.MSStream
+
+document.getElementById("ios_safari_sucks").style.display =
+  isIOS ? "inline" : "none";
+
 var reloadButton = d3.select("#reload-button");
 
 function visualizeQuickSort(n)
 {
-
-  console.log(`Redrawing qs-static for width ${window.innerWidth} with ${n} sticks`);
+  //console.log(`Redrawing qs-static for width ${window.innerWidth} with ${n} sticks`);
   d3.selectAll("svg").remove();
   var array = d3.shuffle(d3.range(n)),
       levels = quicksort(array);

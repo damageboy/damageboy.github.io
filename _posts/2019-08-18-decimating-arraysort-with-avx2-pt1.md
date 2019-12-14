@@ -20,7 +20,7 @@ chartjs:
     xAxes:
       - scaleLabel:
           display: true,
-          labelString: "N (elements)"
+          labelString: "N (elements) [Click to toggle]"
   legend:
     display: true
     position: bottom
@@ -49,10 +49,13 @@ chartjs:
 
 Let's get in the ring and show what AVX/AVX2 intrinsics can really do for a non-trivial problem, and even discuss potential improvements that future CoreCLR versions could bring to the table.
 
-Everyone needs to sort arrays, once in a while. We think of it as a solved problem and that nothing can be further done about it in 2019, except for waiting for newer, marginally faster machines to pop-up[^0]. However, that is not the case, and if you join me in this rather long journey, we’ll end up with a replacement function for `Array.Sort`, written in C# that can outperform CoreCLR's own C++[^3] based code by a factor of 10x.  
+Everyone needs to sort arrays, once in a while. We think of it as a solved problem and that nothing can be further done about it in 2019, except for waiting for newer, marginally faster machines to pop-up[^0]. However, that is not the case, and if you join me in this rather long journey, we’ll end up with a replacement function for `Array.Sort`, written in C# that can outperform CoreCLR's own C++[^3] based code by a factor north of 10x.  
 Sounds interesting? If so, down the rabbit hole we go…
 
-As I was reading the post by Stephen Toub about [Improvements in CoreCLR 3.0](https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-core-3-0/), it became apparent that hardware intrinsics were common to many of these, and that so many parts of CoreCLR could still be sped up with these techniques, that one thing led to another, and I decided an attempt to apply hardware intrinsics to a larger problem than I had previously done myself was in order. To see if I could rise to the challenge, I decided to take on array sorting and see how far I can go.
+<span class="uk-label">Note</span> that in the final days before posting this series, Intel started seeding a CPU microcode update that is/was affecting the performance of the released version of CoreCLR 3.0/3.1 quite considerably. I managed to stir up a [small commotion](https://twitter.com/damageboy/status/1194751035136450560) as this was unraveling in my benchmarks. As it happened, my code was (not coincidentally) less affected by this change, while CoreCLRs `Array.Sort()` took a 20% nosedive. Let it never be said I’m nothing less than chivalrous, for I rolled back the microcode update and for this **entire** series I’m going to run against a much faster version of `Array.Sort()` than what you, the reader, are probably using, Assuming you update your machine from time to time. For the technically inclined, here’s a whole footnote[^4] on how to double check what your machine is actually running. I also opened two issues in the CoreCLR repo about attempting to mitigate this both in CoreCLRs C++ code and separately in the JIT. If/when there is movement on those fronts, the microcode you’re running will become less of an issue to begin with, but for now, this just adds another level of unwarranted complexity to our lives.
+{: .notice--warning}
+
+A while back now, I was reading the post by Stephen Toub about [Improvements in CoreCLR 3.0](https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-core-3-0/), and it became apparent that hardware intrinsics were common to many of these, and that so many parts of CoreCLR could still be sped up with these techniques, that one thing led to another, and I decided an attempt to apply hardware intrinsics to a larger problem than I had previously done myself was in order. To see if I could rise to the challenge, I decided to take on array sorting and see how far I can go.
 
 What I came up with eventually would become a re-write of `QuickSort`/`Array.Sort()` with AVX2 hardware intrinsics. Fortunately, choosing  sorting, and specifically, `QuickSort`, makes for a great blog post series, since:
 
@@ -61,7 +64,7 @@ What I came up with eventually would become a re-write of `QuickSort`/`Array.Sor
 * If I can make it there, I can make it anywhere.
 * I had no idea how to do it.
 
-I started googling and found an interesting paper titled: [Fast Quicksort Implementation Using AVX Instructions](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.1009.7773&rep=rep1&type=pdf) by Shay Gueron and Vlad Krasnov. That title alone made me think this would be a walk in the park, but while initially promising, it wasn’t good enough as a drop-in replacement for `Array.Sort` for reasons I’ll shortly get into. I ended up (or rather, still am, to be honest) having a lot of fun expanding on their ideas. I will submit a proper pull-request to start a discussion with CoreCLR devs about integrating this code into the main CoreCLR repo, but for now, let's get in the ring and show what AVX/AVX2 intrinsics are capable of for this non-trivial problem.
+I started with searching various keywords and found an interesting paper titled: [Fast Quicksort Implementation Using AVX Instructions](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.1009.7773&rep=rep1&type=pdf) by Shay Gueron and Vlad Krasnov. That title alone made me think this is about to be a walk in the park. While initially promising, it wasn’t good enough as a drop-in replacement for `Array.Sort` for reasons I’ll shortly go into. I ended up (or rather, still am, to be honest) having a lot of fun expanding on their idea. I will submit a proper pull-request to start a discussion with CoreCLR devs about integrating this code into the main [dotnet/runtime](https://github.com/dotnet/runtime) repository, but for now, let's talk about sorting.
 
 Since there’s a lot to go over here, I’ve split it up into no less than 6 parts:
 
@@ -76,7 +79,7 @@ Since there’s a lot to go over here, I’ve split it up into no less than 6 pa
 
 `QuickSort` is deceivingly simple.  
 No, it really is.  
-In 20 lines of C# or whatever language you can sort numbers. Lots of them, and incredibly fast. However, try and change something about it; it quickly becomes apparent just how tricky it is to improve on it without breaking any of the tenants it is built upon.
+In 20 lines of C# or whatever language you can sort numbers. Lots of them, and incredibly fast. However, try and change something about it; nudge it in the wrong way, and it will quickly turn around and teach you a lesson in humility. It is hard to improve on it without breaking any of the tenants it is built upon.
 
 ### In words
 
@@ -97,9 +100,9 @@ More concretely, `QuickSort` works like this:
 4. Recurse on the right side of the pivot.
 
 Picking a pivot could be a mini-post in itself, but again, in the context of competing with `Array.Sort` we don’t need to dive into it, we’ll copy whatever CoreCLR does, and get on with our lives.  
-CoreCLR uses a pretty standard scheme of median-of-three for pivot selection, which can be summed up as: “Let’s sort these 3 elements: first, middle and last, then pick the middle one of those three”.
+CoreCLR uses a pretty standard scheme of median-of-three for pivot selection, which can be summed up as: “Let’s sort these 3 elements: In the first, middle and last positions, then pick the middle one of those three as the pivot”.
 
-**Partitioning** the array is where we spend most of the time: as we take our selected pivot value and rearrange the array segment that was handed to us such that all numbers *smaller-than* the pivot are in the beginning or **left**, in no particular order amongst themselves. Then comes the *pivot*, in its **final** resting position, and following it are all elements *greater-than* the pivot, again in no particular order amongst themselves.
+**Partitioning** the array is where we spend most of the execution time: we take our selected pivot value and rearrange the array segment that was handed to us such that all numbers *smaller-than* the pivot are in the beginning or **left**, in no particular order amongst themselves. Then comes the *pivot*, in its **final** resting position, and following it are all elements *greater-than* the pivot, again in no particular order amongst themselves.
 
 After partitioning is complete, we recurse to the left and right of the pivot, as previously described.
 
@@ -147,15 +150,20 @@ int Partition(int[] array, int pivot, int left, int right)
 }
 ```
 
-I did say it is deceptively simple, and grasping how QuickSort really works sometimes feels like trying to lift sand through your fingers, so I’ve decided to include two more visualizations of QuickSort, which are derivatives of the amazing work done by [Michael Bostock (@mbostock)](https://observablehq.com/@mbostock) with [d3.js](https://d3js.org/).
+I did say it is deceptively simple, and grasping how QuickSort really works sometimes feels like trying to lift sand through your fingers; To that end I’ve included two more visualizations of QuickSort, which are derivatives of the amazing work done by [Michael Bostock (@mbostock)](https://observablehq.com/@mbostock) with [d3.js](https://d3js.org/).
 
 ### Visualizing QuickSort’s recursion
 
 One thing that we have to keep in mind is that the same data is partitioned over-and-over again, many times, with ever-shrinking partition sizes until we end up having a partition size of 2 or 3, in which case we can trivially sort the partition as-is and return.
 
-To help see this better, we’ll use this way of visualizing arrays in QuickSort:
+To help see this better, we’ll use this way of visualizing arrays and their intermediate states in QuickSort:
+
+<div markdown="1">
+<div markdown="1" class="stickemup">
 
 ![QuickSort Legend](../talks/intrinsics-sorting-2019/quicksort-mbostock/quicksort-vis-legend.svg)
+
+</div>
 
 Here, we see an unsorted array of 200 elements (in the process of getting sorted).  
 The different sticks represent numbers in the  [-45°..+45°] range, and the angle of each individual stick represents its value, as I hope it is easy to discern.  
@@ -166,12 +174,15 @@ We represent the pivots with **two** colors:
 
 Our ultimate goal is to go from the image above to the image below:
 
+</div>
+
 ![QuickSort Sorted](../talks/intrinsics-sorting-2019/quicksort-mbostock/quicksort-vis-sorted.svg)
 
 What follows is a static (e.g., non-animated) visualization that shows how pivots are randomly selected at each level of recursion and how, by the next step, the unsorted segments around them become partitioned until we finally have a completely sorted array. Here is how the whole thing looks:
 
-These visuals are auto-generated in Javascript + d3.js, so feel free to hit that "Reload" button if you feel you want to see a new set of random sticks sorted.
+These visuals are auto-generated in Javascript + d3.js, so feel free to hit that "Reload" button and/or change the number of elements in the array  if you feel you want to see a new set of random sticks sorted.
 {: .notice--info}
+
 <iframe src="../talks/intrinsics-sorting-2019/quicksort-mbostock/qs-static-reload.html" scrolling="no" style="width:1600px; max-width: 100%;background: transparent;" allowfullscreen=""></iframe>
 I encourage you to look at this and try to explain to yourself what QuickSort "does" here, at every level. What you can witness here is the interaction between pivot selection, where it "lands" in the next recursion level (or row), and future pivots to its left and right and in the next levels of recursion. We also see how, with every level of recursion, the partition sizes decrease in until finally, every element is a pivot, which means sorting is complete.
 
@@ -186,7 +197,7 @@ We can witness just how many comparisons and swap operations need to happen for 
 
 It's important to note that `Array.Sort` uses a couple of more tricks to get better performance. I would be irresponsible if I didn't mention those since in the later posts, I borrow at least one idea from its play-book, and improve upon it with intrinsics.
 
-`Array.Sort` isn't `QuickSort`; it is a variation on it called [Introspective Sort](https://en.wikipedia.org/wiki/Introsort) invented by [David Musser](https://en.wikipedia.org/wiki/David_Musser) in 1997. What it roughly does is combine QuickSort, HeapSort, and Insertion Sort, and switch dynamically between them according to the recursion depth and the partition size. This last trick, where it switches to using "Insertion Sort" on small partitions, is critical, both for the general case and also for intrinsics/vectorization. It is beneficial because it replaces (up to) the last 4 levels or so of recursion (for partition sizes `<= 16`) with a single call to an insertion sort. This reduces the overhead associated with recursion with simpler loop-based code, which ultimately runs faster for such small partitions.
+`Array.Sort` isn't strictly `QuickSort`; it is a variation on it called [Introspective Sort](https://en.wikipedia.org/wiki/Introsort) invented by [David Musser](https://en.wikipedia.org/wiki/David_Musser) in 1997. What it roughly does is combine QuickSort, HeapSort, and Insertion Sort, and switch dynamically between them according to the recursion depth and the partition size. This last trick, where it switches to using "Insertion Sort" on small partitions, is critical both for the general case and also for intrinsics/vectorization. It is a sound optimization because it replaces (up to) the last 4 levels or so of recursion (for partition sizes `<= 16`) with a single call to an insertion sort. This reduces the overhead associated with recursion with simpler loop-based code, which ultimately runs faster for such small partitions.
 
 As mentioned, I ended up borrowing this idea for my code as the issues around smaller partition sizes are exacerbated when using vectorized intrinsics in the following posts.
 
@@ -195,32 +206,33 @@ As mentioned, I ended up borrowing this idea for my code as the issues around sm
 With all this new information, this is a good time to measure how a couple of different scalar (e.g. non-vectorized) versions compare to `Array.Sort`. I’ll show some results generated using [BenchmarkDotNet](https://benchmarkdotnet.org/) (BDN) with:
 
 * `Array.Sort()` as the baseline.
-* [`Scalar`]((https://github.com/damageboy/QuicksortAvaganza/blob/master/VxSort/Scalar.cs)) as the code I’ve just presented above.
-  * This version is using regular/safe C#. With this version, every time we access an array element, the JIT inserts bounds-checking machine code around our actual access that ensures the CPU does not read/write outside the memory region owned by the array.
-* [`ScalarUnmanaged`](https://github.com/damageboy/QuicksortAvaganza/blob/master/VxSort/ScalarUnmanaged.cs) as an alternative/faster version to `Scalar` where:
+* [`Managed`]((https://github.com/damageboy/VxSort/blob/master/VxSortResearch/Unstable/Scalar/Managed.cs)) as the code I’ve just presented above.
+  * This version is just basic QuickSort using regular/safe C#. With this version, every time we access an array element, the JIT inserts bounds-checking machine code around our actual access that ensures the CPU does not read/write outside the memory region owned by the array.
+* [`Unmanaged`](https://github.com/damageboy/VxSort/blob/master/VxSortResearch/Unstable/Scalar/Unmanaged.cs) as an alternative/faster version to `Scalar` where:
   * The code uses native pointers and unsafe semantics (using C#‘s new `unmanaged` constraint, neat!).
   * We switch to `InsertionSort` (again, copy-pasted from CoreCLR) when below 16 elements, just like `Array.Sort` does.
 
-I've prepared this last version to show that with unsafe code + `InsertionSort`, we can remove most of the performance gap between C# and C++ for this type of code, which mainly stems from bounds-checking, that the JIT cannot elide for these sort of random-access patterns. 
+I've prepared this last version to show that with unsafe code + `InsertionSort`, we can remove most of the performance gap between C# and C++ for this type of code, which mainly stems from bounds-checking, that the JIT cannot elide for these sort of random-access patterns as well as the jump-to `InsertionSort` optimization. 
 
 <span class="uk-label">Note</span> that for this series, We'll benchmark each sorting method with various array sizes (BDN parameter: `N`): $$ 10^i_{i=1\cdots7} $$. I've added a custom column to the BDN column to the report: `Time / N`. This represents the time spent sorting *per element* in the array, and as such, very useful to compare the results on a more uniform scale.
 {: .notice--info}
 
-<span class="uk-label">Note</span> that in the final days before posting this series, Intel started seeding a CPU microcode update that is/was effecting the released version of CoreCLR 3.0 quite considerably. I managed to stir up a small commotion as this was unravelling in my benchmarks. As it happened, my code was (not coincidentally) less affected by this change, while CoreCLRs `Array.Sort()` took a 20% nosedive. Let it never be said I’m nothing less than chivalrous, for I rolled back the microcode update and for this entire series I’m going to run against a much faster version of `Array.Sort()` than what you, the reader, are probably using, Assuming you update your machine from time to time. For the technically inclined, here’s a whole footnote[^4] on how to double check what your machine is actually running. I also opened two issues in the CoreCLR repo about attempting to mitigate this both in CoreCLRs C++ code and separately in the JIT. If/when there is movement on those fronts, the microcode you’re running will become less of an issue to begin with, but for now, this just adds another level of unwarranted complexity to our lives.
-{: .notice--warning}
+Here are the results in the form of charts and tables. I've included a handy large button you can press to get a quick tour of what each tab contains, what we have here is:
 
-Here are the results in the form of charts showing:
+1. A chart scaling the performance of various implementations being compared to `Array.Sort` as a ratio.
+2. A chart showing time spent sorting a single element in an array of N elements (Time / N).
+3. BDN results in a friendly table form.
+4. Statistics/Counters that teach us about what is actually going on under the hood.
 
-1. the ratio (scaling) of various implementations being compared.
-2. the time spent sorting a single element in an array of N elements (Time / N).
-3. Various BDN results in a friendly table form.
-4. Statistics/Counters collected from my code that teach us a lot about what is actually going on.
-
-
+<div markdown="1">
+<div class="stickemup">
 {% codetabs %}
 
 {% codetab <i class='glyphicon glyphicon-stats'></i> Scaling %}
-
+<div>
+<button name="button" class="uk-button uk-button-small uk-button-primary uk-align-center uk-width-5-6" data-toggle="chardinjs" onclick="$('body').chardinJs('start')">Tell me what I'm seeing here</button>
+<div data-intro="Size of the sorting problem, 10..10,000,000 in powers of 10" data-position="bottom">
+<div data-intro="Performance scale: Array.Sort (solid gray) is always 100%, and the other methods are scaled relative to it" data-position="left">
 <canvas height="200vmax" data-chart="line"> 
 N,100,1K,10K,100K,1M,10M
 ArraySort,1,1,1,1,1,1
@@ -232,7 +244,7 @@ Unmanaged,1.75,1.01,0.99,0.97,0.93,0.95
   "datasets" : [
     { 
       "backgroundColor": "rgba(66,66,66,0.35)",
-      "rough": { "fillStyle": "hachure", "hachureAngle": -30, "hachureGap": 7	}
+      "rough": { "fillStyle": "solid", "hachureAngle": -30, "hachureGap": 7	}
     },
     { 
       "backgroundColor": "rgba(220,33,33,.6)", 
@@ -258,11 +270,16 @@ Unmanaged,1.75,1.01,0.99,0.97,0.93,0.95
  "defaultOptions": {{ page.chartjs | jsonify }}
 }
 --> </canvas>
-
+</div>
+</div>
+</div>
 {% endcodetab %}
 
 {% codetab <i class='glyphicon glyphicon-stats'></i> Time/N %}
-
+<div>
+<button name="button" class="uk-button uk-button-small uk-button-primary uk-align-center uk-width-5-6" data-toggle="chardinjs" onclick="$('body').chardinJs('start')">Tell me what I'm seeing here</button>
+<div data-intro="Size of the sorting problem, 10..10,000,000 in powers of 10" data-position="bottom">
+<div data-intro="Time in nanoseconds spent sorting per element. Array.Sort (solid gray) is the baseline, again" data-position="left">
 <canvas height="200vmax" data-chart="line"> 
 N,100,1K,10K,100K,1M,10M
 ArraySort,12.1123,30.5461,54.641,60.4874,70.7539,80.8431
@@ -272,7 +289,7 @@ Unmanaged,21.0955,30.9692,54.3112,58.9577,65.7222,76.8631
 { 
  "data" : {
   "datasets" : [
-    { "backgroundColor":"rgba(66,66,66,0.15)", "rough": { "fillStyle": "cross-hatch", "hachureGap": 6	} },
+    { "backgroundColor":"rgba(66,66,66,0.35)", "rough": { "fillStyle": "solid", "hachureGap": 6	} },
     { "backgroundColor":"rgba(33,220,33,.6)", "rough": { "fillStyle": "hachure", "hachureAngle": 15, "hachureGap": 6	} },
     { "backgroundColor":"rgba(33,33,220,.9)", "rough": { "fillStyle": "hachure", "hachureAngle": -45, "hachureGap": 6	} }
    ]
@@ -295,118 +312,139 @@ Unmanaged,21.0955,30.9692,54.3112,58.9577,65.7222,76.8631
  "defaultOptions": {{ page.chartjs | jsonify }}
 }
 --> </canvas>
-
+</div>
+</div>
+</div>
 {% endcodetab %}
 
-{% codetab <i class='glyphicon glyphicon-list-alt'></i> Kaby-Lake %}
+{% codetab <i class='glyphicon glyphicon-list-alt'></i> Benchmarks %}
 
+<div>
+<button name="button" class="uk-button uk-button-small uk-button-primary uk-align-center uk-width-5-6" data-toggle="chardinjs" onclick="$('body').chardinJs('start')">Tell me what I'm seeing here</button>
 <table class="table datatable"
   data-json="../_posts/Bench.BlogPt1_Int32_-report.datatable.json"
   data-id-field="name"
   data-pagination="false"
-  data-filter-control="true"  
+  data-filter-control="true"
+  data-intro="Each row in this table represents a benchmark result" data-position="left"
   data-show-pagination-switch="false">
-  <thead>
+  <thead data-intro="The header can be used to sort/filter by clicking" data-position="right">
     <tr>
-        <th data-field="TargetMethodColumn.Method" data-sortable="true"
-        data-filter-control="select">
-        Method<br/>Name
+        <th data-field="TargetMethodColumn.Method" data-sortable="true"            
+            data-filter-control="select">
+          <span
+              data-intro="The name of the benchmarked method" 
+              data-position="top">
+            Method<br/>Name
+          </span>
         </th>
         <th data-field="N" data-sortable="true"
-            data-value-type="int" data-filter-control="select"
-            data-toggle="tooltip" data-html="true" data-placement="top"
-            title="Size of sorting problem in elements">
-            Size<sup><i class='glyphicon glyphicon-question-sign'></i></sup>
+            data-value-type="int" data-filter-control="select">
+            <span
+              data-intro="The size of the sorting problem being benchmarked (# of integers)" 
+              data-position="top">
+            Problem<br/>Size
+            </span>
         </th>
-        <th data-field="TimePerNDataTable" data-sortable="true" 
-            data-value-type="float2-interval-muted"
-            data-toggle="tooltip" data-html="true" data-placement="top"
-            title="Mean time for sorting one element, in nano-seconds (with confidence intervals in the following row)">
-            Time /<br/>Element (ns)<sup><i class='glyphicon glyphicon-question-sign'></i></sup></th>
+        <th data-field="TimePerNDataTable" data-sortable="true"
+            data-value-type="float2-interval-muted">
+            <span 
+              data-intro="Time in nanoseconds spent sorting each element in the array (with confidence intervals in parenthesis)" 
+              data-position="top">
+              Time /<br/>Element (ns)
+            </span>
+        </th>
         <th data-field="RatioDataTable" data-sortable="true" 
-            data-value-type="inline-bar-horizontal-percentage"
-            data-toggle="tooltip" data-html="true" data-placement="top"
-            title="Mean time, scaled to the baseline: < 100% means faster, > 100% is slower">
-            Scaling<sup><i class='glyphicon glyphicon-question-sign'></i></sup>
+            data-value-type="inline-bar-horizontal-percentage">
+            <span data-intro="Each result is scaled to its baseline (Array.Sort in this case)" 
+                  data-position="top">
+                  Scaling
+            </span>
         </th>
-        <th data-field="Measurements" data-sortable="true" data-value-type="inline-bar-vertical"
-            data-toggle="tooltip" data-html="true" data-placement="top"
-            title="Actual individial measurements, highest (slowest) in red, lowest (fastest) in green.This is a very useful tool for spotting outliers or alternatively verifying there are none...">
-            Measurements<sup><i class='glyphicon glyphicon-question-sign'></i></sup>
+        <th data-field="Measurements" data-sortable="true" data-value-type="inline-bar-vertical">
+            <span data-intro="Raw benchmark results visualize how stable the result it. Longest/Shortest runs marked with <span style='color: red'>Red</span>/<span style='color: green'>Green</span>" data-position="top">Measurements</span>
         </th>
     </tr>
   </thead>
 </table>
-
+</div>
 {% endcodetab %}
 
-{% codetab <i class='glyphicon glyphicon-list-alt'></i> Scalar Stats %}
-
+{% codetab <i class='glyphicon glyphicon-list-alt'></i> Statistics %}
+<div>
+<button name="button" class="uk-button uk-button-small uk-button-primary uk-align-center uk-width-5-6" data-toggle="chardinjs" onclick="$('body').chardinJs('start')">Tell me what I'm seeing here</button>
 <table class="table datatable"
   data-json="../_posts/scalar-vs-unmanaged-stats.json"
   data-id-field="name"
   data-pagination="false"
   data-filter-control="true"
+  data-intro="Each row in this table represents a benchmark result" data-position="left"  
   data-show-pagination-switch="false">
-  <thead>
+  <thead data-intro="The header can be used to sort/filter by clicking" data-position="right">
     <tr>
         <th data-field="MethodName" data-sortable="true"
-            data-filter-control="select">Method<br/>Name</th>
-        <th data-field="ProblemSize" data-sortable="true" 
+            data-filter-control="select">
+          <span
+              data-intro="The name of the benchmarked method"
+              data-position="top">Method<br/>Name</span>
+        </th>
+        <th data-field="ProblemSize" data-sortable="true"
             data-value-type="int"
-            data-filter-control="select"
-            data-toggle="tooltip" data-html="true" data-placement="top"
-            title="Size of sorting problem in elements">
-            Size<sup><i class='glyphicon glyphicon-question-sign'></i></sup>
+            data-filter-control="select">
+            <span
+              data-intro="The size of the sorting problem being benchmarked (# of integers)" 
+              data-position="top">Problem<br/>Size</span>
         </th>
         <th data-field="MaxDepthScaledDataTable" data-sortable="true" 
-            data-value-type="inline-bar-horizontal"
-            data-toggle="tooltip" data-html="true" data-placement="top"
-            title="Maximal Encountered Recursion Depth">
-            Max<br/>Depth
-            <sup><i class='glyphicon glyphicon-question-sign'></i></sup>
+            data-value-type="inline-bar-horizontal">
+            <span
+              data-intro="The maximal depth of recursion reached while sorting" 
+              data-position="top">Max<br/>Depth</span>
         </th>
         <th data-field="NumPartitionOperationsScaledDataTable" data-sortable="true" 
-            data-value-type="inline-bar-horizontal"
-            data-toggle="tooltip" data-html="true" data-placement="top"
-            title="Number of Partition Operations Per Sorting Call">
-            # Partitions
-            <sup><i class='glyphicon glyphicon-question-sign'></i></sup>
+            data-value-type="inline-bar-horizontal">
+            <span
+              data-intro="# of partitioning operations for each sort" 
+              data-position="top">Num Partitions</span>
         </th>
         <th data-field="AverageSmallSortSizeScaledDataTable" data-sortable="true" 
-            data-value-type="inline-bar-horizontal"
-            data-toggle="tooltip" data-html="true" data-placement="top"
-            title="Average Size of Small-Sort operation">
+            data-value-type="inline-bar-horizontal">
+            <span
+              data-intro="For hybrid sorting, the average size that each small sort operation was called with (e.g. InsertionSort)" 
+              data-position="top">
             Avg.<br/>Small<br/>Sorts<br/>Size
-            <sup><i class='glyphicon glyphicon-question-sign'></i></sup>
+            </span>
         </th>
         <th data-field="NumScalarComparesScaledDataTable" data-sortable="true" 
-            data-value-type="inline-bar-horizontal"
-            data-toggle="tooltip" data-html="true" data-placement="top"
-            title="Number of user-data driven branches">
+            data-value-type="inline-bar-horizontal">
+            <span
+              data-intro="How many branches were executed in each sort operation that were based on the unsorted array elements"
+              data-position="top">
             # Data-Based<br/>Branches
-            <sup><i class='glyphicon glyphicon-question-sign'></i></sup>
+            </span>
             </th>
         <th data-field="PercentSmallSortCompares" data-sortable="true" 
-            data-value-type="float2-percentage"
-            data-toggle="tooltip" data-html="true" data-placement="top"
-            title="Number of scalar comparison based branches coming from Small Sorting">
-            # Small<br/>Sort<br/>Compares
-            <sup><i class='glyphicon glyphicon-question-sign'></i></sup>
+            data-value-type="float2-percentage">
+            <span
+              data-intro="What percent of</br>⬅<br/>branches happenned as part of small-sorts"
+              data-position="top">
+            % Small<br/>Sort<br/>Data-Based<br/>Branches
+            </span>
         </th>
     </tr>
   </thead>
 </table>
-
+</div>
 {% endcodetab %}
 
 {% endcodetabs %}
+</div>
 
-Surprisingly[^1], the unmanaged C# version is running slightly faster than `Array.Sort`, but with one caveat: it only outperforms the C++ version for large inputs. Otherwise, everything is as expected: The purely `Scalar` variant is just slow, and the `Unamanged` one mostly is on par with `Array.Sort`.  
-These C# implementations were written to **verify** that we can get to `Array.Sort` *like* performance in C#, and they do just that. Running 5% faster for *some* input sizes will not cut it for me; I want it *much* faster. An An equally important reason for re-implementing these basic versions is that we can now sprinkle *statistics-collecting-code* magic fairy dust[^2] on them so that we have even more numbers to dig into. These counters that will assist us in deciphering and comparing future results and implementations. In this post they serve us by establishing a baseline. I've made this available in the `Scalar Stats` tab above, where we can see, per each `N` value (with some notes):
+Surprisingly[^1], the unmanaged C# version is running slightly faster than `Array.Sort`, but with one caveat: it only outperforms the C++ version for large inputs. Otherwise, everything is as expected: The purely `Managed` variant is just slow, and the `Unamanged` one mostly is on par with `Array.Sort`.  
+These C# implementations were written to **verify** that we can get to `Array.Sort` *like* performance in C#, and they do just that. Running 5% faster for *some* input sizes will not cut it for me; I want it *much* faster. An equally important reason for re-implementing these basic versions is that we can now sprinkle *statistics-collecting-code* magic fairy dust[^2] on them so that we have even more numbers to dig into in the "Scalar Stats" tab: These counters will assist us in deciphering and comparing future results and implementations. In this post they serve us by establishing a baseline. We can see, per each `N` value (with some notes):
 
-* The maximal recursion depth.
-  * The unmanaged version, like CoreCLR's `Array.Sort` switches to `InsertionSort` for the last couple of recursion levels, and its maximal depth is smaller.
+* The maximal recursion depth. Note that:
+  * The unmanaged version, like CoreCLR's `Array.Sort` switches to `InsertionSort` for the last couple of recursion levels, therefore, its maximal depth is smaller.
 * The total number of partitioning operations performed.
   * Same as above, less recursion ⮚ less partitioning calls.
 * The average size of what I colloquially refer to as "small-sort" operations performed (e.g., `InsertionSort` for the `Unmanaged` variant).
@@ -419,6 +457,7 @@ These C# implementations were written to **verify** that we can get to `Array.So
 
 Some of these statistics will remain pretty much the same for the rest of this series, regardless of what we do next in future versions, while others radically change; We'll observe and make use of these as key inputs in helping us to figure out how/why something worked, or not!
 
+</div>
 ## All Warmed Up?
 
 We've spent quite some time polishing our foundations concerning `QuickSort`. I know lengthy introductions are somewhat dull, but I think time spent on this post will pays off with dividend when we next encounter our actual implementation in the 3<sup>rd</sup> post. This might be also a time to confess that just by doing the work to provide this refresher helped me come up with at least one, super non-trivial optimization, which I think I’ll keep the lid on all the way until the 6<sup>th</sup> and final post. So never underestimate the importance of really covering the basics.
