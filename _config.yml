@@ -19,12 +19,18 @@ bing_site_verification: "6D5AE23298671D95A20FAD7FA3430ABB"
 # Build settings
 markdown: kramdown
 remote_theme: mmistakes/minimal-mistakes@4.16.6
+
 # Outputting
 permalink: /:year-:month-:day/:title
 breadcrumbs: false
 paginate: 5 # amount of posts to show
 paginate_path: /page:num/
 timezone: UTC
+kramdown:
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    block:
+      line_numbers: true
 
 # Reading Files
 include:

@@ -1,5 +1,5 @@
 ---
-title: "This goes to Eleven (Pt. 1/6)"
+title: "This Goes to Eleven (Pt. 1/6)"
 excerpt: >
   Decimating Array.Sort with AVX2.<br/><br/>
   I ended up going down the rabbit hole re-implementing array sorting with AVX2 intrinsics.<br/>
@@ -20,10 +20,10 @@ chartjs:
     xAxes:
       - scaleLabel:
           display: true,
-          labelString: "N (elements) [Click to toggle]"
+          labelString: "N (elements)"
   legend:
     display: true
-    position: bottom
+    position: right
     labels:
       fontSize: 14
   title:
@@ -69,10 +69,10 @@ I started with searching various keywords and found an interesting paper titled:
 Since there’s a lot to go over here, I’ve split it up into no less than 6 parts:
 
 1. In this part, we start with a refresher on `QuickSort` and how it compares to `Array.Sort()`. If you don’t need a refresher, skip it and get right down to part 2 and onwards. I recommend skimming through, mostly because I’ve got excellent visualizations which should be in the back of everyone’s mind as we deal with vectorization & optimization later.
-2. In [part 2]({% post_url 2019-08-19-decimating-arraysort-with-avx2-pt2 %}), we go over the basics of vectorized hardware intrinsics, vector types, and go over a handful of vectorized instructions we’ll use in part 3. We still won't be sorting anything.
-3. In [part 3]({% post_url 2019-08-20-decimating-arraysort-with-avx2-pt3 %}), we go through the initial code for the vectorized sorting, and we’ll start seeing some payoff. We finish agonizing courtesy of the CPU’s Branch Predictor, throwing a wrench into our attempts.
-4. In [part 4]({% post_url 2019-08-21-decimating-arraysort-with-avx2-pt4 %}), we go over a handful of optimization approaches that I attempted trying to get the vectorized partitioning to run faster. We'll see what worked and what didn't.
-5. In part 5, we’ll see how we can almost get rid of all the remaining scalar code- by implementing small-constant size array sorting. We’ll use... drum roll…, yet more AVX2 vectorization.
+2. In [part 2]({% post_url 2019-08-19-this-goes-to-eleven-pt2 %}), we go over the basics of vectorized hardware intrinsics, vector types, and go over a handful of vectorized instructions we’ll use in part 3. We still won't be sorting anything.
+3. In [part 3]({% post_url 2019-08-20-this-goes-to-eleven-pt3 %}), we go through the initial code for the vectorized sorting, and we’ll start seeing some payoff. We finish agonizing courtesy of the CPU’s Branch Predictor, throwing a wrench into our attempts.
+4. In [part 4]({% post_url 2019-08-21-this-goes-to-eleven-pt4 %}), we go over a handful of optimization approaches that I attempted trying to get the vectorized partitioning to run faster. We'll see what worked and what didn't.
+5. In part 5, we’ll see how we can almost get rid of all the remaining scalar code- by implementing small-constant size array sorting. We’ll use, drum roll…, yet more AVX2 vectorization.
 6. Finally, in part 6, I’ll list the outstanding stuff/ideas I have for getting more juice and functionality out of my vectorized code.
 
 ## QuickSort Crash Course
@@ -188,10 +188,18 @@ I encourage you to look at this and try to explain to yourself what QuickSort "d
 
 ### Visualizing QuickSort’s Comparisons/Swaps
 
-While the above visualization really does a lot to help understand **how** `QuickSort` works, I also wanted to leave you with an impression of the total amount of work done by `QuickSort`, here is an **animation** of the whole process as it goes over the same array, slowly and recursively going from an unsorted mess to a completely sorted array:
+While the above visualization really does a lot to help understand **how** `QuickSort` works, I also wanted to leave you with an impression of the total amount of work done by `QuickSort`:
 
+
+<div markdown="1">
+<div class="stickemup">
 <iframe src="../talks/intrinsics-sorting-2019/quicksort-mbostock/qs-animated-playpause.html" scrolling="no" style="width:1600px; height: 250px; max-width: 100%;background: transparent;" allowfullscreen=""></iframe>
+</div>
+
+Above is an **animation** of the whole process as it goes over the same array, slowly and recursively going from an unsorted mess to a completely sorted array.
+
 We can witness just how many comparisons and swap operations need to happen for a 200 element `QuickSort` to complete successfully. There’s genuinely a lot of work that needs to happen per element (when considering how we re-partition virtually all elements again and again) for the whole thing to finish.
+</div>
 
 ### Array.Sort vs. QuickSort
 
@@ -230,10 +238,11 @@ Here are the results in the form of charts and tables. I've included a handy lar
 
 {% codetab <i class='glyphicon glyphicon-stats'></i> Scaling %}
 <div>
-<button name="button" class="uk-button uk-button-small uk-button-primary uk-align-center uk-width-5-6" data-toggle="chardinjs" onclick="$('body').chardinJs('start')">Tell me what I'm seeing here</button>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
 <div data-intro="Size of the sorting problem, 10..10,000,000 in powers of 10" data-position="bottom">
 <div data-intro="Performance scale: Array.Sort (solid gray) is always 100%, and the other methods are scaled relative to it" data-position="left">
-<canvas height="200vmax" data-chart="line"> 
+<div data-intro="Click legend items to show/hide series" data-position="right">
+<canvas height="130vmx" data-chart="line"> 
 N,100,1K,10K,100K,1M,10M
 ArraySort,1,1,1,1,1,1
 Scalar,2.04,1.57,1.33,1.12,1.09,1.11
@@ -273,14 +282,17 @@ Unmanaged,1.75,1.01,0.99,0.97,0.93,0.95
 </div>
 </div>
 </div>
+</div>
+
 {% endcodetab %}
 
 {% codetab <i class='glyphicon glyphicon-stats'></i> Time/N %}
 <div>
-<button name="button" class="uk-button uk-button-small uk-button-primary uk-align-center uk-width-5-6" data-toggle="chardinjs" onclick="$('body').chardinJs('start')">Tell me what I'm seeing here</button>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
 <div data-intro="Size of the sorting problem, 10..10,000,000 in powers of 10" data-position="bottom">
 <div data-intro="Time in nanoseconds spent sorting per element. Array.Sort (solid gray) is the baseline, again" data-position="left">
-<canvas height="200vmax" data-chart="line"> 
+<div data-intro="Click legend items to show/hide series" data-position="right">
+<canvas height="130vmx" data-chart="line"> 
 N,100,1K,10K,100K,1M,10M
 ArraySort,12.1123,30.5461,54.641,60.4874,70.7539,80.8431
 Scalar,24.7385,47.8796,72.7528,67.7419,77.3906,89.7593
@@ -315,17 +327,18 @@ Unmanaged,21.0955,30.9692,54.3112,58.9577,65.7222,76.8631
 </div>
 </div>
 </div>
+</div>
+
 {% endcodetab %}
 
 {% codetab <i class='glyphicon glyphicon-list-alt'></i> Benchmarks %}
 
 <div>
-<button name="button" class="uk-button uk-button-small uk-button-primary uk-align-center uk-width-5-6" data-toggle="chardinjs" onclick="$('body').chardinJs('start')">Tell me what I'm seeing here</button>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
 <table class="table datatable"
   data-json="../_posts/Bench.BlogPt1_Int32_-report.datatable.json"
   data-id-field="name"
   data-pagination="false"
-  data-filter-control="true"
   data-intro="Each row in this table represents a benchmark result" data-position="left"
   data-show-pagination-switch="false">
   <thead data-intro="The header can be used to sort/filter by clicking" data-position="right">
@@ -372,13 +385,12 @@ Unmanaged,21.0955,30.9692,54.3112,58.9577,65.7222,76.8631
 
 {% codetab <i class='glyphicon glyphicon-list-alt'></i> Statistics %}
 <div>
-<button name="button" class="uk-button uk-button-small uk-button-primary uk-align-center uk-width-5-6" data-toggle="chardinjs" onclick="$('body').chardinJs('start')">Tell me what I'm seeing here</button>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
 <table class="table datatable"
   data-json="../_posts/scalar-vs-unmanaged-stats.json"
   data-id-field="name"
   data-pagination="false"
-  data-filter-control="true"
-  data-intro="Each row in this table represents a benchmark result" data-position="left"  
+  data-intro="Each row in this table contains statistics collected & averaged out of thousands of runs with random data" data-position="left"
   data-show-pagination-switch="false">
   <thead data-intro="The header can be used to sort/filter by clicking" data-position="right">
     <tr>
@@ -405,7 +417,7 @@ Unmanaged,21.0955,30.9692,54.3112,58.9577,65.7222,76.8631
             data-value-type="inline-bar-horizontal">
             <span
               data-intro="# of partitioning operations for each sort" 
-              data-position="top">Num Partitions</span>
+              data-position="top">#<br/>Part-<br/>itions</span>
         </th>
         <th data-field="AverageSmallSortSizeScaledDataTable" data-sortable="true" 
             data-value-type="inline-bar-horizontal">
@@ -420,7 +432,7 @@ Unmanaged,21.0955,30.9692,54.3112,58.9577,65.7222,76.8631
             <span
               data-intro="How many branches were executed in each sort operation that were based on the unsorted array elements"
               data-position="top">
-            # Data-Based<br/>Branches
+            # Data-<br/>Based<br/>Branches
             </span>
             </th>
         <th data-field="PercentSmallSortCompares" data-sortable="true" 
@@ -428,7 +440,7 @@ Unmanaged,21.0955,30.9692,54.3112,58.9577,65.7222,76.8631
             <span
               data-intro="What percent of</br>⬅<br/>branches happenned as part of small-sorts"
               data-position="top">
-            % Small<br/>Sort<br/>Data-Based<br/>Branches
+            % Small<br/>Sort<br/>Data-<br/>Based<br/>Branches
             </span>
         </th>
     </tr>
@@ -441,28 +453,28 @@ Unmanaged,21.0955,30.9692,54.3112,58.9577,65.7222,76.8631
 </div>
 
 Surprisingly[^1], the unmanaged C# version is running slightly faster than `Array.Sort`, but with one caveat: it only outperforms the C++ version for large inputs. Otherwise, everything is as expected: The purely `Managed` variant is just slow, and the `Unamanged` one mostly is on par with `Array.Sort`.  
-These C# implementations were written to **verify** that we can get to `Array.Sort` *like* performance in C#, and they do just that. Running 5% faster for *some* input sizes will not cut it for me; I want it *much* faster. An equally important reason for re-implementing these basic versions is that we can now sprinkle *statistics-collecting-code* magic fairy dust[^2] on them so that we have even more numbers to dig into in the "Scalar Stats" tab: These counters will assist us in deciphering and comparing future results and implementations. In this post they serve us by establishing a baseline. We can see, per each `N` value (with some notes):
+These C# implementations were written to **verify** that we can get to `Array.Sort` *like* performance in C#, and they do just that. Running 5% faster for *some* input sizes will not cut it for me; I want it *much* faster. An equally important reason for re-implementing these basic versions is that we can now sprinkle *statistics-collecting-code* magic fairy dust[^2] on them so that we have even more numbers to dig into in the "Statistics" tab: These counters will assist us in deciphering and comparing future results and implementations. In this post they serve us by establishing a baseline. We can see, per each `N` value (with some commentary):
 
 * The maximal recursion depth. Note that:
   * The unmanaged version, like CoreCLR's `Array.Sort` switches to `InsertionSort` for the last couple of recursion levels, therefore, its maximal depth is smaller.
 * The total number of partitioning operations performed.
   * Same as above, less recursion ⮚ less partitioning calls.
 * The average size of what I colloquially refer to as "small-sort" operations performed (e.g., `InsertionSort` for the `Unmanaged` variant).
-  * The `Scalar` version doesn't have any of this, so it's just 0.
+  * The `Managed` version doesn't have any of this, so it's just 0.
   * In the `Unmanaged` version, we see a consistent value of 9.x: Given that we special case 1,2,3 in the code and 16 is the upper limit, 9.x seems like a reasonable outcome here.
-* The number of branch operations that were user-data dependent; This one is a bit hard to relate to at first, but it becomes apparent why this is a crucial number to track starting with the 3<sup>rd</sup> post onwards. For now, a definition: This statistic counts *how many* times our code did an `if` or a `while` or any other branch operation *whose condition depended on unsorted user supplied data*!
+* The number of branch operations that were user-data dependent; This one may be hard to relate to at first, but it becomes apparent why this is a crucial number to track starting with the 3<sup>rd</sup> post onwards. For now, a definition: This statistic counts *how many* times our code did an `if` or a `while` or any other branch operation *whose condition depended on unsorted user supplied data*!
   * The numbers boggle the mind, this is the first time we get to show how much work is involved.
   * What's even more surprising that for the `Unmanged` variant, the number is even higher (well only surprising if you don't know anything about how `InsertionSort` works...) and yet this version seems to run faster... I have an entire post dedicated just to this part of the problem in this series, so let's just make note of this for now, but already we see peculiar things.
-* Finally, I've also included a statistic here that shows what percent of those scalar compares came from small-sort operations. Again, this was 0% for the `Scalar` variant, but we can see that a large part of those compares are now coming from those last few levels of recursion that were converted to `InsertionSort`...
+* Finally, I've also included a statistic here that shows what percent of those data-based branches came from small-sort operations. Again, this was 0% for the `Managed` variant, but we can see that a large part of those compares are now coming from those last few levels of recursion that were converted to `InsertionSort`...
 
 Some of these statistics will remain pretty much the same for the rest of this series, regardless of what we do next in future versions, while others radically change; We'll observe and make use of these as key inputs in helping us to figure out how/why something worked, or not!
 
 </div>
 ## All Warmed Up?
 
-We've spent quite some time polishing our foundations concerning `QuickSort`. I know lengthy introductions are somewhat dull, but I think time spent on this post will pays off with dividend when we next encounter our actual implementation in the 3<sup>rd</sup> post. This might be also a time to confess that just by doing the work to provide this refresher helped me come up with at least one, super non-trivial optimization, which I think I’ll keep the lid on all the way until the 6<sup>th</sup> and final post. So never underestimate the importance of really covering the basics.
+We've spent quite some time polishing our foundations concerning `QuickSort` and `Array.Sort`. I know lengthy introductions are somewhat dull, but I think time spent on this post will pay off with dividend when we next encounter our actual implementation in the 3<sup>rd</sup> post and later on. This might be also a time to confess that just doing the leg-work to provide this refresher helped me come up with at least one, super non-trivial optimization, which I think I’ll keep the lid on all the way until the 6<sup>th</sup> and final post. So never underestimate the importance of "just" covering the basics.
 
-Before we write vectorized code, we need to pick up some knowhow specific to vectorized intrinsics and introduce a few select intrinsics we’ll be using, so, this is an excellent time to break off this post, grab a fresh cup of coffee and head to the [next post]({% post_url 2019-08-19-decimating-arraysort-with-avx2-pt2 %}).
+Before we write vectorized code, we need to pick up some knowhow specific to vectorized intrinsics and introduce a few select intrinsics we’ll be using, so, this is an excellent time to break off this post, grab a fresh cup of coffee and head to the [next post]({% post_url 2019-08-19-this-goes-to-eleven-pt2 %}).
 
 ---------
 [^0]: Which is increasingly taking [more and more](https://github.com/damageboy/analyze-spec-benchmarks#integer) time to happen, due to Dennard scaling and the slow-down of Moore's law...

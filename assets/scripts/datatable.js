@@ -1728,7 +1728,7 @@
                                     html += '>';
                                     if(data[i]['y_value']) {
                                         var nf = new Intl.NumberFormat();
-                                        html += '<span style="font-weight: bold; color: ' + findBestFontColor(current_color, true) + ';">' + nf.format(data[i]['x_value']) + '</span>';
+                                        html += '<span style="color: ' + findBestFontColor(current_color, true) + ';">' + nf.format(data[i]['x_value']) + '</span>';
                                     }
                                     html += '</div>';
                                 }

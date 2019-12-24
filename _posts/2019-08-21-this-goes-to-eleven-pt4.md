@@ -1,5 +1,5 @@
 ---
-title: "This goes to Eleven (Pt. 4/6)"
+title: "This Goes to Eleven (Pt. 4/6)"
 excerpt: >
   Decimating Array.Sort with AVX2.<br/><br/>
   I ended up going down the rabbit hole re-implementing array sorting with AVX2 intrinsics.<br/>
@@ -22,9 +22,9 @@ I ended up going down the rabbit hole re-implementing array sorting with AVX2 in
 
 Since there’s a lot to go over here, I’ll split it up into a few parts:
 
-1. In [part 1]({% post_url 2019-08-18-decimating-arraysort-with-avx2-pt1 %}), we did a short refresher on `QuickSort` and how it compares to `Array.Sort`. If you don’t need any refresher, you can skip over it and get right down to part 2 and onwards , although I really recommend skimming through, mostly because I’ve got really good visualizations for that should be in the back of everyone’s mind as we’ll be dealing with vectorization & optimization later.
-2. In [part 2]({% post_url 2019-08-19-decimating-arraysort-with-avx2-pt2 %}), we go over the basics of Vectorized HW Intrinsics, discussed vector types, and a handful of vectorized instructions we’ll actually be using in part 3, but we still will not be sorting anything.
-3. In [part 3]({% post_url 2019-08-20-decimating-arraysort-with-avx2-pt3 %}) we go through the initial code for the vectorized sorting and we’ll finally start seeing some payoff. We’ll finish with some agony courtesy of CPU’s Branch Predictor, just so we don't get too cocky.
+1. In [part 1]({% post_url 2019-08-18-this-goes-to-eleven-pt1 %}), we did a short refresher on `QuickSort` and how it compares to `Array.Sort`. If you don’t need any refresher, you can skip over it and get right down to part 2 and onwards , although I really recommend skimming through, mostly because I’ve got really good visualizations for that should be in the back of everyone’s mind as we’ll be dealing with vectorization & optimization later.
+2. In [part 2]({% post_url 2019-08-19-this-goes-to-eleven-pt2 %}), we go over the basics of Vectorized HW Intrinsics, discussed vector types, and a handful of vectorized instructions we’ll actually be using in part 3, but we still will not be sorting anything.
+3. In [part 3]({% post_url 2019-08-20-this-goes-to-eleven-pt3 %}) we go through the initial code for the vectorized sorting and we’ll finally start seeing some payoff. We’ll finish with some agony courtesy of CPU’s Branch Predictor, just so we don't get too cocky.
 4. In this part, we go over a handful of optimization approaches that I attempted trying to get the vectorized partition to run faster, we'll see what worked and what didn't.
 5. In part 5, we’ll see how we can almost get rid of 100% of the remaining scalar code, by implementing small-constant size array sorting. We’ll use, drum roll…, yet more AVX2 vectorization and gain a considerable amount of performance / efficiency in the process.
 6. Finally, in part 6, I’ll list the outstanding stuff / ideas I have for getting more juice and functionality out of my vectorized code.
