@@ -1,11 +1,10 @@
 @font-face {
     font-family: 'Cascadia Code';
-    src: url('CascadiaCode.eot');
-    src: url('CascadiaCode.eot?#iefix') format('embedded-opentype'),
-        url('CascadiaCode.woff2') format('woff2'),
-        url('CascadiaCode.woff') format('woff'),
-        url('CascadiaCode.ttf') format('truetype');
+    src: url('../fonts/CascadiaCode.eot');
+    src: url('../fonts/CascadiaCode.eot?#iefix') format('embedded-opentype'),
+        url('../fonts/CascadiaCode.woff2') format('woff2'),
+        url('../fonts/CascadiaCode.woff') format('woff'),
+        url('../fonts/CascadiaCode.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
 }
-

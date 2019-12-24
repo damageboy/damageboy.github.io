@@ -41,7 +41,10 @@ var JekyllChart =
     function createChart (canvas, CSV, comments) {
       canvas.chart = null
       var ctx = canvas.getContext('2d')
-      var chartOptions = { responsive: true }
+      var chartOptions = { 
+        responsive: true,
+        maintainAspectRatio: false
+      }
       var chartData = { labels: null, datasets: [] }
       if (comments !== null) {
         for (var j = 0; j < comments.length; j++) {
@@ -178,8 +181,8 @@ var JekyllChart =
     var chartConfig = { 
       defaults: {
         global: { 
-          defaultFontFamily: '"Indie Flower", cursive',
-          defaultFontSize: 18
+          //defaultFontFamily: '"Indie Flower", cursive',
+          //defaultFontSize: 18
         }
       }
     }

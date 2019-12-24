@@ -39,6 +39,13 @@ $type-size-6: 1.0em !default; // ~12px
 $type-size-7: 0.75em !default; // ~11px
 $type-size-8: 0.685em !default; // ~10px
 
+$small: 600px !default;
+$medium: 768px !default;
+$medium-wide: 900px !default;
+$large: 1024px !default;
+$x-large: 1360px !default;
+$max-width: $x-large !default;
+
 @import "minimal-mistakes/skins/{{ site.minimal_mistakes_skin | default: 'default' }}"; // skin
 @import "minimal-mistakes"; // main partials
 
@@ -95,10 +102,151 @@ small,
   font-size: 80%;
 }
 
-.stickemup {
-  position: -webkit-sticky;
-  position: sticky;
-  top: 0;
-  background-color: rgba(238, 238, 238, 1);
+// Up to 2.1
+@media (max-aspect-ratio: 1920/914) {
+  .stickemup {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    background-color: rgba(238, 238, 238, 1);
+    z-index: 666;
+  }
+}
+
+.top-scroll-progress-bar {
+  background: linear-gradient(to right,rgb(227, 44, 25), var(--scroll), transparent 0);
+  background-repeat: no-repeat;
+  width: 100%;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  height: 4px;
+  z-index: 1;
+}
+
+// Up to 2.1
+@media (max-aspect-ratio: 1920/914) {
+  .benchmark-chart-container {
+    height: 25em;
+    position: relative; 
+  }
+}
+
+@media (min-aspect-ratio: 1920/914) {
+  .benchmark-chart-container {
+    height: 20em;
+    position: relative; 
+  }
+}
+
+pre.highlight {
+  padding-top: 0.25em !important;
+  padding-bottom: 0.25em !important;
+}
+
+ul.uk-tab > li {
+  margin-bottom: 0 !important
+}
+
+.helpbutton {
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: help;
+  position: absolute;
+  left: -3%;
+  top: 5%;
   z-index: 666;
+}
+div.rotated-header-container {
+  padding-bottom: 0.4rem;
+  padding-top: 0.4rem;
+}
+div.rotated-header {
+  transform: 
+  // Magic Numbers
+  translate(0px, 0px)
+  // 45 is really 360-45
+  rotate(305deg);
+  //width: 30px;
+  padding-bottom: 10px;
+}
+
+.bootstrap-table .fixed-table-container .table thead th .th-inner {
+  padding-bottom: .25rem !important;
+  padding-top: .25rem !important;
+}
+
+.bootstrap-table .fixed-table-container .table thead th .sortable {
+  padding-right: 22px !important;
+}
+
+  object.animated-border{
+    display:flex;
+    flex-direction:row;
+    justify-content:center;
+    width:100%;
+    min-height:100%;
+    margin-bottom:3rem;
+    align-self:center;
+    background:transparent;
+    padding:0.5rem 0.5rem;
+    margin:0 0.5rem;
+    transition:all .3s ease;
+    letter-spacing:1px;
+    outline:none;
+
+    border:dotted 2px #41403E;
+
+    
+    box-shadow: 10px 19px 17px -13px hsla(0,0%,0%,.2);
+    border-radius: 10px 25px;
+    &:hover{
+       box-shadow:2px 8px 4px -6px hsla(0,0%,0%,.3);
+    } 
+}
+
+.pull-right.pagination {
+  padding: 0
+}
+
+.pull-right.pagination>ul>li {
+  padding: 0;
+  line-height: 0;
+}
+
+
+.pull-right.pagination>ul {
+  line-height: 0
+}
+
+.pull-left.pagination-detail {
+  display: none;
+  visibility: hidden;
+}
+.divTable{
+	display: table;
+	width: 100%;
+}
+.divTableRow {
+	display: table-row;
+}
+.divTableHeading {
+	display: table-header-group;
+}
+.divTableCell, .divTableHead {
+	border: none;
+	display: table-cell;
+	padding: 3px 10px;
+}
+.divTableHeading {
+	display: table-header-group;
+	font-weight: bold;
+}
+.divTableFoot {
+	display: table-footer-group;
+	font-weight: bold;
+}
+.divTableBody {
+	display: table-row-group;
 }

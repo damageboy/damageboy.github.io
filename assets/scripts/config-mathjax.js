@@ -1,8 +1,11 @@
 window.MathJax = {
+  chtml: {
+    fontURL: '/assets/fonts/',   // The URL where the fonts are found
+  },
   options: {
     renderActions: {
-      find: [10, function (doc) {
-        for (const node of document.querySelectorAll('script[type^="text/tex"]')) {
+      findScript: [10, function (doc) {
+        for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
           const display = !!node.type.match(/; *mode=display/);
           const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
           const text = document.createTextNode('');

@@ -1,0 +1,97 @@
+name: Build Jekyll site
+
+on: 
+  push:
+    branches:
+      - dev
+
+env:
+    ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+    ALGOLIA_API_KEY: ${{ secrets.ALGOLIA_API_KEY }}
+    DEPLOY_BRANCH: master
+    RUBY_VERSION: 2.6
+
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - name: Set up Ruby
+        uses: actions/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+
+      - uses: actions/cache@v1
+        id: gem-cache
+        with:
+          path: ~/.gem
+          key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gems-
+
+      - name: Install crappy code-tabs fork for jekyll 4.0
+        shell: bash
+        if: steps.gem-cache.outputs.cache-hit != 'true'
+        run: gem install gems/*.gem --user-install
+
+      - name: Install/update bundles
+        shell: bash
+        run: |
+          gem install --user-install bundler 
+          bundle config path ~/.gem
+          bundle install  --jobs 4 --retry 3
+
+      - name: hotpatch remote-theme
+        shell: bash
+        run: >
+          sed -i 's#site.theme.configure_sass#site.theme.configure_sass if site.theme.respond_to?(:configure_sass)#' 
+          ~/.gem/ruby/${RUBY_VERSION}*/gems/jekyll-remote-theme-0.4.1/lib/jekyll-remote-theme/munger.rb
+
+      - name: Build with jekyll
+        shell: bash
+        run: bundle exec jekyll build
+
+      - name: Update algolia search
+        shell: bash
+        run: bundle exec jekyll algolia
+
+      - name: Shove the generated site to the master branch
+        shell: bash
+        run: |
+          COMMIT_EMAIL=`jq '.pusher.email' ${GITHUB_EVENT_PATH}`
+          COMMIT_NAME=`jq '.pusher.name' ${GITHUB_EVENT_PATH}`
+          git config --global user.email "${COMMIT_EMAIL}"
+          git config --global user.name "${COMMIT_NAME}"
+          REPOSITORY_PATH="https://${ACCESS_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if [ "$(git ls-remote --heads "$REPOSITORY_PATH" "$DEPLOY_BRANCH" | wc -l)" -eq 0 ]; then
+            echo "Creating remote branch ${BRANCH} as it doesn't exist..."
+            git checkout "${DEPLOY_BRANCH}"
+            git checkout --orphan $DEPLOY_BRANCH
+            git rm -rf .
+            touch README.md
+            git add README.md
+            git commit -m "Initial commit"
+            git push $REPOSITORY_PATH $DEPLOY_BRANCH
+            git checkout -
+          fi
+          # Commits the data to Github.
+          echo "Deploying to GitHub..."
+          git add -f _site 
+          git commit -m "Deploying to ${DEPLOY_BRANCH} - $(date +%T)" | grep -v "create mode"
+          SUBTREE_REF=$(git subtree split --prefix _site)
+          git checkout --force $DEPLOY_BRANCH
+          git reset --hard ${SUBTREE_REF}
+          git clean -fdx
+          echo "Adding .nojekyll"
+          touch .nojekyll
+          git add --force .nojekyll
+          git commit -m "Disabling github pages builds - $(date +%T)"
+          git log
+          git push --force $REPOSITORY_PATH $DEPLOY_BRANCH
+          echo "Deployment succesful!"
+          echo 
+          git reset --hard "${GITHUB_SHA}"

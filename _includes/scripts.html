@@ -37,6 +37,9 @@
   {% endfor %}
 {% endif %}
 
+<div class="top-scroll-progress-bar"></div>
+
+
 <script>
 jQuery( document ).ready(function() {
     jQuery('table.datatable').each(function(){
@@ -44,4 +47,17 @@ jQuery( document ).ready(function() {
     });
 });
 </script>
+
+<script>
+  var element = document.documentElement,
+    body = document.body,
+    scrollTop = 'scrollTop',
+    scrollHeight = 'scrollHeight',
+    progress = document.querySelector('.top-scroll-progress-bar'),
+    scroll;
   
+  document.addEventListener('scroll', function() {
+    scroll = (element[scrollTop]||body[scrollTop]) / ((element[scrollHeight]||body[scrollHeight]) - element.clientHeight) * 100;
+    progress.style.setProperty('--scroll', scroll + '%');
+  });
+  </script>
