@@ -16,15 +16,24 @@ minimal_mistakes_skin: air #"aqua", "contrast", "dark", "dirt", "neon", "mint", 
 google_site_verification: "wcrvaF3e88-Vb6y-9eUTqYaXDMOukzl4c-IdKByS0Xc"
 bing_site_verification: "6D5AE23298671D95A20FAD7FA3430ABB"
 
+# Local serving
+host: 0.0.0.0
+
 # Build settings
 markdown: kramdown
-remote_theme: mmistakes/minimal-mistakes@4.16.6
+remote_theme: mmistakes/minimal-mistakes@4.17.2
+
 # Outputting
 permalink: /:year-:month-:day/:title
 breadcrumbs: false
 paginate: 5 # amount of posts to show
 paginate_path: /page:num/
 timezone: UTC
+kramdown:
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    block:
+      line_numbers: true
 
 # Reading Files
 include:
@@ -35,7 +44,7 @@ exclude:
   - talks/*/*.md
   - "*.sublime-project"
   - "*.sublime-workspace"
-  - vendor
+  - gems
   - .asset-cache
   - .bundle
   - .jekyll-assets-cache
@@ -43,7 +52,6 @@ exclude:
   - assets/js/plugins
   - assets/js/_main.js
   - assets/js/vendor
-  - Capfile
   - CHANGELOG
   - config
   - Gemfile

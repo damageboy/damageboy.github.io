@@ -1,5 +1,5 @@
 ---
-title: "This goes to Eleven (Pt. 4/6)"
+title: "This Goes to Eleven (Pt. 4/6)"
 excerpt: >
   Decimating Array.Sort with AVX2.<br/><br/>
   I ended up going down the rabbit hole re-implementing array sorting with AVX2 intrinsics.<br/>
@@ -7,13 +7,14 @@ excerpt: >
 header:
   overlay_image: url('/assets/images/these-go-to-eleven.jpg'), url('/assets/images/these-go-to-eleven.webp')
   overlay_filter: rgba(106, 0, 0, 0.6)
+  og_image: /assets/images/these-go-to-eleven.jpg
   actions:
     - label: "GitHub"
       url: "https://github.com/damageboy/vxsort"
     - label: "Nuget"
       url: "https://www.nuget.org/packages/VxSort"
 hidden: true
-date: 2019-08-20 11:26:28 +0300
+date: 2020-01-31 08:26:28 +0300
 classes: wide
 #categories: coreclr intrinsics vectorization quicksort sorting
 ---
@@ -22,24 +23,25 @@ I ended up going down the rabbit hole re-implementing array sorting with AVX2 in
 
 Since there’s a lot to go over here, I’ll split it up into a few parts:
 
-1. In [part 1]({% post_url 2019-08-18-decimating-arraysort-with-avx2-pt1 %}), we did a short refresher on `QuickSort` and how it compares to `Array.Sort`. If you don’t need any refresher, you can skip over it and get right down to part 2 and onwards , although I really recommend skimming through, mostly because I’ve got really good visualizations for that should be in the back of everyone’s mind as we’ll be dealing with vectorization & optimization later.
-2. In [part 2]({% post_url 2019-08-19-decimating-arraysort-with-avx2-pt2 %}), we go over the basics of Vectorized HW Intrinsics, discussed vector types, and a handful of vectorized instructions we’ll actually be using in part 3, but we still will not be sorting anything.
-3. In [part 3]({% post_url 2019-08-20-decimating-arraysort-with-avx2-pt3 %}) we go through the initial code for the vectorized sorting and we’ll finally start seeing some payoff. We’ll finish with some agony courtesy of CPU’s Branch Predictor, just so we don't get too cocky.
+1. In [part 1]({% post_url 2020-01-28-this-goes-to-eleven-pt1 %}), we did a short refresher on `QuickSort` and how it compares to `Array.Sort`. If you don’t need any refresher, you can skip over it and get right down to part 2 and onwards , although I really recommend skimming through, mostly because I’ve got really good visualizations for that should be in the back of everyone’s mind as we’ll be dealing with vectorization & optimization later.
+2. In [part 2]({% post_url 2020-01-29-this-goes-to-eleven-pt2 %}), we go over the basics of Vectorized HW Intrinsics, discussed vector types, and a handful of vectorized instructions we’ll actually be using in part 3, but we still will not be sorting anything.
+3. In [part 3]({% post_url 2020-01-30-this-goes-to-eleven-pt3 %}) we go through the initial code for the vectorized sorting and we’ll finally start seeing some payoff. We’ll finish with some agony courtesy of CPU’s Branch Predictor, just so we don't get too cocky.
 4. In this part, we go over a handful of optimization approaches that I attempted trying to get the vectorized partition to run faster, we'll see what worked and what didn't.
 5. In part 5, we’ll see how we can almost get rid of 100% of the remaining scalar code, by implementing small-constant size array sorting. We’ll use, drum roll…, yet more AVX2 vectorization and gain a considerable amount of performance / efficiency in the process.
 6. Finally, in part 6, I’ll list the outstanding stuff / ideas I have for getting more juice and functionality out of my vectorized code.
 
 ## (Trying) to squeeze some more vectorized juice
 
-I thought it would be nice to show a bunch of things I ended up trying to improve performance.  
-I tried to keep most of these experiments in separate implementations, both the ones that yielded positive results and the failures. These can be seen in the original repo under the [Happy](https://github.com/damageboy/QuicksortAvaganza/tree/master/VxSort/AVX2/Happy) and [Sad](https://github.com/damageboy/QuicksortAvaganza/tree/master/QuickSortAvaganza/AVX2/Sad) folders.
+I thought it would be nice to show a bunch of things I ended up trying to improve performance.
+I tried to keep most of these experiments in separate implementations, both the ones that yielded positive results and the failures. These can be seen in the original repo under the [Happy](https://github.com/damageboy/VxSort/tree/research/VxSortResearch/Unstable/AVX2/Happy) and [Sad](https://github.com/damageboy/VxSort/tree/research/VxSortResearch/Unstable/AVX2/Sad) folders.
 
 While some worked, and some didn't, I think a bunch of these were worth mentioning, so here goes:
 
 ### Dealing with small JIT hiccups: :+1:
 
-One of the more annoying things I've discovered during this optimization process was the the JIT could generate much better code around with pointer arithmetic.  
-Consider this following piece of code, which we've shown before:
+One of the more surprising things I've discovered during the optimization journey was that the JIT could generate much better code, specifically around with pointer arithmetic.  
+With the basic version working, I started turning my attention to the body of the main loop, for obvious reasons, and immediately saw some red-flag raising assembly code, specifically
+around this following piece of code, which we've shown before:
 
 ```csharp
 if (readLeft   - writeLeft <= 
@@ -53,31 +55,116 @@ if (readLeft   - writeLeft <=
 It looks innocent enough, but here's the freely commented x86 asm code for it:
 
 ```nasm
-mov rcx, rdi   ; copy readLeft
-sub rcx, r12   ; subtract writeLeft
-mov r8, rcx    ; wat?
-sar r8, 0x3f   ; wat?1?
-and r8, 0x3    ; wat?!?!?
-add rcx, r8    ; wat!?!@#
-sar rcx, 0x2   ; wat#$@#$@
-mov r9, rsi    ; copy writeRight 
-sub r9, r13    ; subtract readRight
-mov r10, r9    ; wat?
-sar r10, 0x3f  ; wat?1?
-and r10, 0x3   ; wat?!?!?
-add r9, r10    ; wat!?!@#
-sar r9, 0x2    ; wat#$@#$@
-cmp rcx, r9    ; finally, comapre!
+mov     rax,rdx       ; copy readLeft
+sub     rax,r12       ; subtract writeLeft
+mov     rcx,rax       ; wat?
+sar     rcx,3Fh       ; wat?1?
+and     rcx,3         ; wat?!?!?
+add     rax,rcx       ; wat!?!@#
+sar     rax,2         ; wat#$@#$@
+mov     rcx,[rbp-58h] ; copy writeRight, but from the stack?
+mov     r8,rcx        ; inside the loop body?!?!?
+sub     r8,rsi        ; subtract readRight
+mov     r10,r8        ; wat?
+sar     r10,3Fh       ; wat?!?
+and     r10,3         ; wat!?!@#
+add     r8,r10        ; wat#$@#$@
+sar     r8,2          ; wat^!#$!#$
+cmp     rax,r8        ; finally, comapre!
 ```
 
-As you can see from my comments, quite a few of those instructions were not making me happy...  
-The original code made the JIT (wrongfully) think we are want it to perform `int *` arithmetic for `readLeft - writeLeft` and `writeRight - readRight`. In other words: The JIT generated code to take the numerical, or `byte *` pointer differences, and generated extra code to convert them to `int *` differences: so lots of extra arithmetic operations. This is quite pointless: we just care if one side is larger than the other, we don't care if this is done with `byte *` or `int *` units... This is similar to converting two distance measurements taken in `cm` to `km` just to compare which is greater. Redundant.
+It's not every day that we get to see two JIT issues with one line of code, I know some people might take this as a bad sign, but in many ways this is great! To my twisted mind it feels
+like digging for oil in Texas in the early 20s... We've practically hit the ground with a pickaxe accidentaly, only to see black liquid seeping out almost immediately!
+
+#### JIT Bug: `writeRight` not being optimized into register
+
+One super weird thing that we can see happenning here is on <span class="uk-label">L8-9</span> especially when compared to <span class="uk-label">L1</span>. The code merely tries to substract two pairs of pointers, but the
+generated machine code is weird: 3 out of 4 pointers were correctly lifted out of the stack into registers outside the body of the loop (`readLeft`, `writeLeft`, `readRight`), but the 4<sup>th</sup> one, `writeRight` is the designated black-sheep of the family and is being continously read from the stack (and later written to at the end of the loop body).  
+There is good reason for this, and it's super weird that this is happenning! What do we do?
+
+For one thing, I've opened up an issue about this code. The issues itself shows just how finicky the JIT is regarding this variable, and surpisingly, by fundging around the setup code this can be easily worked around for now.  
+Here's the original setup code I presented in the previous post:
+
+
+<div markdown="1">
+<div markdown="1" class="stickemup">
+
+```csharp
+unsafe int* VectorizedPartitionInPlace(int* left, int* right)
+{
+    var N = Vector256<T>.Count; // Treated by JIT as constant!
+    var pivot = *right;
+    var P = Vector256.Create(pivot);
+
+    var writeLeft = left;
+    var writeRight = right - N - 1; // <- Why the hate?>
+    var tmpLeft = _tempStart;
+    var tmpRight = _tempEnd - N;
+
+    PartitionBlock(left,          P, ref tmpLeft, ref tmpRight);
+    PartitionBlock(right - N - 1, P, ref tmpLeft, ref tmpRight);
+
+    var readLeft  = left + N;
+    var readRight = right - 2*N - 1;
+```
+
+</div>
+
+Here's a simple fix: Just moving the pointer declaration closer to the loop body seems to convince the JIT that we can all be freinds once again:
+
+</div>
+
+```csharp
+unsafe int* VectorizedPartitionInPlace(int* left, int* right)
+{
+    var N = Vector256<T>.Count; // Treated by JIT as constant!
+    var pivot = *right;
+    var P = Vector256.Create(pivot);
+
+    var tmpLeft = _tempStart;
+    var tmpRight = _tempEnd - N;
+
+    PartitionBlock(left,          P, ref tmpLeft, ref tmpRight);
+    PartitionBlock(right - N - 1, P, ref tmpLeft, ref tmpRight);
+
+    var writeLeft = left;
+    var writeRight = right - N - 1; // <- Oh, so now we're cool?
+    var readLeft  = left + N;
+    var readRight = right - 2*N - 1;
+```
+
+The asm is slightly cleaner:
+
+```nasm
+mov     r8,rax        ; copy readLeft
+sub     r8,r15        ; subtract writeLeft
+mov     r9,r8         ; wat?
+sar     r9,3Fh        ; wat?1?
+and     r9,3          ; wat?!?!?
+add     r8,r9         ; wat!?!@#
+sar     r8,2          ; wat#$@#$@
+mov     r9,rsi        ; copy writeRight
+sub     r9,rcx        ; subtract readRight
+mov     r10,r9        ; wat?1?
+sar     r10,3Fh       ; wat?!?!?
+and     r10,3         ; wat!?!@#
+add     r9,r10        ; wat#$@#$@
+sar     r9,2          ; wat^%#^#@!
+cmp     r8,r9         ; finally, comapre!
+```
+
+It doesn't look like much, but we've managed to remove two memory accesses from the loop body (The read, removed "between" these two last asm listings, and a symmetrical write to the same stack variable/location towards the end of the loop).
+It's also clear, at least from my comments that I'm not entirely pleased yet, so let's move on to...
+
+#### JIT not optimizing pointer difference comaprisons
+
+The original code made the JIT (wrongfully) think we are want it to perform `int *` arithmetic for `readLeft - writeLeft` and `writeRight - readRight`. In other words: The JIT generated code to take the numerical, or `byte *` pointer differences, and generated extra code to convert them to `int *` differences: so lots of extra arithmetic operations. This is quite pointless: we just care if one side is larger than the other, we don't care if this is done with `byte *` or `int *` units... This is similar to converting two distance measurements taken in `cm` to `km` just to compare which is greater. Clearly redundant.
 
 With my new disillusionment with the JIT I have to write this:
 
 ```csharp
 if ((byte *) readLeft   - (byte *) writeLeft) <= 
-    (byte *) writeRight - (byte *) readRight)) {
+    (byte *) writeRight - (byte *) readRight) {
     // ...
 } else {
     // ...
@@ -97,7 +184,10 @@ cmp rcx, r9   ; compare
 It doesn't take a degree in reverse-engineering asm code to figure out this was a good idea!  
 By forcefully casting each pointer to `byte *` we are "telling" the JIT that the comparison can be made without the extra fan-fare.
 
-The same pattern (albeit slightly more convoluted) re-surfaces here:
+#### Removing extra instructions
+
+Another small issue arose around the pointer mutation code in the inlined partitioning block.
+When we update two `write*` pointers are updating an int pointer with the result of the `PopCount` intrinsic:
 
 ```csharp
 var popCount = PopCount(mask);
@@ -105,7 +195,8 @@ writeLeft += 8U - popCount;
 writeRight -= popCount;
 ```
 
-Here, the `popCount` result is used to increment two `int *` values. Unfortunately, the JIT isn't smart enough to see that it would be wiser to left shift `popCount` once by `2` (e.g. convert to `byte *` distance)  and reuse that value twice. So I re-wrote the previous rather clean code into the following god-awful mess:
+Unfortunately, the JIT isn't smart enough to see that it would be wiser to left shift `popCount` once by `2` (e.g. convert to `byte *` distance)  and reuse that value twice while mutating the two pointers.
+So I re-wrote the previous rather clean code into the following god-awful mess:
 
 ```csharp
 var popCount = PopCount(mask) << 2;
@@ -113,7 +204,9 @@ writeRight = ((int *) ((byte *) writeRight - popCount);
 writeLeft =  ((int *) ((byte *) writeLeft + 8*4U - popCount);
 ```
 
-Now we're generating slightly denser code by eliminating silly instructions from a hot loop. But does it help?
+I won't bother showing the asm, it's pretty clear from the C# that we pre-left shift (or multiply by 4) the popCount result before mutating the pointers.
+Now we're generating slightly denser code by eliminating a silly instruction from a hot loop.
+Time to see how this whole thing did in terms of performance:
 
 | Method                   | N        |  Mean (µs) | Time / N (ns) | Ratio |
 | ------------------------ | -------- | -------------: | ------------: | ----: |
@@ -136,11 +229,11 @@ If this is the going rate for ugly, I'll bite the bullet :)
 ### Get rid of localsinit flag on all methods: :+1:
 
 While this isn't "coding" per-se, I think it's something that is worthwhile mentioning in this series: Historically, the C# compiler emits the `localsinit` flag on all methods that declare local variables. This is done even though the compiler is rather strict and employs definite-assignment analysis to avoid having uninitialized locals to begin with... Sounds confusing? Redundant? I thought so too!  
-To be clear... Even though it is *not allowed* to use uninitialized variables in C#, and the the compiler *will* insist that we initialize everything like good boys and girls, the emitted MSIL still tells the JIT to generate **extra** code that initializes these locals before we get to initialize them. Naturally this adds more code to decode and execute which is really not OK in my book, especially for recursive code like the one in question.
+To be clear... Even though we are *not allowed* to use uninitialized variables in C#, and the compiler *will* throw those `CS0165` errors at us and insist that we initialize everything like good boys and girls, the emitted MSIL will still instructs the JIT to generate **extra** code that initializes these locals with `0`s before we get to initialize them. Naturally this adds more code to decode and execute which is really not OK in my book, especially for recursive code like the one in question.
 
 There is a [C# language proposal](https://github.com/dotnet/csharplang/blob/master/proposals/skip-localsinit.md) that seems to be dormant about allowing developers to get around this weirdness, but in the meantime I devoted 5 minutes of my life to use the excellent [`LocalsInit.Fody`](https://github.com/ltrzesniewski/LocalsInit.Fody) weaver for [Fody](https://github.com/ltrzesniewski/LocalsInit.Fody) which can re-write assemblies to get rid of this annoyance. I encourage you to support Fody through open-collective as it really is a wonderful project that serves so many backbone projects in the .NET World.
 
-At any rate, since we have lots of locals, and when we are after all implementing a recursive algorithm, this has a substantial effect on our code:
+At any rate, we have lots of locals, and we are after all implementing a recursive algorithm, so this has a substantial effect on our performance:
 
 
 
@@ -148,42 +241,45 @@ Not bad: a 1%-3% improvement (especially for higher array sizes) across the boar
 
 ### Selecting a good `InsertionSort` threshold: :+1:
 
-As mentioned before, it's not clear that the currently selected threshold for `InsertionSort`, which is 16 elements + 1 (for pivot), or 17 in total is the best for our mix of partitioning. I tried 24, 32, 40, 48 on top of 16, and this is what came out in the form of an Area Bump Chart:
+As mentioned before, it's not clear that the currently selected threshold for `InsertionSort`, which is 16 elements + 1 (for pivot), or 17 in total is the best for our mix of partitioning. I tried 24, 32, 40, 48 on top of 16, and this is what came out:
 
 <object style="margin: auto" width="100%" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/insertion-sort-threshold.svg"></object>
-This sort of visualization is great at showing us at each exact value of N, which threshold performed best, or was positioned as the lowest in the chart.  
-What's abundantly clear is that 16 isn't cutting it. And while for small/medium sized arrays 40/48 looks like a good threshold, in my eyes, the clear overall winner here is 32, as it seems to perform pretty well for the smaller array sizes, and exceedingly well for larger arrays. 
+
+I don't want to make a very big fuss out of this at this stage, as the next big post is all about replacing the small-array sorting approach with a spankin` vectorized vesion that will change the entire dynamics anyway, so this serves more of reminder that while we need to do our best to make partitioning as fast as possible, and later make small-sorting as fast as possible, for every little change that we do in any of these, we need to (re-)consider the cutoff threshold at which we'll switch from the former to the latter.
+
+For now, I'm taking 32 as my new threshold, but this is temporary anyway, so let's just get on with life for now.
 
 ### Aligning to CPU Cache-lines: :+1:
 
-Alignment, generally speaking, is not critical in modern x64 processors, although some people believe in this myth, probably due to bad experience a decade or two ago. Here's a short excerpt from a recent edition of Intel System's Programming guide about this topic: 
+Alignment, that is, controlling/conforming the exact address of memory accesses to some HW limitations, generally speaking, is not critical in modern processors, although some people believe in this myth, probably due to bad experience a decade or two ago. While historical processors either simply disallowed non-aligned access or performance suffered from this, the last decade of so worth off processors are simply oblivious to this problem per-se, as long as we issue reads and writes that all end up within a **single cache-line**, or 64-bytes on almost any modern-day processors: 
 
 <object style="margin: auto" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/cacheline-boundaries.svg"></object>
-What we should be careful about, however, is when our read operations ends up **crossing** cache-lines (which are 64 bytes long on almost all modern HW). This literally causes the CPU to issue *two* read operations directed at the cache units. This sort of cache-line crossing read does have a sustained effect on perfromance[^0].  
-For example, when we process an array using 4 byte reads, this means that when our data is *not* 4-bytes aligned these cross cache-line reads would occur at a rate of 4/64 or 6.25% of reads. In general, even this rate of cross-cacheline reads rarely even happens since in programming languages, C# included, both the default memory allocator and the JIT/Compiler work in tandem to avoid this situations by always aligning to machine word size on allocation, and adding padding within our classes and structs to make sure the different members are also aligned to 4/8 bytes.  
-So far, I’ve told you why/when you shouldn’t care about this. This was my way of easing into the topic and providing the reasoning why most developers can afford *not to know* this and not pay any performance penalty. For the most part, this is simply a non-issue.  
+
+What happens when, lets say, our read operations end up **crossing** cache-lines? This literally causes the CPU to issue *two* read operations directed at the cache units. This sort of cache-line crossing read does have a sustained effect on perfromance[^0].  
+For example, when we process an array using 4-byte reads, this means that if our array or starting address is *not* divisable by 4, and we are scannning an array sequentially, cross cache-line reads would occur at a rate of 4/64 or 6.25% of reads. Even this pretty small rate of cross-cacheline accesses usually remains *theoretical* for a combination of reasons: In most in programming languages, C# included, both the default memory allocator and the JIT/Compiler work in tandem to avoid this by making sure allocated memory is aligned to machine word size on the one hand, and by adding padding bytes within our classes and structs in between members, where needed, to make sure the different members are also aligned to 4/8 bytes.  
+So far, I’ve told you why/when you *shouldn’t* care about this. This was my way of both easing you into the topic and helping you feel not so bad if this is news to you. You really can afford *not to know* this and not pay any performance penalty, for the most part, this is simply a non-issue.  
 Unfortunately, this is not true for `Vector256<T>` sized reads, which are 32 bytes wide (256 bits / 8). And this is doubly not true for our partitioning problem:
 
-* Thee memory given to us to partition is almost *never* aligned to 32-bytes, since the allocator doesn’t care about that sort of alignment
+* The memory given to us for partitioning/sorting is almost *never* aligned to 32-bytes, except for cases of stupid luck, since the allocator doesn’t care about that sort of alignment.
+* And even if it were aligned, it would do us no good: The allocator, at best, would align the **entire** array to 32 bytes, but once we've performed a single partition operation the following sub-partitions’ start/end addresses are determined by the actual (e.g. random) data. There is no way we will get lucky enough that every partition will be magically 32-byte aligned.
 
-* And even if it did, it would do us no good: once we perform a single partition operation, the following partitions’ start addresses are determined by the actual (random) data. There is no way we will get lucky enough that every partition will be magically 32-byte aligned.
+Now that it is clear that we won’t be aligned to 32-bytes, this really means that when we go over the array sequentially (left to right and right to left as we do) we end up reading across cache-lines every **other** read! Or at a rate of 50%! This just escalated from a "...generally a non-problem" into a "Houston, we have a problem" very quickly. Not cool.
 
-Now that it is clear that we won’t be aligned to 32-bytes, this really means that when we go over the array sequentially (left to right and right to left as we do) we end up reading across cache-lines every **other** read! Or at a rate of 50%! Not cool.
+Fine, we have a problem, the first step is acknowleding/accepting, so I'm told, so let’s consider our memory access patterns when reading/writing with respect to alignment:
 
-Let’s consider our memory access patterns when reading/writing with respect to alignment:
-
-* For writing, we're all over the place, we always advance the write pointers according to how the data was partitioned, e.g. it is data dependent, and there is little we can say about our write addresses. Also, Intel CPUs have a specific optimization for this in the form of store buffers, so the bottom line is we can’t/don't need to care about writing.
+* For writing, we're all over the place, we always advance the write pointers according to how the data was partitioned, e.g. it is data dependent, and there is little we can say about our write addresses. Also, Intel CPUs have a specific optimization for this in the form of store buffers, which I'll refrain from describing here; the bottom line is we can’t/don't need to care about writing.
 * For reading, the situation is different: We *always* advance the read pointers by 8 elements (32-bytes) on the one hand, and we actually have a special intrinsic: `Avx.LoadAlignedVector256()`[^1] that can help us ensure that we are indeed reading from aligned memory.
 
-Can we do something about these cross-cacheline reads? We sure can! and initially, not at a great cost: remember that we need to deal with the remainder of the array anyway, and we've been doing that towards the end of our partitioning code thus far. We can move that code from the end of our partitioning function, to the beginning while also modifying it to partition with scalar code until both `readLeft`/`readRight` pointers are aligned to 32 bytes.  
+Can something about these cross-cacheline reads? Yes! and initially, I did get something "working" quickly: remember that we need to deal with the remainder of the array anyway, and we've been doing that towards the end of our partitioning code thus far. We can move that code from the end of our partitioning function, to the beginning while also modifying it to partition with scalar code until both `readLeft`/`readRight` pointers are aligned to 32 bytes.  
 This means we would do a little more scalar work:
 
 * Previously we had 0-7 elements left as a remainder for scalar partitioning per partition call.
-  * 3.5 elements on average.
-* By aligning from the partition outer rims *inwards* we will have 0-7 elements on each side to partition with scalar code...
-  * 7 elements on average.
+  * `3.5` elements on average.
+* By aligning from the partition's outer rims *inwards* we will have 0-7 elements on both sides to partition with scalar code...
+  * So `3.5 x 2 == 7` elements on average.
 
-In other words, this is an optimization with a trade-off: We will end up with more scalar work than before on the one hand (which is unfortunate), but we can change all of the loading code to use `Avx.LoadAlignedVector256()` and *know for sure* that we will no longer be causing the CPU to do cross cache-line reads (The latter being the performance boost).
+In other words, doing this sort of pre-alignment inwards is an optimization with a trade-off: We will end up with more scalar work than before on the one hand (which is unfortunate), but we can change the vector loading code to use `Avx.LoadAlignedVector256()` and *know for sure* that we will no longer be causing the CPU to do cross cache-line reads (The latter being the performance boost).  
+I understand that some smart-ass readers will want to quickly point out that adding 3.5 scalar operations doesn't sound like much of a trade off, but that isn't entirely true: each scalar comparison comes with a likely branch mis-prediction, so it has a higher cost than what you are pricing in, on the one hand; also, just as importantly don't forget that this is a recursive function, with ever decreasing partition sizes. If you go back to the initial stats we collected in previous posts, you'll be quickly reminded that we partition upwards of 300k times for 1 million element arrays, as a single data-point, so this does tedn to pile up...
 
 I won't bother showing the entire code listing for `AVX2DoublePumpedAligned` , it's available [here](https://github.com/damageboy/QuicksortAvaganza/blob/master/VxSort/AVX2DoublePumpedAligned.cs), but I will show the rewritten scalar partition block; originally it was right after the double-pumped loop and looked like this:
 

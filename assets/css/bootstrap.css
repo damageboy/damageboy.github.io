@@ -1264,7 +1264,7 @@ table th[class*="col-"] {
 }
 
 .progress {
-  height: 24px;
+  height: 22px;
   /*margin-bottom: 20px;*/
   overflow: hidden;
   background-color: #f5f5f5;
@@ -1589,7 +1589,7 @@ table th[class*="col-"] {
 .progress span {
   line-height: 24px;
   font-family: "Lato";
-  font-size: 1.4em;
+  font-size: 1.1em;
   position: absolute;
   display: block;
   width: 100%;

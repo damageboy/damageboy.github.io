@@ -1,5 +1,5 @@
 ---
-title: "This goes to Eleven (Pt. 2/6)"
+title: "This Goes to Eleven (Part. 2/6)"
 excerpt: >
   Decimating Array.Sort with AVX2.<br/><br/>
   I ended up going down the rabbit hole re-implementing array sorting with AVX2 intrinsics.<br/>
@@ -7,31 +7,29 @@ excerpt: >
 header:
   overlay_image: url('/assets/images/these-go-to-eleven.jpg'), url('/assets/images/these-go-to-eleven.webp')
   overlay_filter: rgba(106, 0, 0, 0.6)
+  og_image: /assets/images/these-go-to-eleven.jpg
   actions:
     - label: "GitHub"
       url: "https://github.com/damageboy/vxsort"
     - label: "Nuget"
       url: "https://www.nuget.org/packages/VxSort"
-hidden: true
-date: 2019-08-19 08:26:28 +0300
+date: 2020-01-29 08:26:28 +0300
 classes: wide
 #categories: coreclr intrinsics vectorization quicksort sorting
 ---
 
-I ended up going down the rabbit hole re-implementing array sorting with AVX2 intrinsics, and there's no reason I should go down alone.
+Since there’s a lot to over go over here, I’ve split it up into no less than 6 parts:
 
-Since there’s a lot to over go over here, I’ll split it up into a few parts:
-
-1. In [part 1]({% post_url 2019-08-18-decimating-arraysort-with-avx2-pt1 %}), we start with a refresher on `QuickSort` and how it compares to `Array.Sort()`.
+1. In [part 1]({% post_url 2020-01-28-this-goes-to-eleven-pt1 %}), we start with a refresher on `QuickSort` and how it compares to `Array.Sort()`.
 2. In this part, we go over the basics of vectorized hardware intrinsics, vector types, and go over a handful of vectorized instructions we’ll use in part 3. We still won't be sorting anything.
-3. In [part 3]({% post_url 2019-08-20-decimating-arraysort-with-avx2-pt3 %}), we go through the initial code for the vectorized sorting, and we’ll start seeing some payoff. We finish agonizing courtesy of the CPU’s Branch Predictor, throwing a wrench into our attempts.
-4. In [part 4]({% post_url 2019-08-21-decimating-arraysort-with-avx2-pt4 %}), we go over a handful of optimization approaches that I attempted trying to get the vectorized partitioning to run faster. We'll see what worked and what didn't.
-5. In part 5, we’ll see how we can almost get rid of all the remaining scalar code- by implementing small-constant size array sorting. We’ll use... drum roll…, yet more AVX2 vectorization.
+3. In [part 3]({% post_url 2020-01-30-this-goes-to-eleven-pt3 %}), we go through the initial code for the vectorized sorting, and we’ll start seeing some payoff. We finish agonizing courtesy of the CPU’s Branch Predictor, throwing a wrench into our attempts.
+4. In part 4, we go over a handful of optimization approaches that I attempted trying to get the vectorized partitioning to run faster. We'll see what worked and what didn't.
+5. In part 5, we’ll see how we can almost get rid of all the remaining scalar code- by implementing small-constant size array sorting. We’ll use, drum roll…, yet more AVX2 vectorization.
 6. Finally, in part 6, I’ll list the outstanding stuff/ideas I have for getting more juice and functionality out of my vectorized code.
 
 ## Intrinsics / Vectorization
 
-I'll start by repeating my own words from the first [blog post where I discussed intrinsics]({% post_url 2018-08-18-netcoreapp3.0-intrinsics-in-real-life-pt1 %}#the-whatwhy-of-intrinsics) in CoreCLR 3.0:
+I'll start by repeating my own words from the first [blog post where I discussed intrinsics]({% post_url 2018-08-18-netcoreapp3.0-intrinsics-in-real-life-pt1 %}#the-whatwhy-of-intrinsics) in the CoreCLR 3.0 alpha days:
 
 > Processor intrinsics are a way to directly embed specific CPU instructions via special, fake method calls that the JIT replaces at code-generation time. Many of these instructions are considered exotic, and normal language syntax does cannot map them cleanly.  
 > The general rule is that a single intrinsic "function" becomes a single CPU instruction.
@@ -43,46 +41,46 @@ You can go and re-read that introduction if you care for a more general and gent
   * They're grouped into 67 different categories/groups, these groups loosely correspond to various generations of CPUs as more and more intrinsics were gradually added.
 * More than 94% are vectorized hardware intrinsics, which we'll define more concretely below.
 
-That last point is supercritical: CPU intrinsics, at least in 2019, are overwhelmingly about being able to execute vectorized instructions. That's really why you *should* be paying them attention in the first place. There is additional stuff in there, for sure: if you're a kernel developer, or writing crypto code, or some other niche-cases, but vectorization is why you are really here, whether you knew it or not.
+That last point is super-critical: CPU intrinsics, at least in 2020, are overwhelmingly about being able to execute vectorized instructions. That's really why you *should* be paying them attention in the first place. Sure, there's additional stuff in there: if you're a kernel developer, or writing crypto code, or some other niche-cases, but vectorization is why you are really here, whether you knew it or not.
 
-In C#, we've mostly shied away from having intrinsics until CoreCLR 3.0 came along, where intrinsic support was added, championed by [@tannergooding](https://twitter.com/tannergooding) and others from Microsoft (Thanks Tanner!). but as single-threaded performance has virtually stopped improving, more programming languages started adding intrinsics support (go, rust, Java and now C#) so developers in those languages would have access to these specialized, much more efficient instructions. CoreCLR 3.0 does not support all 1,218 intrinsics that I found, but a more modest 226 intrinsics in [15 different classes](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.x86?view=netcore-3.0&viewFallbackFrom=dotnet-plat-ext-3.0) for x86 Intel and AMD processors. Each class is filled with many static functions, all of which are processor intrinsics, and represent a 1:1 mapping to Intel group/code names. As C# developers, we roughly get everything that Intel incorporated in their processors manufactured from 2014 and onwards[^1], and for AMD processors, from 2015 onwards.
+In C#, we've mostly shied away from having intrinsics until CoreCLR 3.0 came along, where intrinsic support became official/complete, championed by [@tannergooding](https://twitter.com/tannergooding) as well as others from Microsoft and Intel. but as single-threaded performance has virtually stopped improving, more programming languages started adding intrinsics support (go, rust, Java and now C#) so developers in those languages would have access to these specialized, much more efficient instructions. CoreCLR 3.0 does not support all 1,218 intrinsics that I found, but a more modest 226 intrinsics in [15 different classes](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.x86?view=netcore-3.0&viewFallbackFrom=dotnet-plat-ext-3.0) for x86 Intel and AMD processors. Each class is filled with many static functions, all of which are unique processor intrinsics, and represent a 1:1 mapping to Intel group/code names. As C# developers, we roughly get access to everything that Intel incorporated in their processors manufactured from 2014 and onwards[^1], and for AMD processors, from 2015 onwards.
 
 What are these vectorized intrinsics?  
 We need to cover a few base concepts specific to that category of intrinsics before we can start explaining specific intrinsics/instructions:
 
-*  What are vectorized intrinsics, and why have they become so popular.
+* What are vectorized intrinsics, and why have they become so popular.
 * How vectorized intrinsics interact with specialized vectorized *registers*.
 * How those registers are reflected as, essentially, new primitive types in CoreCLR 3.0.
 
 ### SIMD What & Why
 
-I'm going to use vectorization and SIMD interchangeably from here-on, but for the first and last time, let's spell out what SIMD is: **S**ingle **I**nstruction **M**ultiple **D**ata is really a simple idea when you think about it. A lot of code ends up doing "stuff" in loops, usually, processing vectors of data one element at a time. SIMD instructions bring a simple new idea to the table: The CPU adds special instructions that can do arithmetic, logic and many other types of generalized operations on "vectors", e.g. process multiple elements per instruction.
+I'm going to use vectorization and SIMD interchangeably from here-on, but for the first and last time, let's spell out what SIMD is: **S**ingle **I**nstruction **M**ultiple **D**ata is really a simple idea when you think about it. A lot of code ends up doing "stuff" in loops, usually, processing vectors of data one element at a time. SIMD instructions bring a simple new idea to the table: The CPU adds special instructions that can do arithmetic, bit-operations, comparisons and many other types of generalized operations on "vectors", e.g. process multiple elements per instruction.
 
-The benefit of using this approach to computing is that it allows for much greater efficiency: When we use vectorized intrinsics we end up executing the same *number* of instructions to process, for example, 8 data elements per instruction. Therefore, we reduce the amount of time the CPU spends decoding instructions for the same amount of work; furthermore, most vectorized instructions operate *independently* on the various **elements** of the vector and complete their operation at the same number of CPU cycles as the equivalent non-vectorized (or scalar) instruction. In short, in the land of CPU feature economics, vectorization is considered a high bang-for-buck feature: You can get a lot of *potential* performance for relatively little transistors added to the CPU, as long as people are willing to adapt their code (e.g. rewrite it) to use your new intrinsics, or compilers somehow magically manage to auto-vectorize the code (hint: There are tons of problems with that too)[^2].
+The benefit of using this approach to computing is that it allows for much greater efficiency: When we use vectorized intrinsics we end up executing the same *number* of instructions to process, for example, 8 data elements per instruction. Therefore, we reduce the amount of time the CPU spends decoding instructions for the same amount of work; furthermore, most vectorized instructions operate *independently* on the various **elements** of the vector and complete their operation at the same number of CPU cycles as the equivalent non-vectorized (or scalar) instruction. In short, in the land of CPU feature economics, vectorization is considered a high bang-for-buck feature: You can get a lot of *potential* performance for relatively little transistors added to the CPU, as long as people are willing to adapt their code (e.g. rewrite it) to use these new intrinsics, or compilers somehow magically manage to auto-vectorize the code (spoiler: There are tons of problems with that too)[^2].
 
-Another equally important thing to embrace and understand about vectorized intrinsics is what they don’t and cannot provide: branching. It’s pretty much impossible to even attempt to imagine what a vectorized branch instruction would mean. Both concepts just don’t even fit. Appropriately, a substantial part of vectorizing code is forcing oneself to accomplishing the given task without using branching. As we will see, branching begets unpredictability, at the CPU level, and unpredictability is our enemy, when we want to reach the stratosphere, performance wise!
+Another equally important thing to embrace and understand about vectorized intrinsics is what they don’t and cannot provide: branching. It’s pretty much impossible to even attempt to imagine what a vectorized branch instruction would mean. These two concepts don’t begin to mix. Appropriately, a substantial part of vectorizing code is forcing oneself to accomplishing the given task without using branching. As we will see, branching begets unpredictability, at the CPU level, and unpredictability is our enemy, when we want to go fast.
 
-Of course, I’m grossly over-romanticizing vectorized intrinsics and their benefits: There are also many non-trivial overheads involved both using them and adding them to our processors. But all in all, the grand picture of CPU economics remains the same, adding and using vectorized instructions is still, compared to other potential improvements, quite cheap, under the assumption that programmers are willing to make the effort to re-write and maintain vectorized code.
+Of course, I’m grossly over-romanticizing vectorized intrinsics and their benefits: There are also many non-trivial overheads involved both using them and adding them to our processors and to using them in our code. However, all in all, in the grand picture of CPU/performance economics adding and using vectorized instructions is still, compared to other potential improvements, quite cheap, under the assumption that programmers are willing to make the effort to re-write and maintain vectorized code.
 
 #### SIMD registers
 
 After our short introduction to vectorized intrinsics, we need to discuss SIMD registers, and how this piece of the puzzle fits the grand picture: Teaching our CPU to execute 1,000+ vectorized instructions is just part of the story, these instructions need to somehow operate on our data. Do all of these instructions simply take a pointer to memory and run wild with it? The short answer is: **No**. For the *most* part, CPU instructions dealing with vectorization (with a few notable exceptions) use special registers inside our CPU that are called SIMD registers. This is analogous to scalar (regular, non-vectorized) code we write in any programming language: while some instructions read and write directly to memory, and occasionally some instruction will accept a memory address as an operand, most instructions are register ↔ register only.
 
-Just like scalar CPU registers, SIMD registers have a constant bit-width. In Intel these come at 64, 128, 256 and recently 512 bit wide registers. Being SIMD registers, they will end up containing multiple data-elements of another primitive type. The same register can and will be used to process a wide-range of primitive data-types, depending on which instruction is using it, as we will shortly demonstrate.
+Just like scalar CPU registers, SIMD registers have a constant bit-width. In Intel these come at 64, 128, 256 and recently 512 bit wide registers. Unlike scalar registers, though, SIMD registers, end up *containing multiple* data-elements of another primitive type. The same register can and will be used to process a wide-range of primitive data-types, depending on which instruction is using it, as we will shortly demonstrate.
 
-For now, this is all I care to explain about SIMD Registers at the CPU level: just like you don't necessarily need to know how many scalar registers exist and the details surrounding how the JIT generates code to use them efficiently for a given CPU, you can skip attaining that knowledge when starting with vectorization as well. We will circle back later and give more attention to these details when, invariably, our vectorized code doesn't perform as quickly as we'd like it to, but for now we just need the basics.
+For now, this is all I care to explain about SIMD Registers at the CPU level: We need to be aware of their existence (we'll see them in disassembly dumps anywat), and since we are dealing with high-perfomance code we kind of need to know how many of them exist inside our CPU.
 
-#### SIMD Intrinsic Types in C#
+#### SIMD Intrinsic Types in C\\#
 
-We've discussed SIMD intrinsics and mentioned that those operate (e.g. accept and modify) on SIMD registers. To work with SIMD intrinsics in C# we need to get acquainted with the C# abstraction of the very same registers we just mentioned: These are primitive vector types that the JIT recognizes and knows how to work with, In C# those would be:
+We've touched lightly upon SIMD intrinsics and how they operate (e.g. accept and modify) on SIMD registers. Time to figure out how we can fiddle with everything in C#; we'll start with the types:
 
-| CoreCLR                                                      | Intel x86    |
-| ------------------------------------------------------------ | ------------ |
-| [`Vector64<T>`](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.vector64?view=netcore-3.0) | `mmo-mm7`    |
-| [`Vector128<T>`](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.vector128?view=netcore-3.0) | `xmm0-xmm15` |
-| [`Vector256<T>`](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.vector256?view=netcore-3.0) | `ymm0-ymm15` |
+| C# Type                                                      | x86 Registers    | Width (bits) |
+| ------------------------------------------------------------ |:------------:|:------------:|
+| [`Vector64<T>`](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.vector64?view=netcore-3.0) | `mmo-mm7`    | 64  |
+| [`Vector128<T>`](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.vector128?view=netcore-3.0) | `xmm0-xmm15` | 128 |
+| [`Vector256<T>`](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.vector256?view=netcore-3.0) | `ymm0-ymm15` | 256 |
 
-These are special value-types recognized by the JIT while it is busy generating machine code. We should think about these types just like we think about other special-case primitive types such as `int` or `double`. These vector types all accept a generic parameter `<T>`. This parameter can’t just be anything we'd like. It is limited to the types supported on our CPU and its vectorized intrinsics. Also, the numerical part of the type name (`64`/`128`/`256`) denotes the number of bits in the vectorized type, or the actual width of the SIMD register in bits.
+These are primitive vector value-types recognized by the JIT while it is generating machine code. We should try and think about these types just like we think about other special-case primitive types such as `int` or `double`, with one exception: These vector types all accept a generic parameter `<T>`, which may seem a little odd for a primitive type at a first glance, until we remember that their purpose is to contain *other* primitive types (there's a reason they put the word "Vector" in there...); moreover, this generic parameter can’t just be any type or even value-type we'd like... It is limited to the types supported on our CPU and its vectorized intrinsics.
 
 Let's take `Vector256<T>`, which I'll be using exclusively in this series, as an example; `Vector256<T>` can be used **only** with the following primitive types:
 
@@ -103,13 +101,14 @@ Let's take `Vector256<T>`, which I'll be using exclusively in this series, as an
     </tbody>
 </table>
 
-No matter what type of the supported primitive types we'll choose, we'll end up with a total of 256 bits, or the underlying SIMD register width.
+No matter which type of the supported primitive set we'll choose, we'll end up with a total of 256 bits, or the underlying SIMD register width.  
+Now that we've kind of figured out of vector types/registers are represented in C#, let's perform some operations on them.
 
-#### A few Vectorized Instructions for the road
+### A few Vectorized Instructions for the road
 
 Armed with this new understanding and knowledge of `Vector256<T>` we can move on and start learning a few vectorized instructions.
 
-Chekhov famously said: "If in the first act you have hung a pistol on the wall, then in the following one it should be fired. Otherwise, don't put it there". Here are seven loaded AVX2 pistols, and let me assure you they are about to fire in the next act. I’m obviously not going to explain all 1,000+ intrinsics mentioned before, if only not to piss off Anton Chekhov. We will **thoroughly** explain the ones needed to get this party going.  
+Chekhov famously said: "If in the first act you have hung a pistol on the wall, then in the following one it should be fired. Otherwise, don't put it there". Here are seven loaded AVX2 pistols; rest assured they are about to fire in the next act. I’m obviously not going to explain all 1,000+ intrinsics mentioned before, if only not to piss off Anton Chekhov. We will **thoroughly** explain the ones needed to get this party going.  
 Here's the list of what we're going to go over:
 
 | x64 asm       | Intel                                                        | CoreCLR                                                      |
@@ -122,15 +121,26 @@ Here's the list of what we're going to go over:
 | `popcnt`      | [`_mm_popcnt_u32`](https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_popcnt_u32&expand=4378) | [`Popcnt.PopCount`](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.x86.popcnt.popcount?view=netcore-3.0#System_Runtime_Intrinsics_X86_Popcnt_PopCount_System_UInt32_) |
 | `vpermd`      | [`_mm256_permutevar8x32_epi32`](https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm256_permutevar8x32_epi32&expand=4201) | [`Avx2.PermuteVar8x32`](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.x86.avx2.permutevar8x32?view=netcore-3.0#System_Runtime_Intrinsics_X86_Avx2_PermuteVar8x32_System_Runtime_Intrinsics_Vector256_System_Int32__System_Runtime_Intrinsics_Vector256_System_Int32__) |
 
-I understand that for first time readers, this list looks like I'm just name-dropping lots of fancy code names to make myself sound smart, but the unfortunate reality is that we *kind of need* to know all of these, and here is why: On the right column I've provided the actual C# Intrinsic function we will be calling in our code and linked to their docs. But here's a funny thing: There is no "usable" documentation on Microsoft's own docs regarding most of these intrinsics. All those docs do is simply point back to the Intel name, which I've also provided in the middle column, with links to the real documentation, the sort that actually explains what the instruction does. Finally, since we're practically writing assembly code anyways, and I can guarantee we'll end up inspecting JIT'd code, I provided the x64 assembly opcodes for our instructions as well.[^3] 
+I understand that for first time readers, this list looks like I'm just name-dropping lots of fancy code names to make myself sound smart, but the unfortunate reality is that we *kind of need* to know all of these, and here is why: On the right column I've provided the actual C# Intrinsic function we will be calling in our code and linked to their docs. But here's a funny thing: There is no "usable" documentation on Microsoft's own docs regarding most of these intrinsics. All those docs do is simply point back to the Intel C/C++ intrinsic name, which I've also provided in the middle column, with links to the real documentation, the sort that actually explains what the instruction does with pseudo code. Finally, since we're practically writing assembly code anyways, and I can guarantee we'll end up inspecting JIT'd code down the road, I provided the x86 assembly opcodes for our instructions as well.[^3]
 Now, What does each of these do? Let's find out...
 
-As luck would have it, I was blessed with the ultimate power of wielding SVG animations, so most of these instructions will be accompanied by an animation *visually explaining* them.  
-<span class="uk-label">Hint</span>: These animations are triggered by your mouse pointer / finger-touch inside them. The animations will immediately freeze once the pointer is out of the drawing area, and resume again when inside...  
-Use this wisely. From here-on, I'll use the following icon when I have a thingy that animates:<br/><object style="margin: auto" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/play.svg"></object>
+<table style="margin-bottom: 0em">
+<tr>
+<td style="border: none"><span class="uk-label">Hint</span></td>
+<td style="border: none">From here-on, The following icon means I have a thingy that animates: <object style="margin: auto; position: relative; top: 1.1em" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/play.svg"></object><br/>
+Click/Touch/Hover <b>inside</b> means: <i class="glyphicon glyphicon-play"></i><br/>
+Click/Touch/Hover <b>outside</b> means: <i class="glyphicon glyphicon-pause"></i>
+</td>
+</tr>
+</table>
 {: .notice--info}
 
 #### Vector256.Create(int value)
+
+<div markdown="1">
+<div markdown="1" class="stickemup">
+<object class="animated-border" width="100%" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/inst-animations/vbroadcast-with-hint.svg"></object>
+</div>
 
 We start with a couple of simple instructions, and nothing is more simple than this first: This intrinsic accepts a single scalar value and simply “broadcasts” it to an entire SIMD register, this is how you’d use it:
 
@@ -146,10 +156,14 @@ vpbroadcastd ymm0, xmm0   ; 3 cycle latency / 1 cycle throughput
 ```
 
 This specific intrinsic is translated into two intel opcodes, since there is no direct single instruction that performs this.
-Here it is visually: 
+</div>
 
-<object style="margin: auto" width="100%" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/inst-animations/vbroadcast-with-hint.svg"></object>
 #### Avx2.LoadDquVector256 / Avx.Store
+
+<div markdown="1">
+<div markdown="1" class="stickemup">
+<object class="animated-border" width="100%" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/inst-animations/lddqu-with-hint.svg" ></object>
+</div>
 
 Next up we have a couple of brain dead simple intrinsics that we use to read/write from memory into SIMD registers and conversely store from SIMD registers back to memory. These are amongst the most common intrinsics out there, as you can imagine:
 
@@ -169,10 +183,15 @@ vlddqu ymm1, ymmword ptr [rdi]  ; 5 cycle latency + cache/memory
 vmovdqu ymmword ptr [rdi], ymm1 ; Same as above
 ```
 
-I only included an SVG animation for `LoadDquVector256`, but you can use your imagination and visualize how `Store` simply does the same thing in reverse:
+I only included an SVG animation for `LoadDquVector256`, but you can use your imagination and visualize how `Store` simply does the same thing in reverse.
+</div>
 
-<object style="margin: auto" width="100%" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/inst-animations/lddqu-with-hint.svg" ></object>
 #### CompareGreaterThan
+
+<div markdown="1">
+<div markdown="1" class="stickemup">
+<object class="animated-border" width="100%" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/inst-animations/vpcmpgtd-with-hint.svg" ></object>
+</div>
 
 `CompareGreaterThan` does an *n*-way, element-by-element *greater-than* (`>`) comparison between two `Vector256<T>` instances. In our case where `T` is really `int`, this means comparing 8 integers in one go, instead of performing 8 comparisons serially!
 
@@ -192,10 +211,14 @@ vpcmpgtd ymm2, ymm1, ymm0 ; 1 cycle latency
                           ; 0.5 cycle throughput
 ```
 
-Visually this does:
-
-<object style="margin: auto" width="100%" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/inst-animations/vpcmpgtd-with-hint.svg" ></object>
+</div
+>
 #### MoveMask
+
+<div markdown="1">
+<div markdown="1" class="stickemup">
+<object class="animated-border" width="100%" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/inst-animations/vmovmskps-with-hint.svg"></object>
+</div>
 
 Another intrinsic which will prove to be very useful is the ability to extract some bits from a vectorized register into a normal, scalar one. `MoveMask` does just this. This intrinsic takes the top-level (MSB) bit from every element and moves it into our scalar result:
 
@@ -211,9 +234,8 @@ vmovmskps rax, ymm2  ; 5 cycle latency
                      ; 1 cycle throughput
 ```
 
-Visually:
+</div>
 
-<object style="margin: auto" width="100%" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/inst-animations/vmovmskps-with-hint.svg"></object>
 #### PopCount
 
 `PopCount` is a very powerful intrinsic, which [I've covered extensively before]({% post_url 2018-08-19-netcoreapp3.0-intrinsics-in-real-life-pt2 %}): `PopCount` returns the number of `1` bits in a 32/64 bit primitive.  
@@ -223,23 +245,30 @@ In C#, we would use it as follows:
 int result = PopCnt.PopCount(0b0000111100110011);
 // result == 8
 ```
+
 And in x64 assembly code:
 
 ```nasm
 popcnt rax, rdx  ; 3 cycle latency
                  ; 1 cycle throughput
 ```
-In this series, `PopCount` is the only intrinsic I use that is not purely vectorized[^5].
 
+In this series, `PopCount` is the only intrinsic I use that is not purely vectorized[^5].
 
 #### PermuteVar8x32
 
-`PermuteVar8x32` accepts two vectors: source, permutation and performs a permutation operation **on** the source value *according to the order provided* in the permutation value. If this sounds confusing go straight to the visualization below... 
+<div markdown="1">
+<div markdown="1" class="stickemup">
+<object class="animated-border" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/inst-animations/vpermd-with-hint.svg"></object>
+</div>
+
+`PermuteVar8x32` accepts two vectors: source, permutation and performs a permutation operation **on** the source value *according to the order provided* in the permutation value. If this sounds confusing go straight to the visualization below...
 
 ```csharp
 Vector256<int> data, perm;
 Vector256<int> result = Avx2.PermuteVar8x32(data, perm);
 ```
+
 While technically speaking, both the `data` and `perm` parameters are of type `Vector256<int>` and can contain any integer value in their elements, only the 3 least significant bits in `perm` are taken into account for permutation of the elements in `data`.  
 This should make sense, as we are permuting an 8-element vector, so we need 3 bits (2<sup>3</sup> == 8) in every permutation element to figure out which element goes where... In x64 assembly this is:
 
@@ -247,16 +276,17 @@ This should make sense, as we are permuting an 8-element vector, so we need 3 bi
 vpermd ymm1, ymm2, ymm1 ; 3 cycles latency
                         ; 1 cycles throughput
 ```
-And with our trusty animations, what goes on under the hood becomes that much clearer:
-<object stle="margin: auto" width="100%" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/inst-animations/vpermd-with-hint.svg"></object>
-#### That’s it for now
+
+</div>
+
+### That’s it for now
 
 This post was all about laying the groundwork before this whole mess comes together.  
 Remember, we’re re-implementing QuickSort with AVX2 intrinsics in this series, which for the most part, means re-implementing the partitioning function from our scalar code listing in the previous post.  
 I’m sure wheels are turning in many heads now as you are trying to figure out what comes next…  
 I think it might be a good time as any to end this post and leave you with a suggestion: Try to take a piece of paper or your favorite text editor, and see if you can some cobble up these instructions into something that can partition numbers given a selected pivot.
 
-When you’re ready, head on to the [next post]({% post_url 2019-08-20-decimating-arraysort-with-avx2-pt3 %}) to see how the whole thing comes together, and how fast we can get it to run with a basic version…
+When you’re ready, head on to the [next post]({% post_url 2020-01-30-this-goes-to-eleven-pt3 %}) to see how the whole thing comes together, and how fast we can get it to run with a basic version…
 
 ---------
 [^0]: To be clear, some of these are intrinsics in unreleased processors, and even of those that are all released in the wild, there is no single processor support all of these...
