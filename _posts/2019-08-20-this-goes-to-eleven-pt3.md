@@ -424,7 +424,7 @@ public static class DoublePumpNaive
 
 </div>
 
-Most of this is pretty boring code:
+Most of this is pretty dull code:
 
 * We start with a top-level static class `DoublePumpNaive` containing a single `Sort` entry point accepting a normal managed array.
 * We special case, relying on generic type elision, for  `typeof(int)`, newing up a `VxSortInt32` struct and finally calling its internal `.Sort()` method to initiate the recursive sorting.
@@ -439,7 +439,7 @@ Continuing on to `VxSortInt32` itself:
 
 ```csharp
 
-    internal unsafe struct VxSortInt32
+    internal unsafe ref struct VxSortInt32
     {
         const int SLACK_PER_SIDE_IN_ELEMENTS    = SLACK_PER_SIDE_IN_VECTORS * 8;
         const int TMP_SIZE_IN_ELEMENTS          = 2 * SLACK_PER_SIDE_IN_ELEMENTS + 8;
@@ -463,13 +463,13 @@ Continuing on to `VxSortInt32` itself:
 ```
 </div>
 
-This is where the real top-level sorting entry point for 32-bit igned integers is:
+This is where the real top-level sorting entry point for 32-bit signed integers is:
 
-* This struct contains a bunch of constants and members that are initialized for a single sort-job/call and immediately discarded once sorting is completed.
-* There's a little nasty bit hiding in plain-sight there, where we exfiltrtrate an interior pointer obtained inside a `fixed` block and store it for the lifetime of the struct, outside of the `fixed` block.
-  * This is generally a no-no since in theory we don't have a guarantee that the struct won't be boxed / stored inside a managed object on a heap where the GC is free to move our struct around.
-  * In this case, it is assumed that caller is internal and will only ever call `new VxSortInt32(...)` in the context of stack allocation and keep it that way.
-  * This somewhat abnormal assumption was taken so that the temporary memory sits close to the various pointers, taking advantage of locality of reference.
+* This struct contains a bunch of constants and members that are initialized for a single sort-job/call and immediately discarded once sorting is complete.
+* There's a little nasty bit hiding in plain sight there, where we exfiltrate an interior pointer obtained inside a `fixed` block and store it for the lifetime of the struct, outside of the `fixed` block.
+  * This is generally a no-no, since, in theory, we don't have a guarantee that the struct won't be boxed/stored inside a managed object on a heap where the GC is free to move our memory around.
+  * In this case, we *are ensuring* that instances of `VxSortInt32` are never promoted to the managed heap by declaring it as a [`ref struct`](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/ref#ref-struct-types).
+  * The motivation behind this is to ensure that the `fixed` temporary memory resides close to the other struct fields, taking advantage of locality of reference.
 
 </div>
 
