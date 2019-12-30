@@ -190,7 +190,6 @@ I encourage you to look at this and try to explain to yourself what QuickSort "d
 
 While the above visualization really does a lot to help understand **how** `QuickSort` works, I also wanted to leave you with an impression of the total amount of work done by `QuickSort`:
 
-
 <div markdown="1">
 <div class="stickemup">
 <iframe src="../talks/intrinsics-sorting-2019/quicksort-mbostock/qs-animated-playpause.html" scrolling="no" style="width:1600px; height: 250px; max-width: 100%;background: transparent;" allowfullscreen=""></iframe>
@@ -220,7 +219,7 @@ With all this new information, this is a good time to measure how a couple of di
   * The code uses native pointers and unsafe semantics (using C#‘s new `unmanaged` constraint, neat!).
   * We switch to `InsertionSort` (again, copy-pasted from CoreCLR) when below 16 elements, just like `Array.Sort` does.
 
-I've prepared this last version to show that with unsafe code + `InsertionSort`, we can remove most of the performance gap between C# and C++ for this type of code, which mainly stems from bounds-checking, that the JIT cannot elide for these sort of random-access patterns as well as the jump-to `InsertionSort` optimization. 
+I've prepared this last version to show that with unsafe code + `InsertionSort`, we can remove most of the performance gap between C# and C++ for this type of code, which mainly stems from bounds-checking, that the JIT cannot elide for these sort of random-access patterns as well as the jump-to `InsertionSort` optimization.
 
 <span class="uk-label">Note</span> that for this series, We'll benchmark each sorting method with various array sizes (BDN parameter: `N`): $$ 10^i_{i=1\cdots7} $$. I've added a custom column to the BDN column to the report: `Time / N`. This represents the time spent sorting *per element* in the array, and as such, very useful to compare the results on a more uniform scale.
 {: .notice--info}
@@ -242,7 +241,7 @@ Here are the results in the form of charts and tables. I've included a handy lar
 <div data-intro="Size of the sorting problem, 10..10,000,000 in powers of 10" data-position="bottom">
 <div data-intro="Performance scale: Array.Sort (solid gray) is always 100%, and the other methods are scaled relative to it" data-position="left">
 <div data-intro="Click legend items to show/hide series" data-position="right">
-<canvas height="130vmx" data-chart="line"> 
+<canvas height="130vmx" data-chart="line">
 N,100,1K,10K,100K,1M,10M
 ArraySort,1,1,1,1,1,1
 Scalar,2.04,1.57,1.33,1.12,1.09,1.11
@@ -292,7 +291,7 @@ Unmanaged,1.75,1.01,0.99,0.97,0.93,0.95
 <div data-intro="Size of the sorting problem, 10..10,000,000 in powers of 10" data-position="bottom">
 <div data-intro="Time in nanoseconds spent sorting per element. Array.Sort (solid gray) is the baseline, again" data-position="left">
 <div data-intro="Click legend items to show/hide series" data-position="right">
-<canvas height="130vmx" data-chart="line"> 
+<canvas height="130vmx" data-chart="line">
 N,100,1K,10K,100K,1M,10M
 ArraySort,12.1123,30.5461,54.641,60.4874,70.7539,80.8431
 Scalar,24.7385,47.8796,72.7528,67.7419,77.3906,89.7593
@@ -343,10 +342,10 @@ Unmanaged,21.0955,30.9692,54.3112,58.9577,65.7222,76.8631
   data-show-pagination-switch="false">
   <thead data-intro="The header can be used to sort/filter by clicking" data-position="right">
     <tr>
-        <th data-field="TargetMethodColumn.Method" data-sortable="true"            
+        <th data-field="TargetMethodColumn.Method" data-sortable="true"
             data-filter-control="select">
           <span
-              data-intro="The name of the benchmarked method" 
+              data-intro="The name of the benchmarked method"
               data-position="top">
             Method<br/>Name
           </span>
@@ -354,22 +353,22 @@ Unmanaged,21.0955,30.9692,54.3112,58.9577,65.7222,76.8631
         <th data-field="N" data-sortable="true"
             data-value-type="int" data-filter-control="select">
             <span
-              data-intro="The size of the sorting problem being benchmarked (# of integers)" 
+              data-intro="The size of the sorting problem being benchmarked (# of integers)"
               data-position="top">
             Problem<br/>Size
             </span>
         </th>
         <th data-field="TimePerNDataTable" data-sortable="true"
             data-value-type="float2-interval-muted">
-            <span 
-              data-intro="Time in nanoseconds spent sorting each element in the array (with confidence intervals in parenthesis)" 
+            <span
+              data-intro="Time in nanoseconds spent sorting each element in the array (with confidence intervals in parenthesis)"
               data-position="top">
               Time /<br/>Element (ns)
             </span>
         </th>
-        <th data-field="RatioDataTable" data-sortable="true" 
+        <th data-field="RatioDataTable" data-sortable="true"
             data-value-type="inline-bar-horizontal-percentage">
-            <span data-intro="Each result is scaled to its baseline (Array.Sort in this case)" 
+            <span data-intro="Each result is scaled to its baseline (Array.Sort in this case)"
                   data-position="top">
                   Scaling
             </span>
@@ -404,30 +403,30 @@ Unmanaged,21.0955,30.9692,54.3112,58.9577,65.7222,76.8631
             data-value-type="int"
             data-filter-control="select">
             <span
-              data-intro="The size of the sorting problem being benchmarked (# of integers)" 
+              data-intro="The size of the sorting problem being benchmarked (# of integers)"
               data-position="top">Problem<br/>Size</span>
         </th>
-        <th data-field="MaxDepthScaledDataTable" data-sortable="true" 
+        <th data-field="MaxDepthScaledDataTable" data-sortable="true"
             data-value-type="inline-bar-horizontal">
             <span
-              data-intro="The maximal depth of recursion reached while sorting" 
+              data-intro="The maximal depth of recursion reached while sorting"
               data-position="top">Max<br/>Depth</span>
         </th>
-        <th data-field="NumPartitionOperationsScaledDataTable" data-sortable="true" 
+        <th data-field="NumPartitionOperationsScaledDataTable" data-sortable="true"
             data-value-type="inline-bar-horizontal">
             <span
-              data-intro="# of partitioning operations for each sort" 
+              data-intro="# of partitioning operations for each sort"
               data-position="top">#<br/>Part-<br/>itions</span>
         </th>
-        <th data-field="AverageSmallSortSizeScaledDataTable" data-sortable="true" 
+        <th data-field="AverageSmallSortSizeScaledDataTable" data-sortable="true"
             data-value-type="inline-bar-horizontal">
             <span
-              data-intro="For hybrid sorting, the average size that each small sort operation was called with (e.g. InsertionSort)" 
+              data-intro="For hybrid sorting, the average size that each small sort operation was called with (e.g. InsertionSort)"
               data-position="top">
             Avg.<br/>Small<br/>Sorts<br/>Size
             </span>
         </th>
-        <th data-field="NumScalarComparesScaledDataTable" data-sortable="true" 
+        <th data-field="NumScalarComparesScaledDataTable" data-sortable="true"
             data-value-type="inline-bar-horizontal">
             <span
               data-intro="How many branches were executed in each sort operation that were based on the unsorted array elements"
@@ -435,7 +434,7 @@ Unmanaged,21.0955,30.9692,54.3112,58.9577,65.7222,76.8631
             # Data-<br/>Based<br/>Branches
             </span>
             </th>
-        <th data-field="PercentSmallSortCompares" data-sortable="true" 
+        <th data-field="PercentSmallSortCompares" data-sortable="true"
             data-value-type="float2-percentage">
             <span
               data-intro="What percent of</br>⬅<br/>branches happenned as part of small-sorts"

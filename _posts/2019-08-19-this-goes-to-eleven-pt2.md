@@ -48,7 +48,7 @@ In C#, we've mostly shied away from having intrinsics until CoreCLR 3.0 came alo
 What are these vectorized intrinsics?  
 We need to cover a few base concepts specific to that category of intrinsics before we can start explaining specific intrinsics/instructions:
 
-*  What are vectorized intrinsics, and why have they become so popular.
+* What are vectorized intrinsics, and why have they become so popular.
 * How vectorized intrinsics interact with specialized vectorized *registers*.
 * How those registers are reflected as, essentially, new primitive types in CoreCLR 3.0.
 
@@ -70,7 +70,7 @@ Just like scalar CPU registers, SIMD registers have a constant bit-width. In Int
 
 For now, this is all I care to explain about SIMD Registers at the CPU level: We need to be aware of their existence (we'll see them in disassembly dumps anywat), and since we are dealing with high-perfomance code we kind of need to know how many of them exist inside our CPU.
 
-#### SIMD Intrinsic Types in C#
+#### SIMD Intrinsic Types in C\\#
 
 We've touched lightly upon SIMD intrinsics and how they operate (e.g. accept and modify) on SIMD registers. Time to figure out how we can fiddle with everything in C#; we'll start with the types:
 
@@ -80,7 +80,7 @@ We've touched lightly upon SIMD intrinsics and how they operate (e.g. accept and
 | [`Vector128<T>`](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.vector128?view=netcore-3.0) | `xmm0-xmm15` | 128 |
 | [`Vector256<T>`](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.vector256?view=netcore-3.0) | `ymm0-ymm15` | 256 |
 
-These are primitive vector value-types recognized by the JIT while it is generating machine code. We should try and think about these types just like we think about other special-case primitive types such as `int` or `double`, with one exception: These vector types all accept a generic parameter `<T>`, which may seem a little odd for a primitive type at a first glance, until we remember that their purpose is to contain *other* primitive types (there's a reason they put the word "Vector" in there...); moreover, this generic parameter can’t just be any type or even value-type we'd like... It is limited to the types supported on our CPU and its vectorized intrinsics. 
+These are primitive vector value-types recognized by the JIT while it is generating machine code. We should try and think about these types just like we think about other special-case primitive types such as `int` or `double`, with one exception: These vector types all accept a generic parameter `<T>`, which may seem a little odd for a primitive type at a first glance, until we remember that their purpose is to contain *other* primitive types (there's a reason they put the word "Vector" in there...); moreover, this generic parameter can’t just be any type or even value-type we'd like... It is limited to the types supported on our CPU and its vectorized intrinsics.
 
 Let's take `Vector256<T>`, which I'll be using exclusively in this series, as an example; `Vector256<T>` can be used **only** with the following primitive types:
 
@@ -121,7 +121,7 @@ Here's the list of what we're going to go over:
 | `popcnt`      | [`_mm_popcnt_u32`](https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_popcnt_u32&expand=4378) | [`Popcnt.PopCount`](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.x86.popcnt.popcount?view=netcore-3.0#System_Runtime_Intrinsics_X86_Popcnt_PopCount_System_UInt32_) |
 | `vpermd`      | [`_mm256_permutevar8x32_epi32`](https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm256_permutevar8x32_epi32&expand=4201) | [`Avx2.PermuteVar8x32`](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.x86.avx2.permutevar8x32?view=netcore-3.0#System_Runtime_Intrinsics_X86_Avx2_PermuteVar8x32_System_Runtime_Intrinsics_Vector256_System_Int32__System_Runtime_Intrinsics_Vector256_System_Int32__) |
 
-I understand that for first time readers, this list looks like I'm just name-dropping lots of fancy code names to make myself sound smart, but the unfortunate reality is that we *kind of need* to know all of these, and here is why: On the right column I've provided the actual C# Intrinsic function we will be calling in our code and linked to their docs. But here's a funny thing: There is no "usable" documentation on Microsoft's own docs regarding most of these intrinsics. All those docs do is simply point back to the Intel C/C++ intrinsic name, which I've also provided in the middle column, with links to the real documentation, the sort that actually explains what the instruction does with pseudo code. Finally, since we're practically writing assembly code anyways, and I can guarantee we'll end up inspecting JIT'd code down the road, I provided the x86 assembly opcodes for our instructions as well.[^3] 
+I understand that for first time readers, this list looks like I'm just name-dropping lots of fancy code names to make myself sound smart, but the unfortunate reality is that we *kind of need* to know all of these, and here is why: On the right column I've provided the actual C# Intrinsic function we will be calling in our code and linked to their docs. But here's a funny thing: There is no "usable" documentation on Microsoft's own docs regarding most of these intrinsics. All those docs do is simply point back to the Intel C/C++ intrinsic name, which I've also provided in the middle column, with links to the real documentation, the sort that actually explains what the instruction does with pseudo code. Finally, since we're practically writing assembly code anyways, and I can guarantee we'll end up inspecting JIT'd code down the road, I provided the x86 assembly opcodes for our instructions as well.[^3]
 Now, What does each of these do? Let's find out...
 
 As luck would have it, I was blessed with the ultimate power of wielding SVG animations, so most of these instructions will be accompanied by an animation *visually explaining* them.  
@@ -204,6 +204,7 @@ And in x64 assembly, this is pretty simple too:
 vpcmpgtd ymm2, ymm1, ymm0 ; 1 cycle latency
                           ; 0.5 cycle throughput
 ```
+
 </div
 >
 #### MoveMask
@@ -226,6 +227,7 @@ There’s an oddity here, as you can tell by that awkward `.AsSingle()` call, tr
 vmovmskps rax, ymm2  ; 5 cycle latency
                      ; 1 cycle throughput
 ```
+
 </div>
 
 #### PopCount
@@ -237,14 +239,15 @@ In C#, we would use it as follows:
 int result = PopCnt.PopCount(0b0000111100110011);
 // result == 8
 ```
+
 And in x64 assembly code:
 
 ```nasm
 popcnt rax, rdx  ; 3 cycle latency
                  ; 1 cycle throughput
 ```
-In this series, `PopCount` is the only intrinsic I use that is not purely vectorized[^5].
 
+In this series, `PopCount` is the only intrinsic I use that is not purely vectorized[^5].
 
 #### PermuteVar8x32
 
@@ -253,12 +256,13 @@ In this series, `PopCount` is the only intrinsic I use that is not purely vector
 <object stle="margin: auto" width="100%" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/inst-animations/vpermd-with-hint.svg"></object>
 </div>
 
-`PermuteVar8x32` accepts two vectors: source, permutation and performs a permutation operation **on** the source value *according to the order provided* in the permutation value. If this sounds confusing go straight to the visualization below... 
+`PermuteVar8x32` accepts two vectors: source, permutation and performs a permutation operation **on** the source value *according to the order provided* in the permutation value. If this sounds confusing go straight to the visualization below...
 
 ```csharp
 Vector256<int> data, perm;
 Vector256<int> result = Avx2.PermuteVar8x32(data, perm);
 ```
+
 While technically speaking, both the `data` and `perm` parameters are of type `Vector256<int>` and can contain any integer value in their elements, only the 3 least significant bits in `perm` are taken into account for permutation of the elements in `data`.  
 This should make sense, as we are permuting an 8-element vector, so we need 3 bits (2<sup>3</sup> == 8) in every permutation element to figure out which element goes where... In x64 assembly this is:
 
@@ -266,6 +270,7 @@ This should make sense, as we are permuting an 8-element vector, so we need 3 bi
 vpermd ymm1, ymm2, ymm1 ; 3 cycles latency
                         ; 1 cycles throughput
 ```
+
 </div>
 
 ### That’s it for now

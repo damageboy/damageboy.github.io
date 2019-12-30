@@ -77,10 +77,11 @@ At the same time, stable sorting is a non-issue when:
 * Lastly, sometimes, *we just don’t care*. We're fine if our data gets reordered.
 
 In the .NET/C# world, one could say that the landscape regarding sorting is a little unstable (pun intended):
+
 * [`Array.Sort`](https://docs.microsoft.com/en-us/dotnet/api/system.array.sort?view=netcore-3.1) is unstable, as is clearly stated in the remarks section:
   > This implementation performs an unstable sort; that is, if two elements are equal, their order might not be preserved.
 * On the other hand, [`Enumerable.OrderBy`](https://docs.microsoft.com/en-us/dotnet/api/system.linq.enumerable.orderby?view=netcore-3.1) is stable:
-> This method performs a stable sort; that is, if the keys of two elements are equal, the order of the elements is preserved.
+  > This method performs a stable sort; that is, if the keys of two elements are equal, the order of the elements is preserved.
 
 In general, what I came up with in my full repo/nuget package are algorithms capable of doing both stable and unstable sorting. But with two caveats:
 
@@ -113,7 +114,7 @@ static unsafe void PartitionBlock(int *dataPtr, Vector256<int> P,
     var data = Avx2.LoadDquVector256(dataPtr);
     var mask = (uint) Avx.MoveMask(
         Avx2.CompareGreaterThan(data, P).AsSingle());
-    data = Avx2.PermuteVar8x32(data, 
+    data = Avx2.PermuteVar8x32(data,
         Avx2.LoadDquVector256(PermTablePtr + mask * 8)));
     Avx.Store(writeLeft,  data);
     Avx.Store(writeRight, data);
@@ -122,6 +123,7 @@ static unsafe void PartitionBlock(int *dataPtr, Vector256<int> P,
     writeLeft  += 8 - pc;
 }
 ```
+
 </div>
 
 That's a lot of cheese, let’s break this down:
@@ -151,7 +153,6 @@ This was a full 8-element wise partitioning block, and it's worth noting a thing
 * It is completely branch-less(!): We've given the CPU a nice juicy block with no need to speculate on what code gets executed next. It sure looks pretty when you consider the number of branches our scalar code would execute for the same amount of work. Don't pop a champagne bottle quite yet though, we're about to run into a wall full of thorny branches in a second, but sure feels good for now.
 * If we want to execute multiple copies of this block, the main dependency from one block to the next is the mutation of the `writeLeft` and `writeRight` pointers. It's unavoidable given we set-out to perform in-place sorting (well, I couldn't avoid it, maybe you can!), but worth-while mentioning nonetheless. If you need a reminder about how dependencies can change the dynamics of efficient execution, you can read up on when I tried my best to go at it battling with [`PopCount` to run screaming fast](2018-08-20-netcoreapp3.0-intrinsics-in-real-life-pt3.md).
 
-
 I thought it would be nice to wrap up the discussion of this block by showing off that the JIT is relatively well behaved in this case with the generated x64 asm:  
 Anyone who has followed the C# code can use the intrinsics table from the previous post and read the assembly code without further help. Also, it is pretty clear that this is basically a 1:1 translation of C# code. Congratulations: It's 2020, and we're x86 assembly programmers again!
 </div>
@@ -177,7 +178,6 @@ add r9d, 0x20                        ;
 add r12, r9                          ; Update writeLeft pos
 sub r8, rcx                          ; Update writeRight pos
 ```
-
 
 ## Permutation lookup table
 
@@ -236,14 +236,13 @@ Here's a visual representation of the mental model I was in while debugging/maki
 
 <br/>
 
-Funny, right? It's closer to what I actually do than I'd like to admit! I fondly named this approach in my code as "double-pumped partitioning”. It pumps values in-to/out-of **both** ends of the array at all times. I've left it pretty much intact in the repo under the name [`DoublePumpNaive`](https://github.com/damageboy/QuicksortAvaganza/blob/master/VxSort/DoublePumpNaive.cs), in case you want to dig through the full code. Like all good things in life, it comes in 3-parts: 
+Funny, right? It's closer to what I actually do than I'd like to admit! I fondly named this approach in my code as "double-pumped partitioning”. It pumps values in-to/out-of **both** ends of the array at all times. I've left it pretty much intact in the repo under the name [`DoublePumpNaive`](https://github.com/damageboy/QuicksortAvaganza/blob/master/VxSort/DoublePumpNaive.cs), in case you want to dig through the full code. Like all good things in life, it comes in 3-parts:
 
 * Prime the pump (make some initial room inside the array).
 * Loop over the data in 8-element chunks executing our vectorized code block.
 * Finally, go over the last remaining data elements (e.g. the last remaining `< 8` block of unpartitioned data) and partition them using scalar code. This is a very common and unfortunate pattern we find in vectorized code, as we need to finish off with just a bit of scalar work.
 
 Let's start with another visual aid for how I ended up doing this; note the different color codes and legend I've provided here, and try to watch a few loops of this noticing the various color transitions, this will become useful for parsing the text and code below:
-
 
 <div markdown="1">
 <div markdown="1" class="stickemup">
@@ -280,7 +279,7 @@ Let's go over it again, in more detail, this time with code:
 
 ### Setup: Make some room!
 
-What I eventually opted for was to read from *one* area and write to *another* area in the same array. But we need to make some spare room inside the array for this. How? 
+What I eventually opted for was to read from *one* area and write to *another* area in the same array. But we need to make some spare room inside the array for this. How?
 
 We cheat! (¯\\_(ツ)_/¯), but not really: we allocate some temporary space, using `stackalloc` in C#, here's why this isn't really cheating in any reasonable person’s book:
 
@@ -310,19 +309,21 @@ unsafe int* VectorizedPartitionInPlace(int* left, int* right)
     var readLeft  = left + N;
     var readRight = right - 2*N - 1;
 ```
+
 </div>
 
-The function accepts two parameters: `left`, `right` pointing to the edges of the partitioning task we were handed. The selected pivot is “passed” in an unconventional way: the caller (The top-level sort function) is responsible for moving it to the right edge of the array before calling the partitioning function. In other words, we start executing the function expecting the pivot to be already selected and placed at the right edge of the segment (e.g., `right` points to it). This is a remnant of my initial copy-pasting of CoreCLR code, and to be honest, I don't care enough to change it. 
+The function accepts two parameters: `left`, `right` pointing to the edges of the partitioning task we were handed. The selected pivot is “passed” in an unconventional way: the caller (The top-level sort function) is responsible for **moving** it to the right edge of the array before calling the partitioning function. In other words, we start executing the function expecting the pivot to be already selected and placed at the right edge of the segment (e.g., `right` points to it). This is a remnant of my initial copy-pasting of CoreCLR code, and to be honest, I don't care enough to change it.
 
-With some temporary space set aside (represented here by `_tempStart` and `_tempEnd` fields), we partition a single 8-element vector on each side, with our good-ole' partitioning block **straight into** that temporary space. It is important to  Having done that, we don't care about the original contents of the area we just read from anymore: we're free to write up to one `Vector256<T>` to each end of the array in the future. We've made enough room inside our array available for writing in-place while partitioning. We finish the setup by initializing read and write pointers for every side (`readLeft`, `readRight`, `writeLeft`, `writeRight`); An alternative way to think about them is that each side gets its own head (read) and tail (write) pointers. We will be continuously reading from **one** of the heads and writing to **both** tails from now on.
-
-The setup ends with `readLeft` pointing a `Vector256<int>` to the right of `left` , and `readRight` pointing 1 element + 2 `Vector256<int>` left of `right`. This might seem peculiar at first, but easily explained:
-* `right` itself points to the selected pivot, and we're not going to partition it, so we skip that element (this explains the `-1`).
-* When we read/write using `Avx2.LoadDquVector256`/`Avx.Store` we always have to supply the *start* address to read from or write to!  
-  Since There is no ability to read/write to the "left" of the pointer, we decrement that pointer by one more vector's worth of space.
-
-<span class="uk-label">Note</span> that I'm using a variable (`N`) instead of `Vector256<int>.Count`. It seems inefficient at first, but worry not: At JIT time, the `Count` property is actually a constant as far as the JIT is concerned. Furthermore, when we initialize N with its value and never modify it, the JIT treats N as a constant as well! So really, I get to use a short/readable variable name and pay no penalty in any form for it.
+<span class="uk-label">Note</span> that I'm using a "variable" (`N`) instead of `Vector256<int>.Count`. There's a reason for those double quotes: At JIT time, the right-hand expression is considered as a constant as far as the JIT is concerned. Furthermore, once we initialize N with its value and *never* modify it, the JIT treats N as a constant as well! So really, I get to use a short/readable name and pay no penalty in for it.
 {: .notice--info}
+
+We proceed to partition a single 8-element vector on each side, with our good-ole' partitioning block **straight into** that temporary space. It is important to remember that having done that, we don't care about the original contents of the area we just read from anymore: we're free to write up to one `Vector256<T>` to each edge of the array in the future. We've made enough room inside our array available for writing in-place while partitioning. We finish the setup by initializing read and write pointers for every side (`readLeft`, `readRight`, `writeLeft`, `writeRight`); An alternative way to think about them is that each side gets its own head (read) and tail (write) pointers. We will be continuously reading from **one** of the heads and writing to **both** tails from now on.
+
+The setup ends with `readLeft` pointing a single `Vector256<int>` *right* of `left` , and `readRight` pointing 1 element + 2x`Vector256<int>` *left* of `right`. The setup og `readRight` might initially seem peculiar, but easily explained:
+
+* `right` itself points to the selected pivot; we're not going to (re-)partition it, so we skip that element (this explains the `- 1`).
+* As with the `tmpRight` pointer, when we read/write using `Avx2.LoadDquVector256`/`Avx.Store` we always have to supply the *start* address to read from or write to!  
+  Since There is no ability to read/write to the "left" of the pointer, we decrement that pointer by `2*N` to account for the data that was already partitioned and to prepare it for the next write.
 
 ### Loop
 
@@ -342,20 +343,23 @@ Here's the same loop we saw in the animation with our vectorized block smack in 
             readRight -= N;
         }
 
-        PartitionBlock(nextPtr, P, ref writeLeft, ref writeRight); 
+        PartitionBlock(nextPtr, P, ref writeLeft, ref writeRight);
     }
     readRight += N;
     tmpRight += N;
 ```
+
 </div>
 
 This is the heart of the partitioning operation and where we spend most of the time sorting the array. Looks quite boring, eh?
 
 This loop is all about calling our good ole' partitioning block on the entire array. We-reuse the same block, but here, for the first time, actually use it as an in-place partitioning block, since we are both reading and writing to the same array.
-The heart of the loop is our good ole' block, but the interesting bit is that beefy condition that we described in words/animation before: it calculates the distance between each head and tail on each side and compares them to determine which side has less space left, or which side is closer to being overwritten. Given that the **next** read will happen from the side we choose here, we've just added 8 more integers worth of *writing* space to that same endangered side, thereby eliminating the risk of overwriting.
+While the runtime of the loop is dominated by the partitioning block, the interesting bit is that beefy condition on <span class="uk-label">L3</span> that we described/animated before: it calculates the distance between each head and tail on both sides and compares them to determine which side has less space left, or which side is closer to being overwritten. Given that the **next** read will happen from the side we choose here, we've just added 8 more integers worth of *writing* space to that same endangered side, thereby eliminating the risk of overwriting.
 
 <span class="uk-label">Note</span> that while it might be easy to read in terms of correctness or motivation, this is a very *sad line of code*, as it will haunt us in the next posts!
 {: .notice--info}
+
+Finally, as we exit the loop once there are `< 8` elements left (remember that we pre-decremented `readRight` by `N` elements before the loop), we are done with all vectorized work for this partitioning call. as such, this is as good a time to re-adjust both `readRight` and `tmpRight` that were pre-decremented by `N` elements to make them ready-to-go for using `Avx.Store` back in preparation for the final step.
 
 ### Handling the remainder and finishing up
 
@@ -379,98 +383,145 @@ Here's the final piece of this function:
     writeLeft += leftTmpSize;
     var rightTmpSize = (uint) (int) (_tempEnd - tmpRight);
     Unsafe.CopyBlockUnaligned(writeLeft, tmpRight, rightTmpSize * sizeof(int));
-    Swap(writeLeft++, right);
+    Swap(writeLeft, right);
     return writeLeft;
 }
 ```
+
 </div>
 
-Finally, we come out of the loop once we have less than 8-elements to partition (1-7 elements). We can't use vectorized code here, so we drop to plain-old scalar partitioning. To keep things simple, we partition the last elements right into the temporary area we used at the top of the function to make room for the main-loop. This is the reason we're allocating 8 more elements in the temporary area in the first place.
+Finally, we come out of the loop once we have less than 8-elements to partition (1-7 elements). We can't use vectorized code here, so we drop to plain-old scalar partitioning. To keep things simple, we partition these last elements straight into the temporary area. This is the reason we're allocating 8 more elements in the temporary area in the first place.
 
-Once we're done with this remainder trailing scalar partitioning nuisance, we copy back the already partitioned data from the temporary area back into the array to the area left between `writeLeft` and `writeRight`, it's a quick 64-96 byte copy in two operations, and we are nearly done. We still need to move the pivot *back* to the newly calculated pivot position (remember the caller placed it on the right edge of the array as part of pivot selection) and report this position back as the return value for this to be officially be christened as AVX2 partitioning function.
+Once we're done with this remainder nuisance, we copy back the already partitioned data from the temporary area back into the array to the area left between `writeLeft` and `writeRight`, it's a quick 64-96 byte copy in two operations, and we are nearly done. We still need to move the pivot *back* to the newly calculated pivot position (remember the caller placed it on the right edge of the array as part of pivot selection) and report this position back as the return value for this to be officially be christened as AVX2 partitioning function.
 </div>
 
 ## Pretending we're Array.Sort
 
-Now that we have a vectorized partitioning function, we're just missing the top-level dispatching code that does temporary stack allocation, pivot selection and recursion. We've covered the scalar variant of this in the first post, but let's look at our real/final function. This is pretty much copy-pasted with minor adaptations from the [CoreCLR code](https://github.com/dotnet/coreclr/blob/master/src/System.Private.CoreLib/shared/System/Collections/Generic/ArraySortHelper.cs#L182):
+Now that we have a proper partitioning function, it's time to string it into a quick-sort like dispatching function: This will be the entry point to our sort routine:
+
+<div markdown="1">
+<div markdown="1" class="stickemup">
 
 ```csharp
-public static partial class DoublePumpNaive<T> 
-  where T : unmanaged, IComparable<T>
+public static class DoublePumpNaive
 {
-    const int SLACK_PER_SIDE_IN_VECTORS  = 1;
-    const int SLACK_PER_SIDE_IN_ELEMENTS = SLACK_PER_SIDE_IN_VECTORS * 8;
-    const int TMP_SIZE_IN_ELEMENTS       = 2 * SLACK_PER_SIDE_IN_ELEMENTS + 8;
-
-    public static unsafe void Sort(T[] array)
+    public static unsafe void Sort<T>(T[] array) where T : unmanaged, IComparable<T>
     {
+        if (array == null)
+            throw new ArgumentNullException(nameof(array));
+
         fixed (T* p = &array[0]) {
             if (typeof(T) == typeof(int)) {
-                // We use this much space for making some room inside
-                // the array + partitioning the remainder
-                var tmp = stackalloc int[TMP_SIZE_IN_ELEMENTS];
-
                 var pInt = (int*) p;
-                VxSortInt32(pInt, pInt, pInt + array.Length - 1, tmp);
+                var sorter = new VxSortInt32(startPtr: pInt, endPtr: pInt + array.Length - 1);
+                sorter.Sort(pInt, pInt + array.Length - 1);
             }
         }
     }
-    //...
-}
+
+    const int SLACK_PER_SIDE_IN_VECTORS = 1;
 ```
 
-This is the entry point to our sort routine: we special case relying on generic type elision to only compile the correct code (for the `typeof(int)` case here) and call our signed integer version `QuickSortInt` after allocating the temporary memory. This is a good time as any to remind again that for the time being, I only implemented vectorized quick-sorting when `T` is `int`. To fully replace `Array.Sort()` more tweaked versions of this code will have to be written to eventually support unsigned integers, both larger and smaller than 32 bits as well as floating-point types.
+</div>
 
-Back to the existing code, though: once we know for sure that `T` is an `int`, we go into `QuickSortInt`:
+Most of this is pretty boring code:
+
+* We start with a top-level static class `DoublePumpNaive` containing a single `Sort` entry point accepting a normal managed array.
+* We special case, relying on generic type elision, for  `typeof(int)`, newing up a `VxSortInt32` struct and finally calling its internal `.Sort()` method to initiate the recursive sorting.
+  * This is a good time as any to remind, again, that for the time being, I only implemented vectorized sorting when `T` is `int`. To fully replace `Array.Sort()` more tweaked versions of this code will have to be written to eventually support unsigned integers, both larger and smaller than 32 bits as well as floating-point types.
+
+Continuing on to `VxSortInt32` itself:
+
+</div>
+
+<div markdown="1">
+<div markdown="1" class="stickemup">
 
 ```csharp
-static unsafe void QuickSortInt(int* start, int* left, int* right, int *tmp)
-{
-    var length = (int) (right - left + 1);
 
-    int* mid;
-    switch (length) {
-        case 0:
-        case 1:
-            return;
-        case 2:
-            SwapIfGreater(left, right);
-            return;
-        case 3:
-            mid = right - 1;
+    internal unsafe struct VxSortInt32
+    {
+        const int SLACK_PER_SIDE_IN_ELEMENTS    = SLACK_PER_SIDE_IN_VECTORS * 8;
+        const int TMP_SIZE_IN_ELEMENTS          = 2 * SLACK_PER_SIDE_IN_ELEMENTS + 8;
+        const int SMALL_SORT_THRESHOLD_ELEMENTS = 16;
+
+        readonly int* _startPtr;
+        readonly int* _endPtr;
+        readonly int* _tempStart;
+        readonly int* _tempEnd;
+        fixed int _temp[TMP_SIZE_IN_ELEMENTS];
+
+        public VxSortInt32(int* startPtr, int* endPtr) : this()
+        {
+            _startPtr = startPtr;
+            _endPtr   = endPtr;
+            fixed (int* pTemp = _temp) {
+                _tempStart = pTemp;
+                _tempEnd   = pTemp + TMP_SIZE_IN_ELEMENTS;
+            }
+        }
+```
+</div>
+
+This is where the real top-level sorting entry point for 32-bit igned integers is:
+
+* This struct contains a bunch of constants and members that are initialized for a single sort-job/call and immediately discarded once sorting is completed.
+* There's a little nasty bit hiding in plain-sight there, where we exfiltrtrate an interior pointer obtained inside a `fixed` block and store it for the lifetime of the struct, outside of the `fixed` block.
+  * This is generally a no-no since in theory we don't have a guarantee that the struct won't be boxed / stored inside a managed object on a heap where the GC is free to move our struct around.
+  * In this case, it is assumed that caller is internal and will only ever call `new VxSortInt32(...)` in the context of stack allocation and keep it that way.
+  * This somewhat abnormal assumption was taken so that the temporary memory sits close to the various pointers, taking advantage of locality of reference.
+
+</div>
+
+```csharp
+        internal void Sort(int* left, int* right)
+        {
+            var length = (int) (right - left + 1);
+
+            int* mid;
+            switch (length) {
+                case 0:
+                case 1:
+                    return;
+                case 2:
+                    SwapIfGreater(left, right);
+                    return;
+                case 3:
+                    mid = right - 1;
+                    SwapIfGreater(left, mid);
+                    SwapIfGreater(left, right);
+                    SwapIfGreater(mid,  right);
+                    return;
+            }
+
+            // Go to insertion sort below this threshold
+            if (length <= SMALL_SORT_THRESHOLD_ELEMENTS) {
+                InsertionSort(left, right);
+                return;
+            }
+
+            // Compute median-of-three, of:
+            // the first, mid and one before last elements
+            mid = left + ((right - left) / 2);
             SwapIfGreater(left, mid);
-            SwapIfGreater(left, right);
-            SwapIfGreater(mid, right);
-            return;
-    }
+            SwapIfGreater(left, right - 1);
+            SwapIfGreater(mid,  right - 1);
 
-    // Go to insertion sort below this threshold
-    if (length <= 16) {
-        InsertionSort(left, right);
-        return;
-    }
+            // Pivot is mid, place it in the right hand side
+            Swap(mid, right);
 
-    // Compute median-of-three, of:
-    // the first, mid and one before last elements
-    mid = left + ((right - left) / 2);
-    SwapIfGreater(left, mid);
-    SwapIfGreater(left, right - 1);
-    SwapIfGreater(mid, right - 1);
-	// Pivot is mid, place it in the right hand side
-    Swap(mid, right);
+            var boundary = VectorizedPartitionInPlace(left, right);
 
-    var sep = VectorizedPartitionInPlace(left, right, tmp);
-
-    QuickSortInt(start,  left, sep - 1, tmp);
-    QuickSortInt(start, sep, right, tmp);
-}
+            Sort( left, boundary - 1);
+            Sort(boundary + 1,  right);
+        }
 ```
 
-This is the part I blatantly copied for [`ArraySortHelper<T>`](https://github.com/dotnet/coreclr/blob/master/src/System.Private.CoreLib/shared/System/Collections/Generic/ArraySortHelper.cs#L182). What it does is:
+Lastly, we have the `Sort` method for the `VxSortInt32` struct. Most of this is code I blatantly copied for [`ArraySortHelper<T>`](https://github.com/dotnet/coreclr/blob/master/src/System.Private.CoreLib/shared/System/Collections/Generic/ArraySortHelper.cs#L182). What it does is:
 
 * Special case for lengths of 0-3
 * When length `<= 16` we just go straight to `InsertionSort` and skip all the recursive jazz (go back to post 1 if you want to know why `Array.Sort()` does this).
-* When we have `>= 17` elements, we go to vectorized partitioning: 
+* When we have `>= 17` elements, we go to vectorized partitioning:
   * we do median of 3 pivot selection
   * swap that pivot so that it resides on the right-most index of the partition.
 * Call `VectorizedPartitionInPlace`, which we've seen before.
@@ -630,14 +681,14 @@ DoublePumpedNaive, 16.7518, 25.7378, 32.6388, 34.5511, 27.2976, 29.5117
             <div class="rotated-header">Size</div>
             </div>
         </th>
-        <th data-field="MaxDepthScaledDataTable" data-sortable="true" 
+        <th data-field="MaxDepthScaledDataTable" data-sortable="true"
             data-value-type="inline-bar-horizontal">
             <div data-intro="The maximal depth of recursion reached while sorting"  data-position="top" class="rotated-header-container">
               <div class="rotated-header">Max</div>
               <div class="rotated-header">Depth</div>
             </div>
         </th>
-        <th data-field="NumPartitionOperationsScaledDataTable" data-sortable="true" 
+        <th data-field="NumPartitionOperationsScaledDataTable" data-sortable="true"
             data-value-type="inline-bar-horizontal">
             <div data-intro="# of partitioning operations per sort" data-position="bottom" class="rotated-header-container">
               <div class="rotated-header">Part</div>
@@ -665,7 +716,7 @@ DoublePumpedNaive, 16.7518, 25.7378, 32.6388, 34.5511, 27.2976, 29.5117
               <div class="rotated-header">Permutes</div>
             </div>
         </th>
-        <th data-field="AverageSmallSortSizeScaledDataTable" data-sortable="true" 
+        <th data-field="AverageSmallSortSizeScaledDataTable" data-sortable="true"
             data-value-type="inline-bar-horizontal">
             <div data-intro="For hybrid sorting, the average size that each small sort operation was called with (e.g. InsertionSort)"
                  data-position="bottom" class="rotated-header-container">
@@ -674,7 +725,7 @@ DoublePumpedNaive, 16.7518, 25.7378, 32.6388, 34.5511, 27.2976, 29.5117
               <div class="rotated-header">Size</div>
             </div>
         </th>
-        <th data-field="NumScalarComparesScaledDataTable" data-sortable="true" 
+        <th data-field="NumScalarComparesScaledDataTable" data-sortable="true"
             data-value-type="inline-bar-horizontal">
             <div data-intro="How many branches were executed in each sort operation that were based on the unsorted array elements"
                  data-position="top" class="rotated-header-container">
@@ -683,7 +734,7 @@ DoublePumpedNaive, 16.7518, 25.7378, 32.6388, 34.5511, 27.2976, 29.5117
               <div class="rotated-header">Branches</div>
             </div>
         </th>
-        <th data-field="PercentSmallSortCompares" data-sortable="true" 
+        <th data-field="PercentSmallSortCompares" data-sortable="true"
             data-value-type="float2-percentage">
             <div data-intro="What percent of</br>⬅<br/>branches happenned as part of small-sorts"
               data-position="bottom" class="rotated-header-container">
@@ -710,6 +761,7 @@ Intel Core i7-7700HQ CPU 2.80GHz (Kaby Lake), 1 CPU, 4 logical and 4 physical co
 InvocationCount=10  IterationCount=3  LaunchCount=1
 UnrollFactor=1  WarmupCount=3
 ```
+
 {% endcodetab %}
 
 {% endcodetabs %}
@@ -719,8 +771,29 @@ We're off to a very good start:
 
 * We can see that as soon as we hit 1000 element arrays (even earlier, in earnest), we already outperform `Array.Sort` (87% runtime), and by the time we get to 1M / 10M element arrays, we see speed-ups north of 2.5x (39%, 37% runtime) over the scalar C++ code!  
 
-* While `Array.Sort` is behaving like we would expect from a `QuickSort`-like function: it is slowing down at rate you'd expect given that it has a Big-O notation of $$\mathcal{O}(n\log{}n)$$, our own `DoublePumpedNaive` is peculiar: The time spent sorting every single element starts going up exponentially as we increase `N`, then goes down a bit and back up. Huh? It actually improves as we sort more data? Quite unreasonable, unless we remind ourselves that we are executing a mix of scalar insertion sort and vectorized code. Where are we actually spending more CPU cycles though?  
-It's time we profile the code to see what's really up: We can fire up the venerable Linux `perf` tool, through a simple test binary/project I've coded up which allows me to execute some dummy sorting by selecting the sort method I want to invoke and specify some parameters for it through the command line, for example:
+* While `Array.Sort` is behaving like we would expect from a `QuickSort`-like function: it is slowing down at rate you'd expect given that it has a Big-O notation of $$\mathcal{O}(n\log{}n)$$, our own `DoublePumpedNaive` is peculiar: The time spent sorting every single element starts going up as we increase `N`, then goes down a bit and back up. Huh? It actually improves as we sort more data? Quite unreasonable, unless we remind ourselves that we are executing a mix of scalar insertion sort and vectorized code. Where are we actually spending more CPU cycles though?  We'll run some profiling sessions in a minute, to get a better idea of what's going on.
+
+If you recall, on the first post in this series, I presented some statistics about is going on inside our sort routine. This is a perfect time to switch to the statistics tab, where I've beefed up the table with some vectorized counters that didn't make sense before with the scalar version. From here we can learn a few interesting facts:
+
+* The number of partitioning operations / small sorts is practically the same
+  * You could ask yourself, or me, why they are not **exactly** the same?
+    To which I'd answer:
+    * The thresholds are 16 vs. 17, which has some effect.
+    * We have to remember that the resulting partitions from each implementation end up looking slightly different because of the double pumping + temporary memory shenanigans. Once the partitions look different, the following pivots selected are different, and the entire whole sort mechanic looks slightly different.
+* We are doing a lot of vectorized work:
+  * Loading two vectors per 8-element(1 data vector + 1 permutation vector)
+  * Storing two vectors (left+right) for every vector read
+  * In a weird coincidence, this means we have perform the same number of vectorized loads and store for every test case.
+  * Finally, lest we forget, we perfom compares/permutations at exactly half of the load/store rate.
+* All of this is helping us by reducing the number of scalar comparisons, but there's still quite a lot of it left too:
+  * We continue to do scalar partitioning inside `VectorizedPartitionInPlace`, as part of handling the remainder that doesn't fit into a `Vector256<int>`.
+  * We are executing tons of scalar comparisons inside of the insertion sort.  
+    It is clear that the majority of scalar comparisons are now coming from the `InsertionSort`: If we focus on the 1M/10M cases here, we see that we went up from attributing 28.08%/24.60% of scalar comparisons in the `Unmanaged` (scalar) test-case all the way to 66.4%/62.74% in the vectorized `DoublePumpNaive` version. This is simply due to the fact that the vectorized version executes less data-dependent branches.
+
+This is but the beginning of our profiling journey, but we are already learning a complicated truth: Right now, as fast as this is already going, the scalar code we use for insertion sort will always put an upper limit on how fast we can possibly go by optimizing the *vectorized code* we've gone over so far, *unless* we get rid of `InsertionSort` alltogether, replacing it with something better. But first thing's first, we must remain focused: 65% of instructions executed are still spent doing vectorized partitioning; That is the biggest target on our scope!
+</div>
+
+As promised, it's time we profile the code to see what's really up: We can fire up the venerable Linux `perf` tool, through a simple test binary/project I've coded up which allows me to execute some dummy sorting by selecting the sort method I want to invoke and specify some parameters for it through the command line, for example:
 
 ```bash
 $ cd ~/projects/public/VxSort/Example
@@ -770,31 +843,10 @@ $ perf report --stdio -F overhead,sym | head -15
 
 {% endcodetabs %}
 
-
 This is a trimmed summary of `perf` session recording performance metrics, specifically: number of instructions executed for running a 1M element sort 100 times, followed by running a 10K element sort, 10K times. I was initially shocked when I saw this for the first time, but we're starting to understand the previous oddities we saw with the `Time/N` column!  
 We're spending upwards of 20% of the our time doing scalar insertion sorting! This was supposed to be vectorized sorting and yet, somehow, "only" 65% of the time is spent in the vectorized function (which also has some scalar parts, to be frank). Not only that, but as the size of the array decreases, the percentage of time spent in scalar code *increases* (from 22.43% to 29.87%), which should not surprise us anymore.  
 Before anything else, let me clearly state that this is not necessarily a bad thing! As the size of the partition decreases, the *benefit* of doing vectorized partitioning decreases in general, and even more so for our AVX2 partitioning, which has non-trivial start-up overhead. We shouldn't care about the amount of time we're spending on scalar code per se, but the amount of time taken to sort the entire array.  
 The decision to go to scalar insertion sort or stick to our vectorized code is controlled by the threshold I mentioned before, which is sitting there at `16`. We're only beginning our optimization phase in the next post, so for now, we'll stick with the threshold selected for `Array.Sort` by the CoreCLR developers, but this is definitely something we will tweak later for our particular implementation.
-
-If you recall, on the first post in this series, I presented some statistics about is going on inside our sort routine. This is a perfect time to bring those statistics back and take them up a notch by adding vectorized operation counters:
-
-I have a lot to say about these statistics, when comparing both sets as presented in these tabs:
-
-* The number of partitioning operations / small sorts is practically the same
-  * You could ask yourself, or me, why they are not **exactly** the same?
-    To which I'd answer:
-    * The thresholds are 16 vs. 17, which has some effect.
-    * We have to remember that the resulting partitions from each implementation end up looking slightly different because of the double pumping + temporary memory shenanigans. Once the partitions look different, the following pivots selected are different, and the entire whole sort mechanic looks slightly different.
-* We are doing a lot of vectorized work:
-  * Loading two vectors per 8-element(1 data vector + 1 permutation vector), storing two vectors (left+right), and lest we forget, compares/permutations.
-* All of this is helping us in reducing the number of scalar comparisons, but there's still a lot of that going on here:
-  * We continue to do some scalar partitioning inside each vectorized partition call, as part of handling the remainder that doesn't fit into a SIMD vector.
-  * We are executing tons of scalar comparisons inside of the insertion sort.
-    It is clear that the majority of scalar comparisons are now coming from the `InsertionSort`: We went up from attributing 28.08%/24.60% of scalar comparisons for the 1M/10M array size all the way to 66.4%/62.74% in AVX2 version. This is simply due to the fact that the vectorized version executes less data-dependent branches. 
-
-This is but the beginning of our profiling journey, but we are already learning a complicated truth: Right now, as fast as this is already going, the scalar code we use for insertion sort will always put an upper limit on how fast we can possibly go by optimizing the *vectorized code* we've gone over so far, *unless* we get rid of `InsertionSort` alltogether, replacing it with something better. But first thing's first, we must remain focused: 65% of instructions executed are still spent doing vectorized partitioning; That is the biggest target on our scope!
-
-</div>
 
 ## Finishing off with a sour taste
 
