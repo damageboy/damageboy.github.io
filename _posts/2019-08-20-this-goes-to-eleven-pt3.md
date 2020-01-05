@@ -128,25 +128,69 @@ static unsafe void PartitionBlock(int *dataPtr, Vector256<int> P,
 
 That's a lot of cheese, let’s break this down:
 
-* <span class="uk-label">L1</span>: Broadcast the pivot value to a vector I’ve named `P`. We’re just creating 8-copies of the selected pivot value in a SIMD register.  
-Technically, this isn't really part of the block as this is this happens only *once* per partitioning function call! It's included here for context.  
-* <span class="uk-label">L3-5</span>: We wrap our block into a static function. We forcefully inline it in various strategic places in the rest of our code.  
-  This may look like an odd signature, but think of it as a way of not copy-pasting code with no performance penalty.
-* <span class="uk-label">L6</span>: Load up data from somewhere in our array. `dataPtr` points to some unpartitioned data. `dataVec` is now loaded with data we need to partition, and that's the important bit.
-* <span class="uk-label">L7-8</span>: Perform an 8-way comparison using `CompareGreaterThan`, then proceed to convert/compress the 256-bit result into an 8-bit value using the `MoveMask` intrinsic.  
-  The goal here is to generate a **scalar** `mask` value, that contains a single `1` bit for every comparison where the corresponding data element was *greater-than* the pivot value and `0` bits for all others. If you are having a hard time following *why* this does this, you need to head back to the [2<sup>nd</sup> post](2019-08-19-this-goes-to-eleven-pt2.md) and read up on these two intrinsics/watch their animations.
-* <span class="uk-label">L9-10</span>: Permute the loaded data according to a permutation vector; A-ha! A twist in the plot!  
-  `mask` contains 8 bits, from LSB to MSB describing where each element belongs to (left/right). We could, of course, loop over those bits and perform 8 branches to determine which side each element belongs to, but that would be a terrible mistake. Instead, we’re going to use the `mask` as an *index* into a lookup-table for permutation values!  
-  This is one of the reasons it was critical for us to have the `MoveMask` intrinsic in the first place. Without it, we would not have a scalar value we could use as an index to our table. Pretty neat, no?  
-  Now, with the permutation operation done, we’ve grouped all the *smaller-or-equal* than values on one side of our `dataVec` SIMD vector/register (the "left" side) and all the *greater-than* values on the other side (the "right" side).  
-  I’ve comfortably glanced over the actual values in the permutation lookup-table which `PermTablePtr` is pointing to; I'll address this a couple of paragraphs below.
-* Partitioning itself is now practically complete: That is, our `dataVec` vector is already partitioned by now. Except that that data is still "stuck" inside our vector. We need to write its contents back to memory. Here comes a small complication: Our `dataVec` vector now contains *both* values that belong to the left and right portion of the original array. We did separate them **within** the vector, but we're not done until each side is written back to memory, on both ends of our array/partition.  
-* <span class="uk-label">L11-12</span>: Store the same vector to both sides of the array. There is no cheap way to write *portions* of a vector to its respective end, so we write the **entire** partitioned vector to both the *left* **and** *right* sides of the array.  
-  At any given moment, we have two write pointers pointing to where we need to write to **next** on either side: `writeLeft` and `writeRight`. Again, how those are initialized and maintained will be dealt with further down where we discuss the outer-loop, but for now, let's assume these pointers initially point to somewhere where it is safe to write at least an entire `Vector256<T>` and move on.
-* <span class="uk-label">L13-15</span>: Book-keeping time: We just wrote 8 elements to each side, and each side had a trail of unwanted data tacked to it. We didn't care for it while we were writing it, because we are about to update the next write pointers in such a way that the *next* writes operations will **overwrite** the trailing data that doesn't belong to each respective side!  
-  * The vector gods are smiling at us: We have the `PopCount` intrinsic to lend us a hand here. We issue `PopCount` on `mask` (again, `MoveMask` was worth its weight in gold here) and get a count of how many bits in `mask` were `1`. This accounts for how many values **inside** the vector were *greater-than* the pivot value and belong to the right side.
-  * This "happens" to be the amount by which we want to *decrease* the `writeRight` pointer (`writeRight` is "advanced" by decrementing it, this may seem weird for now, but will become clearer when we discuss the outer-loop!)
-  * Finally, we adjust the `writeLeft` pointer: `popCount` contains the number of `1` bits; the number of `0` bits is by definition, `8 - popCount` since `mask` had 8 bits of content in it, to begin with. This accounts for how many values in the register were *less-than-or-equal* the pivot value and grouped on the left side of the register.
+
+<div class="divTable">
+<div class="divTableBody">
+<div class="divTableRow">
+<div class="divTableCell"><span class="uk-label">L1</span></div>
+<div class="divTableCell" markdown="1">
+Broadcast the pivot value to a vector I’ve named `P`. We’re just creating 8-copies of the selected pivot value in a SIMD register.  
+Technically, this isn't really part of the block as this is this happens only *once* per partitioning function call! It's included here for context.
+</div>
+</div>
+<div class="divTableRow">
+<div class="divTableCell"><span class="uk-label">L3-5</span></div>
+<div class="divTableCell" markdown="1">
+We wrap our block into a static function. We forcefully inline it in various strategic places in the rest of our code.  
+This may look like an odd signature, but think of it as a way of not copy-pasting code with no performance penalty.
+</div>
+</div>
+<div class="divTableRow">
+<div class="divTableCell"><span class="uk-label">L6</span></div>
+<div class="divTableCell" markdown="1">
+Load up data from somewhere in our array. `dataPtr` points to some unpartitioned data. `dataVec` is now loaded with data we need to partition, and that's the important bit.
+</div>
+</div>
+<div class="divTableRow">
+<div class="divTableCell"><span class="uk-label">L7-8</span></div>
+<div class="divTableCell" markdown="1">
+Perform an 8-way comparison using `CompareGreaterThan`, then proceed to convert/compress the 256-bit result into an 8-bit value using the `MoveMask` intrinsic.  
+The goal here is to generate a **scalar** `mask` value, that contains a single `1` bit for every comparison where the corresponding data element was *greater-than* the pivot value and `0` bits for all others. If you are having a hard time following *why* this does this, you need to head back to the [2<sup>nd</sup> post](2019-08-19-this-goes-to-eleven-pt2.md) and read up on these two intrinsics/watch their animations.
+</div>
+</div>
+<div class="divTableRow">
+<div class="divTableCell"><span class="uk-label">L9-10</span></div>
+<div class="divTableCell" markdown="1">
+Permute the loaded data according to a permutation vector; A-ha! A twist in the plot!  
+`mask` contains 8 bits, from LSB to MSB describing where each element belongs to (left/right). We could, of course, loop over those bits and perform 8 branches to determine which side each element belongs to, but that would be a terrible mistake. Instead, we’re going to use the `mask` as an *index* into a lookup-table for permutation values!  
+This is one of the reasons it was critical for us to have the `MoveMask` intrinsic in the first place. Without it, we would not have a scalar value we could use as an index to our table. Pretty neat, no?  
+Now, with the permutation operation done, we’ve grouped all the *smaller-or-equal* than values on one side of our `dataVec` SIMD vector/register (the "left" side) and all the *greater-than* values on the other side (the "right" side).  
+I’ve comfortably glanced over the actual values in the permutation lookup-table which `PermTablePtr` is pointing to; I'll address this a couple of paragraphs below.
+</div>
+</div>
+<div class="divTableRow">
+<div class="divTableCell"><span class="uk-label">L11-12</span></div>
+<div class="divTableCell" markdown="1">
+Store the same vector to both sides of the array. There is no cheap way to write *portions* of a vector to its respective end, so we write the **entire** partitioned vector to both the *left* **and** *right* sides of the array.  
+At any given moment, we have two write pointers pointing to where we need to write to **next** on either side: `writeLeft` and `writeRight`. Again, how those are initialized and maintained will be dealt with further down where we discuss the outer-loop, but for now, let's assume these pointers initially point to somewhere where it is safe to write at least an entire `Vector256<T>` and move on.
+</div>
+</div>
+</div>
+</div>
+Partitioning itself is now practically complete: That is, our `dataVec` vector is already partitioned by now. Except that that data is still "stuck" inside our vector. We need to write its contents back to memory. Here comes a small complication: Our `dataVec` vector now contains *both* values that belong to the left and right portion of the original array. We did separate them **within** the vector, but we're not done until each side is written back to memory, on both ends of our array/partition.
+<div class="divTable">
+<div class="divTableBody">
+<div class="divTableRow">
+<div class="divTableCell"><span class="uk-label">L13-15</span></div>
+<div class="divTableCell" markdown="1">
+Book-keeping time: We just wrote 8 elements to each side, and each side had a trail of unwanted data tacked to it. We didn't care for it while we were writing it, because we are about to update the next write pointers in such a way that the *next* writes operations will **overwrite** the trailing data that doesn't belong to each respective side!  
+The vector gods are smiling at us: We have the `PopCount` intrinsic to lend us a hand here. We issue `PopCount` on `mask` (again, `MoveMask` was worth its weight in gold here) and get a count of how many bits in `mask` were `1`. This accounts for how many values **inside** the vector were *greater-than* the pivot value and belong to the right side.  
+This "happens" to be the amount by which we want to *decrease* the `writeRight` pointer (`writeRight` is "advanced" by decrementing it, this may seem weird for now, but will become clearer when we discuss the outer-loop!  
+Finally, we adjust the `writeLeft` pointer: `popCount` contains the number of `1` bits; the number of `0` bits is by definition, `8 - popCount` since `mask` had 8 bits of content in it, to begin with. This accounts for how many values in the register were *less-than-or-equal* the pivot value and grouped on the left side of the register.
+</div>
+</div>
+</div>
+</div>
 
 This was a full 8-element wise partitioning block, and it's worth noting a thing or two about it:
 
@@ -564,8 +608,12 @@ DoublePumpedNaive, 1.05, 0.87, 0.6, 0.58, 0.39 , 0.37
  "options": {
     "title": { "text": "AVX2 Naive Sorting - Scaled to Array.Sort", "display": true },
     "scales": { 
-      "yAxes": [{ 
-        "ticks": { "min": 0.2, "callback": "ticksPercent" },
+      "yAxes": [{
+       "ticks": {
+         "fontFamily": "Indie Flower",
+         "min": 0.2, 
+         "callback": "ticksPercent"
+        },
         "scaleLabel": {
           "labelString": "Scaling (%)",
           "display": true
@@ -612,13 +660,13 @@ DoublePumpedNaive, 16.7518, 25.7378, 32.6388, 34.5511, 27.2976, 29.5117
     "title": { "text": "AVX2 Naive Sorting - log(Time/N)", "display": true },
     "scales": { 
       "yAxes": [{ 
-        "ticks": { 
-          "min": 0.8, 
-          "fontFamily": "Indie Flower",
-          "callback": "ticksPercent" 
+        "type": "logarithmic",
+        "ticks": {
+          "callback": "ticksNumStandaard",
+          "fontFamily": "Indie Flower"          
         },
         "scaleLabel": {
-          "labelString": "Scaling (%)",
+          "labelString": "Time/N (ns)",
           "fontFamily": "Indie Flower",
           "display": true
         }
