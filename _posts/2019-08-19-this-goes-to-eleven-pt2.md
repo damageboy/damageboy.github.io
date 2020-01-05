@@ -124,16 +124,22 @@ Here's the list of what we're going to go over:
 I understand that for first time readers, this list looks like I'm just name-dropping lots of fancy code names to make myself sound smart, but the unfortunate reality is that we *kind of need* to know all of these, and here is why: On the right column I've provided the actual C# Intrinsic function we will be calling in our code and linked to their docs. But here's a funny thing: There is no "usable" documentation on Microsoft's own docs regarding most of these intrinsics. All those docs do is simply point back to the Intel C/C++ intrinsic name, which I've also provided in the middle column, with links to the real documentation, the sort that actually explains what the instruction does with pseudo code. Finally, since we're practically writing assembly code anyways, and I can guarantee we'll end up inspecting JIT'd code down the road, I provided the x86 assembly opcodes for our instructions as well.[^3]
 Now, What does each of these do? Let's find out...
 
-As luck would have it, I was blessed with the ultimate power of wielding SVG animations, so most of these instructions will be accompanied by an animation *visually explaining* them.  
-<span class="uk-label">Hint</span>: These animations are triggered by your mouse pointer / finger-touch inside them. The animations will immediately freeze once the pointer is out of the drawing area, and resume again when inside. Eventually, they loop over and begin all over...  
-From here-on, I'll use the following icon when I have a thingy that animates:<br/><object style="margin: auto" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/play.svg"></object>
+<table style="margin-bottom: 0em">
+<tr>
+<td style="border: none"><span class="uk-label">Hint</span></td>
+<td style="border: none">From here-on, The following icon means I have a thingy that animates: <object style="margin: auto; position: relative; top: 1.1em" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/play.svg"></object><br/>
+Click/Touch/Hover <b>inside</b> means: <i class="glyphicon glyphicon-play"></i><br/>
+Click/Touch/Hover <b>outside</b> means: <i class="glyphicon glyphicon-pause"></i>
+</td>
+</tr>
+</table>
 {: .notice--info}
 
 #### Vector256.Create(int value)
 
 <div markdown="1">
 <div markdown="1" class="stickemup">
-<object style="margin: auto" width="100%" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/inst-animations/vbroadcast-with-hint.svg"></object>
+<object class="animated-border" width="100%" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/inst-animations/vbroadcast-with-hint.svg"></object>
 </div>
 
 We start with a couple of simple instructions, and nothing is more simple than this first: This intrinsic accepts a single scalar value and simply “broadcasts” it to an entire SIMD register, this is how you’d use it:
@@ -156,7 +162,7 @@ This specific intrinsic is translated into two intel opcodes, since there is no 
 
 <div markdown="1">
 <div markdown="1" class="stickemup">
-<object style="margin: auto" width="100%" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/inst-animations/lddqu-with-hint.svg" ></object>
+<object class="animated-border" width="100%" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/inst-animations/lddqu-with-hint.svg" ></object>
 </div>
 
 Next up we have a couple of brain dead simple intrinsics that we use to read/write from memory into SIMD registers and conversely store from SIMD registers back to memory. These are amongst the most common intrinsics out there, as you can imagine:
@@ -184,7 +190,7 @@ I only included an SVG animation for `LoadDquVector256`, but you can use your im
 
 <div markdown="1">
 <div markdown="1" class="stickemup">
-<object style="margin: auto" width="100%" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/inst-animations/vpcmpgtd-with-hint.svg" ></object>
+<object class="animated-border" width="100%" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/inst-animations/vpcmpgtd-with-hint.svg" ></object>
 </div>
 
 `CompareGreaterThan` does an *n*-way, element-by-element *greater-than* (`>`) comparison between two `Vector256<T>` instances. In our case where `T` is really `int`, this means comparing 8 integers in one go, instead of performing 8 comparisons serially!
@@ -211,7 +217,7 @@ vpcmpgtd ymm2, ymm1, ymm0 ; 1 cycle latency
 
 <div markdown="1">
 <div markdown="1" class="stickemup">
-<object style="margin: auto" width="100%" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/inst-animations/vmovmskps-with-hint.svg"></object>
+<object class="animated-border" width="100%" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/inst-animations/vmovmskps-with-hint.svg"></object>
 </div>
 
 Another intrinsic which will prove to be very useful is the ability to extract some bits from a vectorized register into a normal, scalar one. `MoveMask` does just this. This intrinsic takes the top-level (MSB) bit from every element and moves it into our scalar result:
@@ -253,7 +259,7 @@ In this series, `PopCount` is the only intrinsic I use that is not purely vector
 
 <div markdown="1">
 <div markdown="1" class="stickemup">
-<object stle="margin: auto" width="100%" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/inst-animations/vpermd-with-hint.svg"></object>
+<object class="animated-border" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/inst-animations/vpermd-with-hint.svg"></object>
 </div>
 
 `PermuteVar8x32` accepts two vectors: source, permutation and performs a permutation operation **on** the source value *according to the order provided* in the permutation value. If this sounds confusing go straight to the visualization below...

@@ -21,35 +21,26 @@ chartjs:
       - scaleLabel:
           display: true,
           labelString: "N (elements)"
-          padding: 1
-          lineHeight: 1.0
+          fontFamily: "Indie Flower"
+        ticks:
+          fontFamily: "Indie Flower"
+
   legend:
     display: true
-    position: right
+    position: bottom
     labels:
+      fontFamily: "Indie Flower"
       fontSize: 14
   title:
     position: top
-  plugins:
-   zoom:
-     pan:
-       enabled: false
-       mode: xy
-     zoom:
-       enabled: false
-       mode: xy
-       speed: 0.1
-   deferred:
-     xOffset: 150
-     yOffset: 50%
-     delay: 750
+    fontFamily: "Indie Flower"
 #categories: coreclr intrinsics vectorization quicksort sorting
 ---
 
 Since there’s a lot to go over here, I’ve split it up into a few parts:
 
 1. In [part 1]({% post_url 2019-08-18-this-goes-to-eleven-pt1 %}), we start with a refresher on `QuickSort` and how it compares to `Array.Sort()`.
-2. In this part, we go over the basics of vectorized hardware intrinsics, vector types, and go over a handful of vectorized instructions we’ll use in part 3. We still won't be sorting anything.
+2. In [part 2]({% post_url 2019-08-19-this-goes-to-eleven-pt2 %}), we go over the basics of vectorized hardware intrinsics, vector types, and go over a handful of vectorized instructions we’ll use in part 3. We still won't be sorting anything.
 3. In this part, we go through the initial code for the vectorized sorting, and we’ll start seeing some payoff. We finish agonizing courtesy of the CPU’s Branch Predictor, throwing a wrench into our attempts.
 4. In [part 4]({% post_url 2019-08-21-this-goes-to-eleven-pt4 %}), we go over a handful of optimization approaches that I attempted trying to get the vectorized partitioning to run faster. We'll see what worked and what didn't.
 5. In part 5, we’ll see how we can almost get rid of all the remaining scalar code- by implementing small-constant size array sorting. We’ll use, drum roll…, yet more AVX2 vectorization.
@@ -79,8 +70,10 @@ At the same time, stable sorting is a non-issue when:
 In the .NET/C# world, one could say that the landscape regarding sorting is a little unstable (pun intended):
 
 * [`Array.Sort`](https://docs.microsoft.com/en-us/dotnet/api/system.array.sort?view=netcore-3.1) is unstable, as is clearly stated in the remarks section:
+  
   > This implementation performs an unstable sort; that is, if two elements are equal, their order might not be preserved.
 * On the other hand, [`Enumerable.OrderBy`](https://docs.microsoft.com/en-us/dotnet/api/system.linq.enumerable.orderby?view=netcore-3.1) is stable:
+  
   > This method performs a stable sort; that is, if the keys of two elements are equal, the order of the elements is preserved.
 
 In general, what I came up with in my full repo/nuget package are algorithms capable of doing both stable and unstable sorting. But with two caveats:
@@ -94,12 +87,19 @@ Given all of this new information and the fact that I am only presenting pure pr
 
 Let's start with this “simple” block, describing what we do with moving pictures.
 
-<span class="uk-label">Hint</span>: These animations are triggered by your mouse pointer / finger-touch inside them. The animations will immediately freeze once the pointer is out of the drawing area, and resume again when inside. Eventually, they loop over and begin all over.  
-From here-on, I'll use the following icon when I have a thingy that animates:<br/><object style="margin: auto" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/play.svg"></object>
-{: .notice--info}
+<table style="margin-bottom: 0em">
+<tr>
+<td style="border: none; padding-top: 0; padding-bottom: 0"><span class="uk-label">Hint</span></td>
+<td style="border: none; padding-top: 0; padding-bottom: 0">From here-on, The following icon means I have a thingy that animates:
+<object style="margin: auto; vertical-align: middle;" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/play.svg"></object><br/>
+Click/Touch/Hover <b>inside</b> means: <i class="glyphicon glyphicon-play"></i><br/>
+Click/Touch/Hover <b>outside</b> means: <i class="glyphicon glyphicon-pause"></i>
+</td>
+</tr>
+</table>
+{: .notice--info} 
 
-<object style="margin: auto" width="100%" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/block-unified-with-hint.svg"></object>
-
+<object class="animated-border" width="100%" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/block-unified-with-hint.svg"></object>
 Here is the same block, in more traditional code form:
 
 <div markdown="1">
@@ -246,7 +246,7 @@ Let's start with another visual aid for how I ended up doing this; note the diff
 
 <div markdown="1">
 <div markdown="1" class="stickemup">
-<object style="margin: auto" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/double-pumped-loop-with-hint.svg"></object>
+<object class="animated-border" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/double-pumped-loop-with-hint.svg"></object>
 </div>
 <object style="margin: auto" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/double-pumped-loop-legend.svg"></object>
 
@@ -445,10 +445,8 @@ Continuing on to `VxSortInt32` itself:
         const int TMP_SIZE_IN_ELEMENTS          = 2 * SLACK_PER_SIDE_IN_ELEMENTS + 8;
         const int SMALL_SORT_THRESHOLD_ELEMENTS = 16;
 
-        readonly int* _startPtr;
-        readonly int* _endPtr;
-        readonly int* _tempStart;
-        readonly int* _tempEnd;
+        readonly int* _startPtr,  _endPtr;
+                      _tempStart, _tempEnd;
         fixed int _temp[TMP_SIZE_IN_ELEMENTS];
 
         public VxSortInt32(int* startPtr, int* endPtr) : this()
@@ -546,7 +544,8 @@ Yes! This is by no means the end, on the contrary, this is only a rather impress
 <div data-intro="Size of the sorting problem, 10..10,000,000 in powers of 10" data-position="bottom">
 <div data-intro="Performance scale: Array.Sort (solid gray) is always 100%, and the other methods are scaled relative to it" data-position="left">
 <div data-intro="Click legend items to show/hide series" data-position="right">
-<canvas height="130vmx" data-chart="line">
+<div class="benchmark-chart-container">
+<canvas data-chart="line">
 N,100,1K,10K,100K,1M,10M
 ArraySort,         1   , 1   , 1  , 1   , 1    , 1
 DoublePumpedNaive, 1.05, 0.87, 0.6, 0.58, 0.39 , 0.37
@@ -581,6 +580,7 @@ DoublePumpedNaive, 1.05, 0.87, 0.6, 0.58, 0.39 , 0.37
 </div>
 </div>
 </div>
+</div>
 
 {% endcodetab %}
 
@@ -591,7 +591,8 @@ DoublePumpedNaive, 1.05, 0.87, 0.6, 0.58, 0.39 , 0.37
 <div data-intro="Size of the sorting problem, 10..10,000,000 in powers of 10" data-position="bottom">
 <div data-intro="Time in nanoseconds spent sorting per element. Array.Sort (solid gray) is the baseline, again" data-position="left">
 <div data-intro="Click legend items to show/hide series" data-position="right">
-<canvas height="130vmx" data-chart="line">
+<div class="benchmark-chart-container">
+<canvas data-chart="line">
 N,100,1K,10K,100K,1M,10M
 ArraySort        , 19.2578, 29.489 , 53.9452, 60.0894, 69.4293, 80.4822
 DoublePumpedNaive, 16.7518, 25.7378, 32.6388, 34.5511, 27.2976, 29.5117
@@ -611,20 +612,23 @@ DoublePumpedNaive, 16.7518, 25.7378, 32.6388, 34.5511, 27.2976, 29.5117
     "title": { "text": "AVX2 Naive Sorting - log(Time/N)", "display": true },
     "scales": { 
       "yAxes": [{ 
-        "type": "logarithmic",
-        "ticks": {
-          "callback": "ticksNumStandaard"
+        "ticks": { 
+          "min": 0.8, 
+          "fontFamily": "Indie Flower",
+          "callback": "ticksPercent" 
         },
         "scaleLabel": {
-          "labelString": "Time/N (ns)",
+          "labelString": "Scaling (%)",
+          "fontFamily": "Indie Flower",
           "display": true
         }
-      }] 
+      }]
     }
  },
  "defaultOptions": {{ page.chartjs | jsonify }}
 }
 --> </canvas>
+</div>
 </div>
 </div>
 </div>
@@ -787,8 +791,9 @@ If you recall, on the first post in this series, I presented some statistics abo
   * Finally, lest we forget, we perfom compares/permutations at exactly half of the load/store rate.
 * All of this is helping us by reducing the number of scalar comparisons, but there's still quite a lot of it left too:
   * We continue to do scalar partitioning inside `VectorizedPartitionInPlace`, as part of handling the remainder that doesn't fit into a `Vector256<int>`.
-  * We are executing tons of scalar comparisons inside of the insertion sort.  
-    It is clear that the majority of scalar comparisons are now coming from the `InsertionSort`: If we focus on the 1M/10M cases here, we see that we went up from attributing 28.08%/24.60% of scalar comparisons in the `Unmanaged` (scalar) test-case all the way to 66.4%/62.74% in the vectorized `DoublePumpNaive` version. This is simply due to the fact that the vectorized version executes less data-dependent branches.
+  * We are still executing scalar comparisons as part of small-sorting/inside of the insertion sort at an alarming rate:
+    * The absolute number of comparisons is quite high: We're still doing millions of data-based branches.
+    * It is also clear from the counters that the overwhelming majority of these are from `InsertionSort`: If we focus on the 1M/10M cases here,    we see that `InsertionSort` went up from attributing 28.08%/24.60% of scalar comparisons in the `Unmanaged` (scalar) test-case all the way to 66.4%/62.74% in the vectorized `DoublePumpNaive` version. Of course this rise is merely in percent terms, but it's clear we will have to deal with this if we intend to make this thing fast.
 
 This is but the beginning of our profiling journey, but we are already learning a complicated truth: Right now, as fast as this is already going, the scalar code we use for insertion sort will always put an upper limit on how fast we can possibly go by optimizing the *vectorized code* we've gone over so far, *unless* we get rid of `InsertionSort` alltogether, replacing it with something better. But first thing's first, we must remain focused: 65% of instructions executed are still spent doing vectorized partitioning; That is the biggest target on our scope!
 </div>
@@ -799,7 +804,7 @@ As promised, it's time we profile the code to see what's really up: We can fire 
 $ cd ~/projects/public/VxSort/Example
 $ dotnet publish -c release -o linux-x64 -r linux-x64
 # Run AVX2DoublePumped with 1,000,000 elements x 100 times
-$ ./linux-x64/Example --type-list DoublePumpedNaive --sizes 1000000
+$ ./linux-x64/Example --type-list DoublePumpNaive --sizes 1000000
 ```
 
 Here we call the `DoublePumpedNaive` implementation we've been discussing from the beginning of this post with 1M elements, and sort the random data 100 times to generate some heat in case global warming is not cutting it for you.  

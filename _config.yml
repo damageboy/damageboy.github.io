@@ -16,6 +16,9 @@ minimal_mistakes_skin: air #"aqua", "contrast", "dark", "dirt", "neon", "mint", 
 google_site_verification: "wcrvaF3e88-Vb6y-9eUTqYaXDMOukzl4c-IdKByS0Xc"
 bing_site_verification: "6D5AE23298671D95A20FAD7FA3430ABB"
 
+# Local serving
+host: 0.0.0.0
+
 # Build settings
 markdown: kramdown
 remote_theme: mmistakes/minimal-mistakes@4.16.6

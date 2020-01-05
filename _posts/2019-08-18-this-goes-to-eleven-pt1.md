@@ -21,26 +21,20 @@ chartjs:
       - scaleLabel:
           display: true,
           labelString: "N (elements)"
+          fontFamily: "Indie Flower"
+        ticks:
+          fontFamily: "Indie Flower"
+
   legend:
     display: true
-    position: right
+    position: bottom
     labels:
+      fontFamily: "Indie Flower"
       fontSize: 14
   title:
     position: top
-  plugins:
-   zoom:
-     pan:
-       enabled: false
-       mode: xy
-     zoom:
-       enabled: false
-       mode: xy
-       speed: 0.1
-   deferred:
-     xOffset: 150
-     yOffset: 50%
-     delay: 750
+    fontFamily: "Indie Flower"
+
 #categories: coreclr intrinsics vectorization quicksort sorting	
 ---
 
@@ -241,7 +235,8 @@ Here are the results in the form of charts and tables. I've included a handy lar
 <div data-intro="Size of the sorting problem, 10..10,000,000 in powers of 10" data-position="bottom">
 <div data-intro="Performance scale: Array.Sort (solid gray) is always 100%, and the other methods are scaled relative to it" data-position="left">
 <div data-intro="Click legend items to show/hide series" data-position="right">
-<canvas height="130vmx" data-chart="line">
+<div class="benchmark-chart-container">
+<canvas data-chart="line">
 N,100,1K,10K,100K,1M,10M
 ArraySort,1,1,1,1,1,1
 Scalar,2.04,1.57,1.33,1.12,1.09,1.11
@@ -267,9 +262,14 @@ Unmanaged,1.75,1.01,0.99,0.97,0.93,0.95
     "title": { "text": "Scalar Sorting - Scaled to Array.Sort", "display": true },
     "scales": { 
       "yAxes": [{ 
-        "ticks": { "min": 0.8, "callback": "ticksPercent" },
+        "ticks": { 
+          "min": 0.8, 
+          "fontFamily": "Indie Flower",
+          "callback": "ticksPercent" 
+        },
         "scaleLabel": {
           "labelString": "Scaling (%)",
+          "fontFamily": "Indie Flower",
           "display": true
         }
       }]
@@ -278,6 +278,7 @@ Unmanaged,1.75,1.01,0.99,0.97,0.93,0.95
  "defaultOptions": {{ page.chartjs | jsonify }}
 }
 --> </canvas>
+</div>
 </div>
 </div>
 </div>
@@ -291,7 +292,8 @@ Unmanaged,1.75,1.01,0.99,0.97,0.93,0.95
 <div data-intro="Size of the sorting problem, 10..10,000,000 in powers of 10" data-position="bottom">
 <div data-intro="Time in nanoseconds spent sorting per element. Array.Sort (solid gray) is the baseline, again" data-position="left">
 <div data-intro="Click legend items to show/hide series" data-position="right">
-<canvas height="130vmx" data-chart="line">
+<div class="benchmark-chart-container">
+<canvas data-chart="line">
 N,100,1K,10K,100K,1M,10M
 ArraySort,12.1123,30.5461,54.641,60.4874,70.7539,80.8431
 Scalar,24.7385,47.8796,72.7528,67.7419,77.3906,89.7593
@@ -311,18 +313,21 @@ Unmanaged,21.0955,30.9692,54.3112,58.9577,65.7222,76.8631
       "yAxes": [{ 
         "type": "logarithmic",
         "ticks": {
-          "callback": "ticksNumStandaard"
+          "callback": "ticksNumStandaard",
+          "fontFamily": "Indie Flower"          
         },
         "scaleLabel": {
           "labelString": "Time/N (ns)",
+          "fontFamily": "Indie Flower",
           "display": true
         }
-      }] 
+      }]
     }
  },
  "defaultOptions": {{ page.chartjs | jsonify }}
 }
 --> </canvas>
+</div>
 </div>
 </div>
 </div>
