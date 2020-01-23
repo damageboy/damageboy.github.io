@@ -3,5 +3,4 @@ _site
 .jekyll-metadata
 .bundle/
 .vscode/
-Gemfile.lock
 *~
