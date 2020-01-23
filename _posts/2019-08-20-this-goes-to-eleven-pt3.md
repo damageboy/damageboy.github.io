@@ -89,7 +89,7 @@ Let's start with this “simple” block, describing what we do with moving pict
 
 <table style="margin-bottom: 0em">
 <tr>
-<td style="border: none; padding-top: 0; padding-bottom: 0"><span class="uk-label">Hint</span></td>
+<td style="border: none; padding-top: 0; padding-bottom: 0; vertical-align: top"><span class="uk-label">Hint</span></td>
 <td style="border: none; padding-top: 0; padding-bottom: 0">From here-on, The following icon means I have a thingy that animates:
 <object style="margin: auto; vertical-align: middle;" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/play.svg"></object><br/>
 Click/Touch/Hover <b>inside</b> means: <i class="glyphicon glyphicon-play"></i><br/>
@@ -255,10 +255,19 @@ static ReadOnlySpan<int> PermTable => new[] {
 * When `mask` is `0b00000111` (decimal 7), the 3 lowest bits of the `mask` are `1`, they represent elements that need to go to the right side of the vector (e.g., elements that were `> pivot`), while all other values need to go to the left (`<= pivot`). The permutation vector: `[3, 4, 5, 6, 7, 0, 1, 2]` does just that.
 * The checkered bit pattern for the `mask` value `0b10101010` (decimal 170) calls to move all the even elements to one side and the odd elements to the other... You can see that `[0, 2, 4, 6, 1, 3, 5, 7]` does the work here.
 
-<span class="uk-label">Note</span> that I'm technically lying here: If you look at the [actual code](https://github.com/damageboy/QuicksortAvaganza/blob/master/VxSort/PermutationTables.cs), you'll see the table's type is `ReadOnlySpan<byte>` and that the values are encoded as individual bytes with little-endian encoding. It is a CoreCLR / C# 7.3 specific optimization that allows us to treat the address of this table as a constant at JIT time. Kevin Jones ([@vcsjones](https://twitter.com/vcsjones)) did a wonderful job of digging into it, go [read his excellent post](https://vcsjones.dev/2019/02/01/csharp-readonly-span-bytes-static/) about this if you want to see interesting bits.  
-We **must** use a `ReadOnlySpan<byte>` for the optimization to trigger (Not reading *that* fine-print cost me two nights of my life chasing what I was *sure* had to be a GC/JIT bug…). Normally, it would be a **bad** idea to store a `ReadOnlySpan<int>` as a `ReadOnlySpan<byte>`: we are forced to choose between little/big-endian encoding *at compile-time*. This runs up against the fact that in C# we compile once and debug (and occasionally run :) everywhere. Therefore, we have to *assume* our binaries might run on both little/big-endian machines where the CPU might not match the encoding we chose. Not great.  
+
+<table style="margin-bottom: 0em">
+<tr>
+<td style="border: none; padding-top: 0; padding-bottom: 0; vertical-align: top"><span class="uk-label uk-label-warning">Note</span></td>
+<td style="border: none; padding-top: 0; padding-bottom: 0"><div markdown="1">
+This is technically a lie: The [actual code](https://github.com/damageboy/QuicksortAvaganza/blob/master/VxSort/PermutationTables.cs) uses `ReadOnlySpan<byte>` as the table's type, with the `int` values encoded as individual bytes in little-endian encoding. This is a C# 7.3 specific optimization where we get to treat the address of this table as a constant at JIT time. Kevin Jones ([@vcsjones](https://twitter.com/vcsjones)) did a wonderful job of [digging into it](https://vcsjones.dev/2019/02/01/csharp-readonly-span-bytes-static/).  
+We **must** use a `ReadOnlySpan<byte>` for the optimization to trigger: Not reading *that* fine-print cost me two nights of my life chasing what I was *sure* had to be a GC/JIT bug. Normally, it would be a **bad** idea to store a `ReadOnlySpan<int>` as a `ReadOnlySpan<byte>`: we are forced to choose between little/big-endian encoding *at compile-time*. This runs up against the fact that in C# we compile once and debug (and occasionally run :) everywhere. Therefore, we have to *assume* our binaries might run on both little/big-endian machines where the CPU might not match the encoding we chose.  
 **In this case**, praise the vector deities, blessed be their name and all that they touch, this is a *non-issue*: The entire premise is **x86** specific. This means that this code will **never** run on a big-endian machine. We can simply assume little endianness here till the end of all times.
-{: .notice--warning}
+</div>
+</td>
+</tr>
+</table>
+{: .notice--warning }
 
 </div>
 
@@ -292,7 +301,7 @@ Let's start with another visual aid for how I ended up doing this; note the diff
 <div markdown="1" class="stickemup">
 <object class="animated-border" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/double-pumped-loop-with-hint.svg"></object>
 </div>
-<object style="margin: auto" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/double-pumped-loop-legend.svg"></object>
+<object style="margin-top: 2em" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/double-pumped-loop-legend.svg"></object>
 
 * Each rectangle is 8-elements wide.
   * Except for the middle one, which represents the last group of up to 8 elements that need to be partitioned. This is often called in vectorized parlance the "remainder problem".
@@ -358,7 +367,16 @@ unsafe int* VectorizedPartitionInPlace(int* left, int* right)
 
 The function accepts two parameters: `left`, `right` pointing to the edges of the partitioning task we were handed. The selected pivot is “passed” in an unconventional way: the caller (The top-level sort function) is responsible for **moving** it to the right edge of the array before calling the partitioning function. In other words, we start executing the function expecting the pivot to be already selected and placed at the right edge of the segment (e.g., `right` points to it). This is a remnant of my initial copy-pasting of CoreCLR code, and to be honest, I don't care enough to change it.
 
-<span class="uk-label">Note</span> that I'm using a "variable" (`N`) instead of `Vector256<int>.Count`. There's a reason for those double quotes: At JIT time, the right-hand expression is considered as a constant as far as the JIT is concerned. Furthermore, once we initialize N with its value and *never* modify it, the JIT treats N as a constant as well! So really, I get to use a short/readable name and pay no penalty in for it.
+
+<table style="margin-bottom: 0em">
+<tr>
+<td style="border: none; padding-top: 0; padding-bottom: 0; vertical-align: top"><span class="uk-label">Note</span></td>
+<td style="border: none; padding-top: 0; padding-bottom: 0"><div markdown="1">
+I'm using a "variable" (`N`) instead of `Vector256<int>.Count`. There's a reason for those double quotes: At JIT time, the right-hand expression is considered as a constant as far as the JIT is concerned. Furthermore, once we initialize N with its value and *never* modify it, the JIT treats N as a constant as well! So really, I get to use a short/readable name and pay no penalty in for it.
+</div>
+</td>
+</tr>
+</table>
 {: .notice--info}
 
 We proceed to partition a single 8-element vector on each side, with our good-ole' partitioning block **straight into** that temporary space. It is important to remember that having done that, we don't care about the original contents of the area we just read from anymore: we're free to write up to one `Vector256<T>` to each edge of the array in the future. We've made enough room inside our array available for writing in-place while partitioning. We finish the setup by initializing read and write pointers for every side (`readLeft`, `readRight`, `writeLeft`, `writeRight`); An alternative way to think about them is that each side gets its own head (read) and tail (write) pointers. We will be continuously reading from **one** of the heads and writing to **both** tails from now on.
@@ -398,10 +416,8 @@ Here's the same loop we saw in the animation with our vectorized block smack in 
 This is the heart of the partitioning operation and where we spend most of the time sorting the array. Looks quite boring, eh?
 
 This loop is all about calling our good ole' partitioning block on the entire array. We-reuse the same block, but here, for the first time, actually use it as an in-place partitioning block, since we are both reading and writing to the same array.
-While the runtime of the loop is dominated by the partitioning block, the interesting bit is that beefy condition on <span class="uk-label">L3</span> that we described/animated before: it calculates the distance between each head and tail on both sides and compares them to determine which side has less space left, or which side is closer to being overwritten. Given that the **next** read will happen from the side we choose here, we've just added 8 more integers worth of *writing* space to that same endangered side, thereby eliminating the risk of overwriting.
-
-<span class="uk-label">Note</span> that while it might be easy to read in terms of correctness or motivation, this is a very *sad line of code*, as it will haunt us in the next posts!
-{: .notice--info}
+While the runtime of the loop is dominated by the partitioning block, the interesting bit is that beefy condition on <span class="uk-label">L3</span> that we described/animated before: it calculates the distance between each head and tail on both sides and compares them to determine which side has less space left, or which side is closer to being overwritten. Given that the **next** read will happen from the side we choose here, we've just added 8 more integers worth of *writing* space to that same endangered side, thereby eliminating the risk of overwriting.  
+While it might be easy to read in terms of correctness or motivation, this is a very *sad line of code*, as it will haunt us in the next posts!
 
 Finally, as we exit the loop once there are `< 8` elements left (remember that we pre-decremented `readRight` by `N` elements before the loop), we are done with all vectorized work for this partitioning call. as such, this is as good a time to re-adjust both `readRight` and `tmpRight` that were pre-decremented by `N` elements to make them ready-to-go for using `Avx.Store` back in preparation for the final step.
 
@@ -456,9 +472,9 @@ public static class DoublePumpNaive
 
         fixed (T* p = &array[0]) {
             if (typeof(T) == typeof(int)) {
-                var pInt = (int*) p;
-                var sorter = new VxSortInt32(startPtr: pInt, endPtr: pInt + array.Length - 1);
-                sorter.Sort(pInt, pInt + array.Length - 1);
+                var pi = (int*) p;
+                var sorter = new VxSortInt32(startPtr: pi, endPtr: pi + array.Length - 1);
+                sorter.Sort(pi, pi + array.Length - 1);
             }
         }
     }
