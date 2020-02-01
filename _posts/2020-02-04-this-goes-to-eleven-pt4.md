@@ -39,9 +39,8 @@ While some worked, and some didn't, I think a bunch of these were worth mentioni
 
 ### Dealing with small JIT hiccups: :+1:
 
-One of the more surprising things I've discovered during the optimization journey was that the JIT could generate much better code, specifically around with pointer arithmetic.  
-With the basic version working, I started turning my attention to the body of the main loop, for obvious reasons, and immediately saw some red-flag raising assembly code, specifically
-around this following piece of code, which we've shown before:
+One of the more surprising things I've discovered during the optimization journey was that the JIT could generate much better code, specifically around/with pointer arithmetic.  
+With the basic version we got working by the end of the [3<sup>rd</sup>]({% post_url 2020-01-30-this-goes-to-eleven-pt3 %}), I started turning my attention to the body of the main loop, where I presume we spend most of our execution time, for obvious reasons, and immediately saw some red-flag raising assembly code, specifically with this single line of code, which we've briefly discussed before:
 
 ```csharp
 if (readLeft   - writeLeft <= 
@@ -55,35 +54,35 @@ if (readLeft   - writeLeft <=
 It looks innocent enough, but here's the freely commented x86 asm code for it:
 
 ```nasm
-mov     rax,rdx       ; copy readLeft
-sub     rax,r12       ; subtract writeLeft
-mov     rcx,rax       ; wat?
-sar     rcx,3Fh       ; wat?1?
-and     rcx,3         ; wat?!?!?
-add     rax,rcx       ; wat!?!@#
-sar     rax,2         ; wat#$@#$@
-mov     rcx,[rbp-58h] ; copy writeRight, but from the stack?
-mov     r8,rcx        ; inside the loop body?!?!?
-sub     r8,rsi        ; subtract readRight
-mov     r10,r8        ; wat?
-sar     r10,3Fh       ; wat?!?
-and     r10,3         ; wat!?!@#
-add     r8,r10        ; wat#$@#$@
-sar     r8,2          ; wat^!#$!#$
-cmp     rax,r8        ; finally, comapre!
+mov     rax,rdx       ; ✓  copy readLeft
+sub     rax,r12       ; ✓  subtract writeLeft
+mov     rcx,rax       ; ✘  wat?
+sar     rcx,3Fh       ; ✘  wat?1?
+and     rcx,3         ; ✘  wat?!?!?
+add     rax,rcx       ; ✘  wat!?!@#
+sar     rax,2         ; ✘  wat#$@#$@
+mov     rcx,[rbp-58h] ; ✓✘ copy writeRight, but from stack?
+mov     r8,rcx        ; ✓✘ in the loop body?!?!?, Oh lordy!
+sub     r8,rsi        ; ✓  subtract readRight
+mov     r10,r8        ; ✘  wat?
+sar     r10,3Fh       ; ✘  wat?!?
+and     r10,3         ; ✘  wat!?!@#
+add     r8,r10        ; ✘  wat#$@#$@
+sar     r8,2          ; ✘  wat^!#$!#$
+cmp     rax,r8        ; ✓  finally, comapre!
 ```
 
-It's not every day that we get to see two JIT issues with one line of code, I know some people might take this as a bad sign, but in many ways this is great! To my twisted mind it feels
-like digging for oil in Texas in the early 20s... We've practically hit the ground with a pickaxe accidentaly, only to see black liquid seeping out almost immediately!
+It's not every day that we get to see two JIT issues with one line of code, I know some people might take this as a bad sign, but in my mind this is great! To me this feels like digging for oil in Texas in the early 20s...
+We've practically hit the ground with a pickaxe accidentaly, only to see black liquid seeping out almost immediately!
 
-#### JIT Bug: `writeRight` not being optimized into register
+#### JIT Bug 1: `writeRight` not being optimized into register
 
 One super weird thing that we can see happenning here is on <span class="uk-label">L8-9</span> especially when compared to <span class="uk-label">L1</span>. The code merely tries to substract two pairs of pointers, but the
-generated machine code is weird: 3 out of 4 pointers were correctly lifted out of the stack into registers outside the body of the loop (`readLeft`, `writeLeft`, `readRight`), but the 4<sup>th</sup> one, `writeRight` is the designated black-sheep of the family and is being continously read from the stack (and later written to at the end of the loop body).  
-There is good reason for this, and it's super weird that this is happenning! What do we do?
+generated machine code is weird: 3 out of 4 pointers were correctly lifted out of the stack into registers outside the body of the loop (`readLeft`, `writeLeft`, `readRight`), but the 4<sup>th</sup> one, `writeRight`, is the designated black-sheep of the family and is being continously read from the stack (and later in the body loop is written back to the stack, to make things worse).  
+There is no good reason for this, and it's super weird that this is happenning! What do we do?
 
-For one thing, I've opened up an issue about this code. The issues itself shows just how finicky the JIT is regarding this variable, and surpisingly, by fundging around the setup code this can be easily worked around for now.  
-Here's the original setup code I presented in the previous post:
+For one thing, I've opened up an issue about this weirdness. The issue itself shows just how finicky the JIT is regarding this one variable, and (un)surpisingly, by fudging around the setup code this can be easily worked around for now.  
+Here's the original setup code I presented in the previous post, just before we enter to loop body:
 
 
 <div markdown="1">
@@ -110,7 +109,7 @@ unsafe int* VectorizedPartitionInPlace(int* left, int* right)
 
 </div>
 
-Here's a simple fix: Just moving the pointer declaration closer to the loop body seems to convince the JIT that we can all be freinds once again:
+Here's a simple fix: Just moving the pointer declaration closer to the loop body seems to convince the JIT that we can all be freinds once more:
 
 </div>
 
@@ -136,31 +135,31 @@ unsafe int* VectorizedPartitionInPlace(int* left, int* right)
 The asm is slightly cleaner:
 
 ```nasm
-mov     r8,rax        ; copy readLeft
-sub     r8,r15        ; subtract writeLeft
-mov     r9,r8         ; wat?
-sar     r9,3Fh        ; wat?1?
-and     r9,3          ; wat?!?!?
-add     r8,r9         ; wat!?!@#
-sar     r8,2          ; wat#$@#$@
-mov     r9,rsi        ; copy writeRight
-sub     r9,rcx        ; subtract readRight
-mov     r10,r9        ; wat?1?
-sar     r10,3Fh       ; wat?!?!?
-and     r10,3         ; wat!?!@#
-add     r9,r10        ; wat#$@#$@
-sar     r9,2          ; wat^%#^#@!
-cmp     r8,r9         ; finally, comapre!
+mov     r8,rax        ; ✓ copy readLeft
+sub     r8,r15        ; ✓ subtract writeLeft
+mov     r9,r8         ; ✘ wat?
+sar     r9,3Fh        ; ✘ wat?1?
+and     r9,3          ; ✘ wat?!?!?
+add     r8,r9         ; ✘ wat!?!@#
+sar     r8,2          ; ✘ wat#$@#$@
+mov     r9,rsi        ; ✓ copy writeRight
+sub     r9,rcx        ; ✓ subtract readRight
+mov     r10,r9        ; ✘ wat?1?
+sar     r10,3Fh       ; ✘ wat?!?!?
+and     r10,3         ; ✘ wat!?!@#
+add     r9,r10        ; ✘ wat#$@#$@
+sar     r9,2          ; ✘ wat^%#^#@!
+cmp     r8,r9         ; ✓ finally, comapre!
 ```
 
 It doesn't look like much, but we've managed to remove two memory accesses from the loop body (The read, removed "between" these two last asm listings, and a symmetrical write to the same stack variable/location towards the end of the loop).
 It's also clear, at least from my comments that I'm not entirely pleased yet, so let's move on to...
 
-#### JIT not optimizing pointer difference comaprisons
+#### JIT bug 2: not optimizing pointer difference comaprisons
 
-The original code made the JIT (wrongfully) think we are want it to perform `int *` arithmetic for `readLeft - writeLeft` and `writeRight - readRight`. In other words: The JIT generated code to take the numerical, or `byte *` pointer differences, and generated extra code to convert them to `int *` differences: so lots of extra arithmetic operations. This is quite pointless: we just care if one side is larger than the other, we don't care if this is done with `byte *` or `int *` units... This is similar to converting two distance measurements taken in `cm` to `km` just to compare which is greater. Clearly redundant.
+Calling this one a bug might be stretch, but in the world of the JIT, sub-optimal code generation can be cosidered just that. The original code performing the comparison is making the JIT (wrongfully) think we really care to perform `int *` arithmetic for `readLeft - writeLeft` and `writeRight - readRight`. In other words: The JIT is generating code to that first creates two the numerical, or `byte *` pointer differences, which is great (I marked that with checkmarks in the listings), but then continues togenerate extra code to convert them to `int *` differences: so lots of extra arithmetic operations. This is quite pointless: we just care if one side is larger than the other, we don't care which unit this comparison is performed in. As far as I'm concerened `byte *` or `int *` are the same when I'm just comparing relative size!... This is similar to converting two distance measurements taken in `cm` to `km` just to compare which is greater. Clearly redundant.
 
-With my new disillusionment with the JIT I have to write this:
+With this new disillusionment with the JIT I wrote this instead:
 
 ```csharp
 if ((byte *) readLeft   - (byte *) writeLeft) <= 
@@ -171,23 +170,22 @@ if ((byte *) readLeft   - (byte *) writeLeft) <=
 }
 ```
 
-By doing this sort of seemingly useless casting, we get the following asm generated:
+By doing this sort of seemingly useless casting 4 times, we get the following asm generated:
 
 ```nasm
-mov rcx, rdi  ; copy readRight
-sub rcx, r12  ; subtract writeLeft
-mov r9, rdi   ; copy writeRight
-sub r9, r13   ; subtract readRight
-cmp rcx, r9   ; compare
+mov rcx, rdi  ; ✓ copy readRight
+sub rcx, r12  ; ✓ subtract writeLeft
+mov r9, rdi   ; ✓ copy writeRight
+sub r9, r13   ; ✓ subtract readRight
+cmp rcx, r9   ; ✓ compare
 ```
 
 It doesn't take a degree in reverse-engineering asm code to figure out this was a good idea!  
-By forcefully casting each pointer to `byte *` we are "telling" the JIT that the comparison can be made without the extra fan-fare.
+Casting each pointer to `byte *` coerces the JIT to do our bidding and just perform a simpler comparison.
 
-#### Removing extra instructions
+#### JIT Bug 3: Removing extra instructions
 
-Another small issue arose around the pointer mutation code in the inlined partitioning block.
-When we update two `write*` pointers are updating an int pointer with the result of the `PopCount` intrinsic:
+Another missed oppertunity arose around the pointer mutation code in the inlined partitioning block. When we update two `write*` pointers, we are really updating an int pointer with the result of the `PopCount` intrinsic:
 
 ```csharp
 var popCount = PopCount(mask);
@@ -195,8 +193,8 @@ writeLeft += 8U - popCount;
 writeRight -= popCount;
 ```
 
-Unfortunately, the JIT isn't smart enough to see that it would be wiser to left shift `popCount` once by `2` (e.g. convert to `byte *` distance)  and reuse that value twice while mutating the two pointers.
-So I re-wrote the previous rather clean code into the following god-awful mess:
+Unfortunately, the JIT isn't smart enough to see that it would be wiser to left shift `popCount` once by `2` (e.g. convert to `byte *` distance)  and reuse that left-shifted value **twice** while mutating the two pointers.
+Again, uglifying the originally clean code into the following god-awful mess get's the job done:
 
 ```csharp
 var popCount = PopCount(mask) << 2;
@@ -205,7 +203,8 @@ writeLeft =  ((int *) ((byte *) writeLeft + 8*4U - popCount);
 ```
 
 I won't bother showing the asm, it's pretty clear from the C# that we pre-left shift (or multiply by 4) the popCount result before mutating the pointers.
-Now we're generating slightly denser code by eliminating a silly instruction from a hot loop.
+We're now generating slightly denser code by eliminating a silly instruction from a hot loop.
+
 Time to see how this whole thing did in terms of performance:
 
 | Method                   | N        |  Mean (µs) | Time / N (ns) | Ratio |
@@ -223,7 +222,7 @@ Time to see how this whole thing did in terms of performance:
 | Naive | 10000000 | 298,068.352 |    29.8068 |  1.00 |
 | MicroOpt | 10000000 | 275,455.395 |    27.5455 |  0.92 |
 
-Sure does! The improvement is very measurable. Too bad we had to uglify the code to get here, but such is life. Our results just improved by another ~4-9% across the board.  
+Sure does! The improvement is *very* measurable. Too bad we had to uglify the code to get here, but such is life. Our results just improved by another ~4-9% across the board.  
 If this is the going rate for ugly, I'll bite the bullet :)
 
 ### Get rid of localsinit flag on all methods: :+1:
@@ -251,11 +250,11 @@ For now, I'm taking 32 as my new threshold, but this is temporary anyway, so let
 
 ### Aligning to CPU Cache-lines: :+1:
 
-Alignment, that is, controlling/conforming the exact address of memory accesses to some HW limitations, generally speaking, is not critical in modern processors, although some people believe in this myth, probably due to bad experience a decade or two ago. While historical processors either simply disallowed non-aligned access or performance suffered from this, the last decade of so worth off processors are simply oblivious to this problem per-se, as long as we issue reads and writes that all end up within a **single cache-line**, or 64-bytes on almost any modern-day processors: 
+Alignment, or, controlling/conforming the exact numerical address of memory accesses to some HW limitation(s), generally speaking, is not critical in modern processors. Although some people believe in this myth, probably due to bad experience a decade or two ago. While historical processors either simply disallowed non-aligned access (Hi there Sun UltraSPARC!) or performance suffered from this (early everything else...), the last decade of so worth off processors are simply oblivious to this problem per-se, as long as we access memory within a **single cache-line**, or 64-bytes on almost any modern-day processors: 
 
 <object style="margin: auto" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/cacheline-boundaries.svg"></object>
 
-What happens when, lets say, our read operations end up **crossing** cache-lines? This literally causes the CPU to issue *two* read operations directed at the cache units. This sort of cache-line crossing read does have a sustained effect on perfromance[^0].  
+What happens when, lets say, our read operations end up **crossing** cache-lines? This literally causes the CPU to issue *two* read operations directed at the load ports/cache units. This sort of cache-line crossing read does have a sustained effect on perfromance[^0].  
 For example, when we process an array using 4-byte reads, this means that if our array or starting address is *not* divisable by 4, and we are scannning an array sequentially, cross cache-line reads would occur at a rate of 4/64 or 6.25% of reads. Even this pretty small rate of cross-cacheline accesses usually remains *theoretical* for a combination of reasons: In most in programming languages, C# included, both the default memory allocator and the JIT/Compiler work in tandem to avoid this by making sure allocated memory is aligned to machine word size on the one hand, and by adding padding bytes within our classes and structs in between members, where needed, to make sure the different members are also aligned to 4/8 bytes.  
 So far, I’ve told you why/when you *shouldn’t* care about this. This was my way of both easing you into the topic and helping you feel not so bad if this is news to you. You really can afford *not to know* this and not pay any performance penalty, for the most part, this is simply a non-issue.  
 Unfortunately, this is not true for `Vector256<T>` sized reads, which are 32 bytes wide (256 bits / 8). And this is doubly not true for our partitioning problem:
