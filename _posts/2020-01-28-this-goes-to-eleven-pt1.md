@@ -1,5 +1,5 @@
 ---
-title: "This Goes to Eleven (Part 1/6)"
+title: "This Goes to Eleven (Part 1/∞)"
 excerpt: >
   Decimating Array.Sort with AVX2.<br/><br/>
   I ended up going down the rabbit hole re-implementing array sorting with AVX2 intrinsics.<br/>
