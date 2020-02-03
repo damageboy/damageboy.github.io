@@ -142,8 +142,7 @@ It's also clear, at least from my comments that I'm not entirely pleased yet, so
 
 #### JIT bug 2: not optimizing pointer difference comparisons
 
-Calling this one a bug might be stretch, but in the world of the JIT, sub-optimal code generation can be considered just that. The original code performing the comparison is making the JIT (wrongfully) think that we want to perform `int *` arithmetic for `readLeft - writeLeft` and `writeRight - readRight`. In other words: The JIT is starts with generating code subtracting the two pointers, generating a `byte *` difference for each pair, which is great (I marked that with checkmarks in the listings), but then goes on to generate extra code converting those differences to `int *` units: so lots of extra arithmetic operations. We just care if one side is larger than the other. This is similar to converting two distance measurements taken in `cm` to `km` to compare which is greater. Clearly redundant.
-
+Calling this one a bug might be stretch, but in the world of the JIT, sub-optimal code generation can be considered just that. The original code performing the comparison is making the JIT (wrongfully) think that we want to perform `int *` arithmetic for `readLeft - writeLeft` and `writeRight - readRight`. In other words: The JIT starts with generating code subtracting both pointer pairs, generating a `byte *` difference for each pair; which is great (I marked that with checkmarks in the listings). Then, it goes on to generate extra code converting those differences into `int *` units: so lots of extra arithmetic operations. This is simply useless: we just care if one side is larger than the other. This is similar to converting two distance measurements taken in `cm` to `km` just to compare which one is greater.  
 To work around this disappointing behaviour, I wrote this instead:
 
 ```csharp
@@ -168,9 +167,9 @@ cmp rcx, r9   ; ✓ compare
 It doesn't take a degree in reverse-engineering asm code to figure out this was a good idea!  
 Casting each pointer to `byte *` coerces the JIT to do our bidding and just perform a simpler comparison.
 
-#### JIT Bug 3: Removing extra instructions
+#### JIT Bug 3: Updating the `write*` pointers more efficiently
 
-I discovered another missed opportunity in the pointer mutation code in the inlined partitioning block. When we update two `write*` pointers, we are really updating an int pointer with the result of the `PopCount` intrinsic:
+I discovered another missed opportunity in the pointer update code at the end of our inlined partitioning block. When we update the two `write*` pointers, our intention is to update two `int *` values with the result of the `PopCount` intrinsic:
 
 ```csharp
 var popCount = PopCount(mask);
@@ -211,18 +210,18 @@ Time to see whether all these changes actuall help in terms of performance:
 This is better! The improvement is *very* measurable. Too bad we had to uglify the code to get here, but such is life. Our results just improved by another ~4-9% across the board.  
 If this is the going rate for ugly, I'll bite the bullet :)
 
-### Get rid of localsinit flag on all methods: :+1:
+### Get rid of `localsinit` flag on all methods: :+1:
 
-While this isn't "coding" per-se, I think it's something that is worthwhile mentioning in this series: Historically, the C# compiler emits the `localsinit` flag on all methods that declare local variables. This flag, which can be clearly seen in .NET MSIL disassembly instructs the JIT to generate machine code that zeros out the local variables as the function starts executing. While this isn't a bad idea in itself, it is important to point out that this is done even though the compiler is already rather strict and employs definite-assignment analysis to avoid having uninitialized locals at the source-code level to begin with... Sounds confusing? Redundant? I thought so too!  
-To be clear: Even though we are *not allowed* to use uninitialized variables in C#, and the compiler *will* throw those `CS0165` errors at us and insist that we initialize everything like good boys and girls, the emitted MSIL will still instruct the JIT to generate **extra** code, essentially double-initializing locals, first with `0`s thanks to `.localinit` before we get to initialize them from C#. Naturally this adds more code to decode and execute, which is not OK in my book. This is made worse by the fact that we are discussing this extra code in the context of a recursive algorithm where the partitioning function is called hundreds of thousands of times for sizeable inputs (you can go back to the 1<sup>st</sup> post to remind yourself just how many times the partitioning function gets called per each input size, hint: it's alot!).
+While this isn't "coding" per-se, I think it's something that's worthwhile mentioning in this series: Historically, the C# compiler emits the `localsinit` flag on all methods that declare local variables. This flag, which can be clearly seen in .NET MSIL disassembly, instructs the JIT to generate machine code that zeros out the local variables as the function starts executing. While this isn't a bad idea in itself, it is important to point out that this is done even though the C# compiler is already rather strict and employs definite-assignment analysis to avoid having uninitialized locals at the source-code level to begin with... Sounds confusing? Redundant? I thought so too!  
+To be clear: Even though we are *not allowed* to use uninitialized variables in C#, and the compiler *will* throw those `CS0165` errors at us and insist that we initialize everything like good boys and girls, the emitted MSIL will still instruct the JIT to generate **extra** code, essentially double-initializing locals, first with `0`s thanks to `localinit` before we get to initialize them from C#. Naturally, this adds more code to decode and execute, which is not OK in my book. This is made worse by the fact that we are discussing this extra code in the context of a recursive algorithm where the partitioning function is called hundreds of thousands of times for sizeable inputs (you can go back to the 1<sup>st</sup> post to remind yourself just how many times the partitioning function gets called per each input size, hint: it's a lot!).
 
-There is a [C# language proposal](https://github.com/dotnet/csharplang/blob/master/proposals/skip-localsinit.md) that seems to be dormant about allowing developers to get around this weirdness, but in the meantime I devoted 5 minutes of my life to use the excellent [`LocalsInit.Fody`](https://github.com/ltrzesniewski/LocalsInit.Fody) weaver for [Fody](https://github.com/ltrzesniewski/LocalsInit.Fody) which can re-write assemblies to get rid of this annoyance. I encourage you to support Fody through open-collective as it really is a wonderful project that serves so many backbone projects in the .NET World.
+There is a [C# language proposal](https://github.com/dotnet/csharplang/blob/master/proposals/skip-localsinit.md) that seems to be dormant about allowing developers to get around this weirdness, but in the meantime, I devoted 5 minutes of my life to use the excellent [`LocalsInit.Fody`](https://github.com/ltrzesniewski/LocalsInit.Fody) weaver for [Fody](https://github.com/ltrzesniewski/LocalsInit.Fody) which can re-write assemblies to get rid of this annoyance. I encourage you to support Fody through open-collective as it is a wonderful project that serves so many backbone projects in the .NET World.
 
-At any rate, we have lots of locals, and we are after all implementing a recursive algorithm, so this has a substantial effect on our performance:
+At any rate, we have lots of locals, and we are after all implementing a recursive algorithm, so this has a substantial effect on performance:
 
 
 
-Not bad: a 1%-3% improvement (especially for higher array sizes) across the board for practically doing nothing...
+Not bad: a 1%-3% improvement (especially for larger array sizes) across the board for practically doing nothing...
 
 ### Selecting a better `InsertionSort` threshold: :+1:
 
@@ -236,8 +235,8 @@ While it is clear that this is making a world of difference, this is the sort of
 
 I tried using prefetch intrinsics to give the CPU early hints as to where we are reading memory from.
 
-Generally speaking prefetching should be used to make sure the CPU always reads some data from memory to cache ahead of the actual time we would use it so that the CPU never stalls waiting for memory which is very slow (Consult the table above again to get your bearings straight). The bottom line is that having to wait for RAM is a death sentence, but even having to wait for L2 cache (14 cycles) when your entire loop's throughput is around 6-7 cycles is really unpleasant. With prefetch intrinsics we can prefetch all the way to L1 cache, or even specify the target level as L2, L3.
-But do we actually need to prefetch? Well, there is no clear cut answer except than trying it out. CPU designers know all of the above just as much as we do, and the CPU already attempts to prefetch data. But it's very hard to know when it might need our help. Adding prefetching instructions puts more load on the CPU as we're adding more instructions to decode & execute, while the CPU might already be doing the same work without us telling it. This is the key consideration we have to keep in mind when trying to figure out if prefetching is a good idea. To make matters worse, the answer can also be CPU model specific...  In our case, prefetching the *writable* memory **made no sense**, as our loop code mostly reads from the same addresses just before writing to them in the next iteration or two, so I mostly focused on trying to prefetch the next read addresses.
+Generally speaking, prefetching should be used to make sure the CPU always reads some data from memory into the cache ahead of the actual time we would require it so that the CPU never stalls waiting for memory, which is very slow. The bottom line is that having to wait for RAM is a death sentence, but even having to wait for L2 cache (14 cycles) when your entire loop's throughput is around 9 cycles is unpleasant. With prefetch intrinsics we can prefetch all the way to L1 cache, or even specify the target level as L2, L3.
+But do we actually need to prefetch? Well, there is no clear cut answer except than trying it out. CPU designers know all of the above just as much as we do, and the CPU already attempts to prefetch data. But it's very hard to know when it might need our help. Adding prefetching instructions puts more load on the CPU as we're adding more instructions to decode & execute, while the CPU might already be doing the same work without us telling it. This is the key consideration we have to keep in mind when trying to figure out if prefetching is a good idea. To make matters worse, the answer can also be CPU model specific... In our case, prefetching the *writable* memory **makes no sense**, as our loop code mostly reads from the same addresses just before writing to them in the next iteration or two, so I mostly focused on trying to prefetch the next read addresses.
 
 Whenever I modified `readLeft`, `readRight`, I immediately added code like this:
 
@@ -266,7 +265,7 @@ Still it was worth a shot.
 
 ### Simplifying the branch :+1:
 
-I'm kind of ashamed at this, since I was literally staring at this line of code and optimizing around it for such an extended duratrion without stopping to really think about what it IS that I'm doing. Really. So let's go back to our re-written branch from a couple of paragraphs ago:
+I'm kind of ashamed at this: I had been literally staring at this line of code and optimizing around it for such a long time without stopping to really think about what it **was** that I'm really trying to do. Let's go back to our re-written branch from a couple of paragraphs ago:
 
 ```csharp
 if ((byte *) readLeft   - (byte *) writeLeft) <= 
@@ -277,22 +276,24 @@ if ((byte *) readLeft   - (byte *) writeLeft) <=
 }
 ```
 
-I've been describing this condition both in animated or code form in the previous part, explaining how it is critical for my double-pumping to work, to figure out which side we need to read from next so we never end-up overwriting data we didn't have a chance to read and partition yet. All in the name of keeping the partitioning in-place. Except I've been overcomplicating the actual condition!
+I've been describing this condition both in animated and code form in the previous part, explaining how for my double-pumping to work, I have to figure out which side we *must* read from next so we never end-up overwriting data we didn't have a chance to read and partition yet.  
+All of this is happening in the name of performing in-place partitioning. However, I've been over-complicating the actual condition!
+At some, admittedly late stage, it hit me, so let's play this out step by step:
 
-At some, admittedly late stage, it hit me, so let's play this out step by step: 
-
-1. We always start with the setup I've described before, where we  make 8 elements worth of space available on **both** sides, by partitioning them away into the temporary memory.
+1. We always start with the setup I've described before, where we make `8` elements worth of space available on **both** sides, by partitioning them away into the temporary memory.
 2. When we get into the main partitioning loop, we initially pick one specific side to read from: so far, this has always been the left side (It doesn't matter which side it is, but it ended up being the left side arbitrarily due to the condition being `<=` rather than `<`).
-3. Once we've done that, we read from that side, there-by increasing the "breathing space" on that left side from 8 to 16 elements temporarily;
-4. Once we finish executing our trusty ole' partitioning block, we can pause for a second and think how both ends look:
-  a. The left side is either back at having 8 elements of space (in the less likely, yet possible case that all elements were smaller than the selected pivot) or more.
-  b. In that case, where the left is now back to 8 elements of free space, the right side also has 8 elements of free space
-  c. In all other cases, the left side has more the 8 elements of free space, and the right side has less that 8 elements left
+3. Given all of the above, we always *start* reading from the left, increasing the "breathing space" on that left side from `8` to `16` elements temporarily.
+4. Once our trusty ole' partitioning block has finished, we can pause for a second to think how both sides look:
+  * The left side either has:
+    * `8` elements of space (in the less likely, yet possible case that all elements read from it were smaller than the selected pivot) -or-
+    * It has more than `8` elements of "free" space.
+  * In the first case, where the left side is now back to 8 elements of free space, the right side also has `8` elements of free space, since nothing was written on that side.
+  * In all other cases, the left side has more than `8` elements of free space, and the right side has less than `8` elements of free space, by definition.
 5. Since those are the true dynamics, why do we even bother comparing **both** heads and tails of each respective side?  
-     
-The answer to that last question is: We don't have to! We could simplify the branch and instead compare the right head+tail pointer distance to see if it is smaller than the magical number 8 or not!
-That condition would be just as good as serving the original intent (which is don't end up overwriting unread data) as the mess I've been busy optimizing...    
-When the right side has less than 8 elements, we read from the right side, since it is in danger of being over-written, otherwise, the only other option is that both sides are back at 8-elements each, and we should go back to reading from the left side again, essentially going back to our starting setup condition as described in (1). It's kind of silly, and I really feel bad it took me 4 months or so to see this. Naturally this ends up being a simpler branch to encode and execute:
+
+The answer to that last question is: We don't have to! We could simplify the branch by comparing only the right head+tail pointer distance to see if it is smaller than the magical number `8` or not!
+This new condition would be just as good at serving the original *intent* (which is: "don't end up overwriting unread data") as the more complicated branch we used before...  
+When the right side has less than `8` elements, we *have to* read from the right side in the next round, since it is in danger of being over-written, otherwise, the only other option is that both sides are back at 8-elements each, and we should go back to reading from the left side again, essentially going back to our starting setup condition as described in (1). It's kind of silly, and I really feel bad it took me 4 months or so to see this. Naturally this ends up being a simpler branch to encode and execute:
 
 ```csharp
 int* nextPtr;
@@ -326,7 +327,6 @@ I ended up encoding and aligning a second permutation table, and by using the co
 Next, I tried to pack the permutation table even further, going from 2kb to 1kb of memory, by packing the 3-bit entries even further into a single 32-bit value.
 The packing is the easy part, but how would we unpack this 32-bit compressed entries? Well, with intrinsics of course, if nothing else, it was worth it so I could do this:
 ![Yo Dawg](../assets/images/yodawg.jpg)
-
 
 My optimized permutation table and vector loading code looks like this:
 
@@ -376,15 +376,15 @@ There are very common cases where performing the permutation is completely un-ne
 * Or perform the permutation
 
 To be percise, there are exactly 9 such cases in the permutation table, whenever the all the `1` bits are already grouped in the upper (MSB) part of the `mask` value in our permutation block, the values are:
-* 0b11111111
-* 0b11111110
-* 0b11111100
-* 0b11111000
-* 0b11110000
-* 0b11100000
-* 0b11000000
-* 0b10000000
-* 0b00000000
+* `0b11111111`
+* `0b11111110`
+* `0b11111100`
+* `0b11111000`
+* `0b11110000`
+* `0b11100000`
+* `0b11000000`
+* `0b10000000`
+* `0b00000000`
 
 I thought it might be a good idea to detect those cases using a switch case or some sort of other intrinsics based code, while it did work, the extra branch and associated branch mis-prediction didn't make this worth while or yield any positive result. The simpler code which always permutes did just as good. Oh well, it was worth the attempt...
 
@@ -396,62 +396,65 @@ None of these attempts helped, and I think the reason is that CPU already does t
 
 ### Getting intimate with x86 for fun and profit: :+1:
 
-I know the title sounds crpytic, but x86 is just weird sometimes, and I wanted to make sure you're mentally prepared for some weirdness in our journey to squeeze a bit of extra performance. We need to remember this is a 40+ year old CISC design made in an entirely different time:
+I know the title sounds cryptic, but x86 is just weird, and I wanted to make sure you're mentally prepared for some weirdness in our journey to squeeze a bit of extra performance. We need to remember that this is a 40+ year-old CISC processor made in an entirely different era:
 
 ![Your Father's LEA](../assets/images/your-fathers-lea.svg)
 
-The last optimization I will to show in this post is about generating sligtly denser code in our vectorized block. The idea here is to trigger the JIT to encode the pointer mutation code in the end of our vectorized partitioning block with a more efficient `LEA` instruction.
+The last optimization I will go over in this post is about generating slightly denser code in our vectorized block. The idea here is to trigger the JIT to encode the pointer update code at the end of our vectorized partitioning block with the more space-efficient `LEA` instruction.
 
-To better explain this, Let's start with the last 3 lines of code of the code I presented at the top of this post, the so-called micro-optimized version:
-
-Here are the final 3 lines of the block in C#:
+To better explain this, We'll start by going back to the last 3 lines of code I presented at the top of *this* post, as part of the so-called micro-optimized version. Here is the C#:
 
 ```csharp
-    // ...
+    // end of partitioning block...
     var popCount = PopCnt.PopCount(mask);
     writeRight = (int*) ((byte*) writeRight - popCount);
     writeLeft  = (int*) ((byte*) writeLeft + (8U << 2) - popCount);
 ```
 
-If we look at the disassmbly of this code, it sure looks verbose, yet correct. Here it is with some comments, and with the machine code on the left hand side:
+If we look at the corresponding disassembly for this code, it looks quite verbose. Here it is with some comments, and with the machine-code bytes on the right-hand side:
 
 ```nasm
-;    var popCount = PopCnt.PopCount(mask);
-F3450FB8C0           popcnt  r8d,r8d
-41C1E002             shl     r8d,2
+;var popCount = PopCnt.PopCount(mask);
+popcnt  r8d,r8d ; F3450FB8C0
+shl     r8d,2   ; 41C1E002
 
-; writeRight = (int*) ((byte*) writeRight - popCount);
-458BC8               mov     r9d,r8d
-492BC9               sub     rcx,r9
+;writeRight = (int*) ((byte*) writeRight - popCount);
+mov     r9d,r8d ; 458BC8
+sub     rcx,r9  ; 492BC9
 
-; writeLeft  = (int*) ((byte*) writeLeft + (8U << 2) - popCount);
-4983C420             add     r12,20h
-458BC0               mov     r8d,r8d
-4D2BE0               sub     r12,r8
+;writeLeft  = (int*) ((byte*) writeLeft + (8U << 2) - popCount);
+add     r12,20h ; 4983C420
+mov     r8d,r8d ; 458BC0
+sub     r12,r8  ; 4D2BE0
 ```
 
-If we count the byes, everything coming after the `PopCount` instruction is taking `20` bytes in total: `4 + 3 + 3 + 4 + 3 + 3` to complete the pointer mutation.
+If we count the bytes, everything after the `PopCount` instruction is taking `20` bytes in total: `4 + 3 + 3 + 4 + 3 + 3` to complete both pointer updates.
 
-The basic idea for what I'm about to show is that we can replace this code, taking advantage of x86's wacky memory addressing, by tweaking the code to enable the JIT, which is already aware of all of this, to generate slightly more compact code, using the `LEA` instruction.  
-What is `LEA` you ask? **L**oad **E**ffective **A**ddress is not that special: All it really does is expose the full extent of x86's memory addressing capabilities in a single instruction, allowing us to encode very compact address calculation, abusing the CPUs address calculation units, and finaly storing the result of the calculation back to a register. 
+The motivation behind what I'm about to show is that we can replace all of this code with a shorter sequence, taking advantage of x86's wacky memory addressing, by tweaking the C# code ever so slightly. This, in turn, will enable the C# JIT, which is already aware of these x86 shenanigans, and is capable of generating the more compact code when it encounters the right constructs at the MSIL/bytecode level.  
+We succeed here if and when we end up using one `LEA` instruction for each pointer modification.
 
-But what can the address calculation units do for us?
-Out of curiousity, I wanted to find out when the memory addressing scheme was defined/last changed, and to my surprise, I found out it was even later than I had originally thought: It seems like Intel last expanded the memory addressing semantics in 1986! I actually went back and researched this for this post and found this scanned 80386 manual:
+What is `LEA` you ask? **L**oad **E**ffective **A**ddress is an instruction that happens to exposes the full extent of x86's memory addressing capabilities in a single instruction, allowing us to encode rather complicated mathematical/address calculations with a minimal set of bytes, abusing the CPUs address calculation units, finally storing the result of that calculation back to a register.
 
+But what can the address calculation units do for us? We need to learn just enough about what it can and cannot do for us to succeed in milking some performance out of `LEA`. Out of curiosity, I went back in time to find out *when* the memory addressing scheme was defined/last changed, and to my surprise, I found out it was *much later* than what I had originally thought: Intel last *expanded* the memory addressing semantics as late as **1986**! Of course this was later expandd again by AMD when they introduced `amd64` to propel x86 from the 32-bit dark-ages into the brave world of 64-bit processing, but that was merely a machine-word expansion. I'm happy I researched this bit of history for this post because I found [this scanned 80386 manual](../assets/images/230985-001_80386_Programmers_Reference_Manual_1986.pdf):
+
+<center>
+<div markdown="1">
 [![80386](../assets/images/80386-manual.png)](../assets/images/230985-001_80386_Programmers_Reference_Manual_1986.pdf)
+</div>
+</center>
 
-Where the "new" memory addressing semantics are described in section `2.5.3.2` on page `2-18`, reprinted here for some of its 1980s era je ne sais quoi:
+In this refernce manual, the "new" memory addressing semantics are described in section `2.5.3.2` on page `2-18`, reprinted here for some of its 1980s era je ne sais quoi:  
+
 ![x86-effective-address-calculation](../assets/images/x86-effective-address-calculation-transparent.png)
 
-Figure `2-10` in the original manual does a very good job explaining what components can go into a memory address calculation in x86, What we want from this is:
+Figure `2-10` in the original manual does a very good job explaining the components and machinery that goes into a memory address calculation in x86, Here it is together with my plans to abuse it:
 * Base register; This will be our pointer that we want to modify: `writeLeft` and `writeRight`.
 * Index: the `PopCount` result, in some form.  
   The index has to be *added* to the base register, the operation will always be addition; of course nothing prevents us from adding a negative number...
 * Scale: The `PopCount` result needs to be multiplied by 4, we'll do it with the scale.
   The scale is limited to be one of `1/2/4/8`, but *for us* this is not a limitation.
-* Displacement: Some other constant we can tack on to the address calculation
-  the displacement can be 8/32 bits and is always used with an addition operation, again.  
-  *But:* and this is an **important** but, there is nothing preventing a compiler from encoding a negative number as a displacemnt, again, taking advantage of signed addition to effectively turn this into a subtraction.
+* Displacement: Some other constant we can tack on to the address calculation. The displacement can be 8/32 bits and is also always used with an addition operation.  
+  *But:* and this is an **important** "but": nothing is preventing the compiler from encoding negative numbers as the displacemnt; again, taking advantage of signed addition, effectively turning this into a subtraction.
 
 The actual code change is super-simple. But without all this pre-amble it wouldn't make sense, here it is:
 ```csharp
@@ -461,38 +464,50 @@ The actual code change is super-simple. But without all this pre-amble it wouldn
     writeLeft  = writeLeft + popCount + 8;
 ```
 
-You must think I'm joking, but really, this is it. By pre-negating the `PopCount` result and writing the code in a simpler form again, without the fancy pre-left shifting, we get this assembly code automatically generated for us by the JIT:
+You must think I'm joking, but really, this is it. By pre-negating the `PopCount` result and writing the simpler code, without all the pre-shifting optimization fanciness, we get this beatiful assembly code automatically generated for us by the JIT:
 
 ```nasm
-F3480FB8FF           popcnt  rdi,rdi
-48F7DF               neg     rdi
-488D04B8             lea     rax,[rax+rdi*4]
-4D8D7CBF20           lea     r15,[r15+rdi*4+20h]
+popcnt  rdi,rdi             ; F3480FB8FF
+neg     rdi                 ; 48F7DF
+lea     rax,[rax+rdi*4]     ; 488D04B8
+lea     r15,[r15+rdi*4+20h] ; 4D8D7CBF20
 ```
 
-The new version is taking `3 + 4 + 5` or `12` bytes in total, to complete the two pointer mutations. So it is clearly denser. It is important to point out that this reduces the time taken by the CPU to fetch and decode these instructions, and not necessarily the time to execute the underlying calculation.
+The new version is taking `3 + 4 + 5` or `12` bytes in total, to complete both pointer updates. So it's clearly denser. It is important to point out that this reduces the time taken by the CPU to fetch and decode these instructions, and not necessarily the time to execute the underlying calculation.
 
-How does it actually compare in runtime?
+How does it improve the performance?
 
 TABLE GOES HERE!!!
 
-There is one last thing to note about this, and that is that I've been slightly lazy: I'm still wasting 3 bytes in the instruction stream and a cycle to negate the `PopCount` result. Can this be avoided? Sure can! We could get rid of it by re-writing the entire algorithm to perfrom the `CompareGreaterThan` operation in the permutation block the other way around. If we could swap the order of operands to the comparison intrinsic, the `mask` variable would now contain `1` bits for all the values where the pivot was larger-than the data. Once we do that, we'd also have to generate a different permutation table to account for the completely different indexing, then we would be able to write the following piece of code for the pointer mutation in C#:
+There is yet one last thing we can do here: I'm still wasting 3 bytes in the instruction stream and an entire cycle to negate the `PopCount` result. Can this be avoided? Sure can! But this will come at a cost (for me):
+
+The way we can get rid of this negation is by essentially re-writing partitioning block:
+* We will start by reversing the order of operands passed to the `CompareGreaterThan` intrinsic.
+* Once that order is reversed, the result of the operation and the `mask` variable where we store the resulting bits is also reversed in its meaning:  
+  we end up having `1` bits in the `mask` variable marking elements that are now *smaller-than* the pivot.
+  * This changes the partitioning dynamics a bit, but everything remains "legal" in that respect.
+* Once the `1` bits mark elements *smaller-than* the pivot, we also need a new permutation table! Or to be more precise, we need the same type of permutation entries in every respect except that their ordering needs to adhere to the new comparison method.
+* Finally, the same `PopCount` operation will now count elements that end up on the *left* side of the array.  
+  All this was done so that we could now update the pointers directly with the `popCount` variable, without negating it on the one hand, and with addition operations on the other hand!
+
+Here is code for the final pointer update code in C#:
 
 ```csharp
-    // ...
-    var popCount = PopCnt.PopCount(mask);
-    writeLeft  = writeLeft + popCount;
-    writeRight = writeRight + popCount - 8;
+    // This popCount counts elements that go to the left!
+    var leftPopCount = PopCnt.PopCount(mask); 
+    writeLeft  = writeLeft + leftPopCount;
+    writeRight = writeRight + leftPopCount - 8;
 ```
 
-This C# code essentially achieves the same pointer mutation except it does so without the negation. We now have to subtract `8`  while mutating `writeRight`, but luckily for us, as I've mentioned before, there is nothing limiting the compiler/JIT from encoding the twos-complement value into the instruction stream, and letting the normal addition operation do it thing. The final generated assmebly code would look like this:
+This C# code essentially achieves the same pointer updates we had before except it does so without the negation. We do have to subtract `8` while updating the `writeRight` pointer, but that was never an issue for the JIT when considering to use `LEA`: The JIT simply encodes the twos-complement value into the instruction stream, and lets the normal addition semantics for LEA pick it up from there. The final assembly code looks like this:
+
 ```nasm
-F3480FB8FF           popcnt  rdi,rdi
-488D04B8             lea     rax,[rax+rdi*4]
-4D8D7CBFE0           lea     r15,[r15+rdi*4-20h]
+popcnt  rdi,rdi             ; F3480FB8FF
+lea     rax,[rax+rdi*4]     ; 488D04B8
+lea     r15,[r15+rdi*4-20h] ; 4D8D7CBFE0
 ```
 
-This further compresses the pointer mutation code down to `9` bytes!
+This further helps by compressing the pointer mutation code down from `12` to `9` bytes! All in this is quite a lot of savings compared to the `20` we started with. These savings will pay in spades in the next posts, as we continue to work on speeding up this vectorized partitioning.
 
 ---
 
