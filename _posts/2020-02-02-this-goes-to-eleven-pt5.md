@@ -14,6 +14,7 @@ header:
     - label: "Nuget"
       url: "https://www.nuget.org/packages/VxSort"
 hidden: true
+published: false
 date: 2020-02-02 05:22:28 +0300
 classes: wide
 #categories: coreclr intrinsics vectorization quicksort sorting

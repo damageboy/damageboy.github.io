@@ -13,6 +13,7 @@ header:
       url: "https://github.com/damageboy/vxsort"
     - label: "Nuget"
       url: "https://www.nuget.org/packages/VxSort"
+published: false
 hidden: true
 date: 2020-02-01 08:26:28 +0300
 classes: wide
