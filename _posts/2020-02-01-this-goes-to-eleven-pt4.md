@@ -13,7 +13,6 @@ header:
       url: "https://github.com/damageboy/vxsort"
     - label: "Nuget"
       url: "https://www.nuget.org/packages/VxSort"
-published: false
 hidden: true
 date: 2020-02-01 08:26:28 +0300
 classes: wide
@@ -77,7 +76,7 @@ We've practically hit the ground with a pickaxe accidentaly, only to see black l
 
 #### JIT Bug 1: `writeRight` not being optimized into register
 
-One super weird thing that we can see happening here is on <span class="uk-label">L8-9</span> especially when compared to <span class="uk-label">L1</span>. The code merely tries to substract two pairs of pointers, but the generated machine code is weird: 3 out of 4 pointers were correctly lifted out of the stack into registers outside the body of the loop (`readLeft`, `writeLeft`, `readRight`), but the 4<sup>th</sup> one, `writeRight`, is the designated black-sheep of the family and is being continuously read from the stack (and later in that loop body is also written back to the stack, to make things worse).  
+One super weird thing that we can see happening here is the asm code that copies `writeRight` on <span class="uk-label">L8-9</span> before performing the subtraction, especially when compared to <span class="uk-label">L1</span> where a similar copy is perfromed for `readLeft`. The code merely tries to substract two pairs of pointers, but the generated machine code is weird: 3 out of 4 pointers were correctly lifted out of the stack into registers outside the body of the loop (`readLeft`, `writeLeft`, `readRight`), but the 4<sup>th</sup> one, `writeRight`, is the designated black-sheep of the family and is being continuously read from the stack (and later in that loop body is also written back to the stack, to make things worse).  
 There is no good reason for this, and it's super weird that this is happening! What do we do?
 
 For one thing, I've opened up an issue about this weirdness. The issue itself shows just how finicky the JIT is regarding this one variable, and (un)surprisingly, by fudging around the setup code this can be easily worked around for now.  
@@ -100,7 +99,7 @@ unsafe int* VectorizedPartitionInPlace(int* left, int* right)
     var readRight = right - 2*N - 1;
 ```
 
-Here's a simple fix: Just moving the pointer declaration closer to the loop body seems to convince the JIT that we can all be friends once more:
+Here's a simple fix: moving the pointer declaration closer to the loop body seems to convince the JIT that we can all be friends once more:
 
 ```csharp
 unsafe int* VectorizedPartitionInPlace(int* left, int* right)
@@ -143,7 +142,7 @@ It's also clear, at least from my comments that I'm not entirely pleased yet, so
 
 #### JIT bug 2: not optimizing pointer difference comparisons
 
-Calling this one a bug might be stretch, but in the world of the JIT, sub-optimal code generation can be considered just that. The original code performing the comparison is making the JIT (wrongfully) think that we want to perform `int *` arithmetic for `readLeft - writeLeft` and `writeRight - readRight`. In other words: The JIT starts with generating code subtracting both pointer pairs, generating a `byte *` difference for each pair; which is great (I marked that with checkmarks in the listings). Then, it goes on to generate extra code converting those differences into `int *` units: so lots of extra arithmetic operations. This is simply useless: we just care if one side is larger than the other. This is similar to converting two distance measurements taken in `cm` to `km` just to compare which one is greater.  
+Calling this one a bug might be stretch, but in the world of the JIT, sub-optimal code generation can be considered just that. The original code performing the comparison is making the JIT (wrongfully) think that we want to perform `int *` arithmetic for `readLeft - writeLeft` and `writeRight - readRight`. In other words: The JIT emits code subtracting both pointer pairs, generating a `byte *` difference for each pair; which is great (I marked that with checkmarks in the listings). Then, it goes on to generate extra code converting those differences into `int *` units: so lots of extra arithmetic operations. This is simply useless: we just care if one side is larger than the other. This is similar to converting two distance measurements taken in `cm` to `km` just to compare which one is greater.  
 To work around this disappointing behaviour, I wrote this instead:
 
 ```csharp
