@@ -66,7 +66,7 @@ What I came up with eventually would become a re-write of `Array.Sort()` with AV
 * If I can make it there, I can make it anywhere.
 * I had no idea how to do it.
 
-I started with searching various keywords and found an interesting paper titled: [Fast Quicksort Implementation Using AVX Instructions](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.1009.7773&rep=rep1&type=pdf) by Shay Gueron and Vlad Krasnov. That title alone made me think this is about to be a walk in the park. While initially promising, it wasn’t good enough as a drop-in replacement for `Array.Sort` for reasons I’ll shortly go into. I ended up having a lot of fun expanding on their basic approach. I will submit a proper pull-request to start a discussion with CoreCLR devs about integrating this code into the main [dotnet/runtime](https://github.com/dotnet/runtime) repository, but for now, let's talk about sorting.
+I started with searching various keywords and found an interesting paper titled: [Fast Quicksort Implementation Using AVX Instructions](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.1009.7773&rep=rep1&type=pdf) by Shay Gueron and Vlad Krasnov. That title alone made me think this is about to be a walk in the park. While initially promising, it wasn’t good enough as a drop-in replacement for `Array.Sort` for reasons I’ll shortly go into. I ended up having a lot of fun expanding on their basic approach. [~~I will submit a proper pull-request to start a discussion with CoreCLR devs about integrating this code into the main dotnet repository~~](https://github.com/dotnet/runtime/pull/33152#issuecomment-596405021)[^5], but for now, let's talk about sorting.
 
 Since there’s a lot to go over here, I’ve split it up into no less than 6 parts:
 
@@ -138,7 +138,7 @@ int PickPivot(int[] items, int left, int right)
 
 int Partition(int[] array, int pivot, int left, int right)
 {
-    while (left <= right) {
+    while (left < right) {
         while (array[left]  < pivot) left++;
         while (array[right] > pivot) right--;
 
@@ -221,9 +221,9 @@ For the unfriendly cases I mentioned before, I have no vectorized approach yet (
 With all this new information, this is a good time to measure how a couple of different scalar (e.g. non-vectorized) versions compare to `Array.Sort`. I’ll show some results generated using [BenchmarkDotNet](https://benchmarkdotnet.org/) (BDN) with:
 
 * `Array.Sort()` as the baseline.
-* [`Managed`]((https://github.com/damageboy/VxSort/blob/master/VxSortResearch/Unstable/Scalar/Managed.cs)) as the code I’ve just presented above.
+* [`Managed`](https://github.com/damageboy/VxSort/blob/research/VxSortResearch/Unstable/Scalar/Managed.cs) as the code I’ve just presented above.
   * This version is just basic QuickSort using regular/safe C#. With this version, every time we access an array element, the JIT inserts bounds-checking machine code around our actual access that ensures the CPU does not read/write outside the memory region owned by the array.
-* [`Unmanaged`](https://github.com/damageboy/VxSort/blob/master/VxSortResearch/Unstable/Scalar/Unmanaged.cs) as an alternative/faster version to `Scalar` where:
+* [`Unmanaged`](https://github.com/damageboy/VxSort/blob/research/VxSortResearch/Unstable/Scalar/Unmanaged.cs) as an alternative/faster version to `Scalar` where:
   * The code uses native pointers and unsafe semantics (using C#‘s new `unmanaged` constraint, neat!).
   * We switch to `InsertionSort` (again, copy-pasted from CoreCLR) when below 16 elements, just like `Array.Sort` does.
 
@@ -534,3 +534,4 @@ Before we write vectorized code, we need to pick up some knowhow specific to vec
 [^2]: I have a special build configuration called `Stats` which compiles in a bunch of calls into various conditionally compiled functions that bump various counters, and finally, dump it all to json and it eventually makes it all the way into these posts (if you dig deep you can get the actual json files :)
 [^3]: Since CoreCLR 3.0 was release, a [PR](https://github.com/dotnet/coreclr/pull/27700) to provide a span based version of this has been recently merged into the 5.0 master branch, but I'll ignore this for the time being as it doesn't seem to matter in this context.
 [^4]: You can grab your microcode signature in one of the following methods: On Windows, the easiest way is to install and run the excellent HWiNFO64 application, it will show you the microcode signature. On line a `grep -i microcode /proc/cpuinfo` does the tricks, and macOs: `sysctl -a | grep -i microcode` will get the job done. Unfortunately you’ll have to consult your specific CPU model to figure out the before/after signature, and I can’t help you there, except to point out that the microcode update in question came out in November 13<sup>th</sup> and is about mitigating the JCC errata.
+[^5]: I came, I Tried, [I Folded](https://github.com/dotnet/runtime/pull/33152#issuecomment-596405021)

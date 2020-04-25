@@ -50,12 +50,6 @@ jobs:
           bundle config build.sassc --disable-march-tune-native
           bundle install  --jobs 4 --retry 3
 
-      - name: hotpatch remote-theme
-        shell: bash
-        run: >
-          sed -i 's#site.theme.configure_sass#site.theme.configure_sass if site.theme.respond_to?(:configure_sass)#' 
-          ~/.gem/ruby/${RUBY_VERSION}*/gems/jekyll-remote-theme-0.4.1/lib/jekyll-remote-theme/munger.rb
-
       - name: Build with jekyll
         shell: bash
         run: bundle exec jekyll build

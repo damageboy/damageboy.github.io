@@ -34,6 +34,7 @@ chartjs:
   title:
     position: top
     fontFamily: "Indie Flower"
+    fontSize: 16
 #categories: coreclr intrinsics vectorization quicksort sorting
 ---
 
@@ -41,7 +42,7 @@ Since there’s a lot to go over here, I’ve split it up into a few parts:
 
 1. In [part 1]({% post_url 2020-01-28-this-goes-to-eleven-pt1 %}), we start with a refresher on `QuickSort` and how it compares to `Array.Sort()`.
 2. In [part 2]({% post_url 2020-01-29-this-goes-to-eleven-pt2 %}), we go over the basics of vectorized hardware intrinsics, vector types, and go over a handful of vectorized instructions we’ll use in part 3. We still won't be sorting anything.
-3. In this part, we go through the initial code for the vectorized sorting, and we’ll start seeing some payoff. We finish agonizing courtesy of the CPU’s Branch Predictor, throwing a wrench into our attempts.
+3. In this part, we go through the initial code for the vectorized sorting, and start seeing some payoff. We finish agonizing courtesy of the CPU’s branch predictor, throwing a wrench into our attempts.
 4. In part 4, we go over a handful of optimization approaches that I attempted trying to get the vectorized partitioning to run faster. We'll see what worked and what didn't.
 5. In part 5, we’ll see how we can almost get rid of all the remaining scalar code- by implementing small-constant size array sorting. We’ll use, drum roll…, yet more AVX2 vectorization.
 6. Finally, in part 6, I’ll list the outstanding stuff/ideas I have for getting more juice and functionality out of my vectorized code.
@@ -347,13 +348,14 @@ Here's the signature + setup code:
 unsafe int* VectorizedPartitionInPlace(int* left, int* right)
 {
     var N = Vector256<T>.Count; // Treated by JIT as constant!
-    var pivot = *right;
-    var P = Vector256.Create(pivot);
 
     var writeLeft = left;
     var writeRight = right - N - 1;
     var tmpLeft = _tempStart;
     var tmpRight = _tempEnd - N;
+
+    var pivot = *right;
+    var P = Vector256.Create(pivot);
 
     PartitionBlock(left,          P, ref tmpLeft, ref tmpRight);
     PartitionBlock(right - N - 1, P, ref tmpLeft, ref tmpRight);
@@ -366,24 +368,23 @@ unsafe int* VectorizedPartitionInPlace(int* left, int* right)
 
 The function accepts two parameters: `left`, `right` pointing to the edges of the partitioning task we were handed. The selected pivot is “passed” in an unconventional way: the caller (The top-level sort function) is responsible for **moving** it to the right edge of the array before calling the partitioning function. In other words, we start executing the function expecting the pivot to be already selected and placed at the right edge of the segment (e.g., `right` points to it). This is a remnant of my initial copy-pasting of CoreCLR code, and to be honest, I don't care enough to change it.
 
+We start by setting up various pointers we'll be using on <span class="uk-label">L5-8</span>: The `writeLeft` and `writeRight` pointers pointing into the internal edges of our array (excluding the last element which is pointing to the selected pivot), while the `tmpLeft` and `tmpRight` pointers are pointing into the internal edges of the temporary space.  
+One recurring pattern is that the right-side pointers are pointing on vector's worth on elements **left** of their respective edge. This makes sense given that we will be using vectorized write operations that take a pointer to memory and write 8 elements at a time; the pointers are setup accounting for that assymetry.
 
 <table style="margin-bottom: 0em">
 <tr>
 <td style="border: none; padding-top: 0; padding-bottom: 0; vertical-align: top"><span class="uk-label">Note</span></td>
 <td style="border: none; padding-top: 0; padding-bottom: 0"><div markdown="1">
-I'm using a "variable" (`N`) instead of `Vector256<int>.Count`. There's a reason for those double quotes: At JIT time, the right-hand expression is considered as a constant as far as the JIT is concerned. Furthermore, once we initialize N with its value and *never* modify it, the JIT treats N as a constant as well! So really, I get to use a short/readable name and pay no penalty in for it.
+I'm using a "variable" (`N`) on <span class="uk-label">L3</span> instead of `Vector256<int>.Count`. There's a reason for those double quotes: At JIT time, the right-hand expression is considered as a constant as far as the JIT is concerned. Furthermore, once we initialize N with its value and *never* modify it, the JIT treats N as a constant as well! So really, I get to use a short/readable name and pay no penalty in for it.
 </div>
 </td>
 </tr>
 </table>
 {: .notice--info}
 
-We start by setting up various pointers we'll be using: Thw `writeLeft` and `writeRight` pointers pointing into the internal edges of our array (excluding the last element which is pointing to the selected pivot), while the `tmpLeft` and `tmpRight` pointers are pointing into the internal edges of the temporary space.  
-One recurring pattern is that the right-side pointers are pointing on vector's worth on elements **left** of their respective edge. This makes sense given that we will be using vectorized write operations that take a pointer to memory and write 8 elements at a time; the pointers are setup accounting for that assymetry.
+We proceed to partition a single 8-element vector on *each* side on <span class="uk-label">L13-14</span>, with our good-ole' partitioning block **straight into** that temporary space through the pointers we just setup. It is important to remember that having done that, we don't care about the original contents of the area we just read from anymore: we're free to write up to one `Vector256<T>` to each edge of the array in the future. We've made enough room inside our array available for writing in-place while partitioning. 
 
-We proceed to partition a single 8-element vector on each side, with our good-ole' partitioning block **straight into** that temporary space through the pointers we just setup. It is important to remember that having done that, we don't care about the original contents of the area we just read from anymore: we're free to write up to one `Vector256<T>` to each edge of the array in the future. We've made enough room inside our array available for writing in-place while partitioning. 
-
-We finish the setup by initializing read pointers for every side (`readLeft`, `readRight`); An alternative way to think about these pointers is that each side gets its own head (read) and tail (write) pointers. We will be continuously reading from **one** of the heads and writing to **both** tails from now on.
+We finish the setup on <span class="uk-label">L16-17</span> by initializing read pointers for every side (`readLeft`, `readRight`); An alternative way to think about these pointers is that each side gets its own head (read) and tail (write) pointers. We will be continuously reading from **one** of the heads and writing to **both** tails from now on.
 
 The setup ends with `readLeft` pointing a single `Vector256<int>` *right* of `left` , and `readRight` pointing 1 element + 2x`Vector256<int>` *left* of `right`. The setup of `readRight` might initially seem peculiar, but easily explained:
 
@@ -419,11 +420,11 @@ Here's the same loop we saw in the animation with our vectorized block smack in 
 
 This is the heart of the partitioning operation and where we spend most of the time sorting the array. Looks quite boring, eh?
 
-This loop is all about calling our good ole' partitioning block on the entire array. We-reuse the same block, but here, for the first time, actually use it as an in-place partitioning block, since we are both reading and writing to the same array.
+This loop is all about calling our good ole' partitioning block on the entire array. We-reuse the same block on <span class="uk-label">L11</span>, but here, for the first time, actually use it as an in-place partitioning block, since we are both reading and writing to the same array.  
 While the runtime of the loop is dominated by the partitioning block, the interesting bit is that beefy condition on <span class="uk-label">L3</span> that we described/animated before: it calculates the distance between each head and tail on both sides and compares them to determine which side has less space left, or which side is closer to being overwritten. Given that the **next** read will happen from the side we choose here, we've just added 8 more integers worth of *writing* space to that same endangered side, thereby eliminating the risk of overwriting.  
 While it might be easy to read in terms of correctness or motivation, this is a very *sad line of code*, as it will haunt us in the next posts!
 
-Finally, as we exit the loop once there are `< 8` elements left (remember that we pre-decremented `readRight` by `N` elements before the loop), we are done with all vectorized work for this partitioning call. as such, this is as good a time to re-adjust both `readRight` and `tmpRight` that were pre-decremented by `N` elements to make them ready-to-go for using `Avx.Store` back in preparation for the final step.
+Finally, as we exit the loop once there are `< 8` elements left (remember that we pre-decremented `readRight` by `N` elements before the loop), we are done with all vectorized work for this partitioning call. as such, this is as good a time to re-adjust both `readRight` and `tmpRight` that were pre-decremented by `N` elements to make them ready-to-go for the final step of handling the remainder with scalr sorting, on <span class="uk-label">L13-14</span>.
 
 ### Handling the remainder and finishing up
 
@@ -454,9 +455,9 @@ Here's the final piece of this function:
 
 </div>
 
-Finally, we come out of the loop once we have less than 8-elements to partition (1-7 elements). We can't use vectorized code here, so we drop to plain-old scalar partitioning. To keep things simple, we partition these last elements straight into the temporary area. This is the reason we're allocating 8 more elements in the temporary area in the first place.
+Finally, we come out of the loop once we have less than 8-elements to partition (1-7 elements). We can't use vectorized code here, so we drop to plain-old scalar partitioning on <span class="uk-label">L1-8</span>. To keep things simple, we partition these last elements straight into the temporary area. This is the reason we're allocating 8 more elements in the temporary area in the first place.
 
-Once we're done with this remainder nuisance, we copy back the already partitioned data from the temporary area back into the array to the area left between `writeLeft` and `writeRight`, it's a quick 64-96 byte copy in two operations, and we are nearly done. We still need to move the pivot *back* to the newly calculated pivot position (remember the caller placed it on the right edge of the array as part of pivot selection) and report this position back as the return value for this to be officially be christened as AVX2 partitioning function.
+Once we're done with this remainder nuisance, we copy back the already partitioned data from the temporary area back into the array to the area left between `writeLeft` and `writeRight`, it's a quick 64-96 byte copy in two operations, performed <span class="uk-label">L10-14</span> and we are nearly done. We still need to move the pivot *back* to the newly calculated pivot position (remember the caller placed it on the right edge of the array as part of pivot selection) and report this position back as the return value for this to be officially be christened as AVX2 partitioning function.
 </div>
 
 ## Pretending we're Array.Sort
@@ -677,7 +678,7 @@ DoublePumpedNaive, 35.4138, 26.9828, 31.5477, 32.1774, 27.8901, 29.4917
   }]
  },
  "options": {
-    "title": { "text": "AVX2 Naive Sorting - log(Time/N)", "display": true },
+    "title": { "text": "Array.Sort + AVX2 Naive Sorting - log(Time/N)", "display": true },
     "scales": { 
       "yAxes": [{ 
         "type": "logarithmic",
