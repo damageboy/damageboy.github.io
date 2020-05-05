@@ -198,7 +198,7 @@ We'll introduce two pure C# functions that implement [population counts](https:/
 
 Ultimately, one of the key processor intrinsics we will use is... `POPCNT` which does exactly this, as a single instruction at the processor level, but for now, we will implement a `PopCount()` method without those intrinsics, for 64/32 bit inputs.  
 Apart from `PopCount()` we will also define a `TrailingZeroCount()`[^3] method, that counts trailing zero bits. I chose an implementation that uses `PopCount()` internally.  
-Here are the two `PopCount()` and `TrailingZeroCount()`methods shamelessly stolen throughout the interwebs from [Hacker's delight](http://www.hackersdelight.org/hdcodetxt/pop.c.txt):
+Here are the two `PopCount()` and `TrailingZeroCount()`methods shamelessly stolen throughout the interwebs from [Hacker's delight](https://github.com/hcs0/Hackers-Delight/blob/master/pop.c.txt):
 
 ```csharp
 public class HackersDelight
