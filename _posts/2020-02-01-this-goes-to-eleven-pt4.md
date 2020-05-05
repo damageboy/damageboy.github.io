@@ -47,7 +47,7 @@ Since there’s a lot to go over here, I’ll split it up into a few parts:
 2. In [part 2]({% post_url 2020-01-29-this-goes-to-eleven-pt2 %}), we go over the basics of vectorized hardware intrinsics, vector types, and go over a handful of vectorized instructions we’ll use in part 3. We still won't be sorting anything.
 3. In [part 3]({% post_url 2020-01-30-this-goes-to-eleven-pt3 %}) we go through the initial code for the vectorized sorting, and start seeing some payoff. We finish agonizing courtesy of the CPU’s branch predictor, throwing a wrench into our attempts.
 4. In this part, we go over a handful of optimization approaches that I attempted trying to get the vectorized partition to run faster, seeing what worked and what didn't.
-5. In part 5, we'll take a deep dive into how to deal with memory alignment issues.
+5. In [part 5]({% post_url 2020-02-02-this-goes-to-eleven-pt5 %}), we'll take a deep dive into how to deal with memory alignment issues.
 6. In part 6, we’ll take a pause from the vectorized partitioning, to get rid of almost 100% of the remaining scalar code, by implementing small, constant size array sorting with yet more AVX2 vectorization.
 7. In part 7, We'll circle back and try to deal with a nasty slowdown left in our vectorized partitioning code
 8. In part 8, I'll tell you the sad story of a very twisted optimization I managed to pull off while failing miserably at the same time.
@@ -727,7 +727,7 @@ When the right side has less than `8` elements, we *have to* read from the right
 
 ```csharp
 int* nextPtr;
-if (writeRight - readRight < N) {
+if ((byte *) writeRight - (byte *) readRight < N * sizeof(int)) {
         // ...
 } else {
         // ...
@@ -740,18 +740,6 @@ This branch is just as "correct" as the previous one, but it is less taxing in a
   We've saved an additional 5 bytes worth of opcodes from the main loop!
 * Less data dependencies for the CPU to potentially wait for.  
   (The CPU doesn't have to wait for the `writeLeft`/`readLeft` pointer mutation and subtraction to complete)
-
-<table style="margin-bottom: 0em">
-<tr>
-<td style="border: none; padding-top: 0; padding-bottom: 0; vertical-align: top"><span class="uk-label">Note</span></td>
-<td style="border: none; padding-top: 0; padding-bottom: 0"><div markdown="1">
-Thanks to the branch being simpler, we can get rid of the previous optimization of forcefully casting to `byte *`.  
-The JIT does recognize *this* pattern, and it makes the wiser decision of directly comparing the subtraction result to the constant we provided to it, converted to byte units at JIT time.
-</div>
-</td>
-</tr>
-</table>
-{: .notice--info}
 
 Naturally this ends up slightly faster, and can verify this with BDN once again:
 
