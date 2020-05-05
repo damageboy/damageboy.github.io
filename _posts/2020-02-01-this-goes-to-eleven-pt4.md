@@ -47,7 +47,7 @@ Since there’s a lot to go over here, I’ll split it up into a few parts:
 2. In [part 2]({% post_url 2020-01-29-this-goes-to-eleven-pt2 %}), we go over the basics of vectorized hardware intrinsics, vector types, and go over a handful of vectorized instructions we’ll use in part 3. We still won't be sorting anything.
 3. In [part 3]({% post_url 2020-01-30-this-goes-to-eleven-pt3 %}) we go through the initial code for the vectorized sorting, and start seeing some payoff. We finish agonizing courtesy of the CPU’s branch predictor, throwing a wrench into our attempts.
 4. In this part, we go over a handful of optimization approaches that I attempted trying to get the vectorized partition to run faster, seeing what worked and what didn't.
-5. In part 5, we'll take a deep dive into how to deal with memory alignment issues.
+5. In [part 5]({% post_url 2020-02-02-this-goes-to-eleven-pt5 %}), we'll take a deep dive into how to deal with memory alignment issues.
 6. In part 6, we’ll take a pause from the vectorized partitioning, to get rid of almost 100% of the remaining scalar code, by implementing small, constant size array sorting with yet more AVX2 vectorization.
 7. In part 7, We'll circle back and try to deal with a nasty slowdown left in our vectorized partitioning code
 8. In part 8, I'll tell you the sad story of a very twisted optimization I managed to pull off while failing miserably at the same time.
