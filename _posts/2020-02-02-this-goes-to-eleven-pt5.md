@@ -46,7 +46,7 @@ Since there’s a lot to go over here, I’ll split it up into a few parts:
 
 1. In [part 1]({% post_url 2020-01-28-this-goes-to-eleven-pt1 %}), we start with a refresher on `QuickSort` and how it compares to `Array.Sort()`.
 2. In [part 2]({% post_url 2020-01-29-this-goes-to-eleven-pt2 %}), we go over the basics of vectorized hardware intrinsics, vector types, and go over a handful of vectorized instructions we’ll use in part 3. We still won't be sorting anything.
-3. In [part 3]({% post_url 2020-01-30-this-goes-to-eleven-pt3 %}) we go through the initial code for the vectorized sorting, and start seeing some payoff. We finish agonizing courtesy of the CPU’s branch predictor, throwing a wrench into our attempts.
+3. In [part 3]({% post_url 2020-01-30-this-goes-to-eleven-pt3 %}), we go through the initial code for the vectorized sorting, and start seeing some payoff. We finish agonizing courtesy of the CPU’s branch predictor, throwing a wrench into our attempts.
 4. In [part 4]({% post_url 2020-02-01-this-goes-to-eleven-pt4 %}), we go over a handful of optimization approaches that I attempted trying to get the vectorized partition to run faster, seeing what worked and what didn't.
 5. In this part, we'll take a deep dive into how to deal with memory alignment issues.
 6. In part 6, we’ll take a pause from the vectorized partitioning, to get rid of almost 100% of the remaining scalar code, by implementing small, constant size array sorting with yet more AVX2 vectorization.
@@ -63,15 +63,15 @@ While some worked, and some didn't, I think a bunch of these were worth mentioni
 
 ### Aligning to CPU Cache-lines: :+1:
 
-With modern computer hardware, CPUs *might* access memory more efficiently when it is naturally aligned: in other words when the *address* we use is a multiple of some magical constant. This constant is classically the machine word size, which is 4/8 bytes on 32/64 bit machines. These constants are related to how the CPU is physically wired and constructed internally. Historically, older processors used to be very limited, either disallowing or severely limiting performance, with non-aligned memory access. To this day, very simple micro-controllers (like the ones you might find in IoT devices, for example) will exhibit such limitations around memory alignment, essentially forcing memory access to conform to multiples of 4/8. With more modern (read: more expensive) CPUs, these requirements have become increasingly relaxed. Most programmers can simply afford to *ignore* this issue. The last decade or so worth of modern processors are oblivious to this problem per-se, as long as we access memory within a **single cache-line**, or 64-bytes on almost any modern-day processors.
+With modern computer hardware, CPUs *might* access memory more efficiently when it is naturally aligned: in other words, when the *address* we use is a multiple of some magical constant. This constant is classically the machine word size, which is 4/8 bytes on 32/64 bit machines. These constants are related to how the CPU is physically wired and constructed internally. Historically, older processors used to be very limited, either disallowing or severely limiting performance, with non-aligned memory access. To this day, very simple micro-controllers (like the ones you might find in IoT devices, for example) will exhibit such limitations around memory alignment, essentially forcing memory access to conform to multiples of 4/8. With more modern (read: more expensive) CPUs, these requirements have become increasingly relaxed. Most programmers can simply afford to *ignore* this issue. The last decade or so worth of modern processors are oblivious to this problem per-se, as long as we access memory within a **single cache-line**, or 64-bytes on almost any modern-day processors.
 
-What is this cache-line? I'm actively fighting my internal inclination, so I **won't  turn** this post into a detour about computer micro-architecture. Caches have been covered elsewhere ad-nauseam by far more talented writers, that I'll never do it justice anyway. Instead, I'll just do the obligatory one-paragraph reminder where we recall that CPUs don't directly communicate with RAM, as it is dead slow; instead they read and write from internal, on-die, special/fast memory called caches. Caches contain partial copies of RAM. Caches are faster, smaller, and organized in multiple levels (L1/L2/L3 caches, to name them), where each level is usually larger in size and slightly slower in terms of latency. When the CPU is instructed to access memory, it instead communicates with the cache units, but it never does so in small units. Even when our code is reading a single byte, the cpu will communicate with it's cache subsystem in a unit-of-work known as a cache-line. In theory, every CPU model may have its own definition of a cache-line, but in practice, the last 15 years of processors seem to have converged to use 64-bytes as that golden number.
+What is this cache-line? I'm actively fighting my internal inclination, so I **won't  turn** this post into a detour about computer micro-architecture. Caches have been covered elsewhere ad-nauseam by far more talented writers, that I'll never do it justice anyway. Instead, I'll just do the obligatory one-paragraph reminder where we recall that CPUs don't directly communicate with RAM, as it is dead slow; instead they read and write from internal, on-die, special/fast memory called caches. Caches contain partial copies of RAM. Caches are faster, smaller, and organized in multiple levels (L1/L2/L3 caches, to name them), where each level is usually larger in size and slightly slower in terms of latency. When the CPU is instructed to access memory, it instead communicates with the cache units, but it never does so in small units. Even when our code is reading a single byte, the CPU will communicate with it's cache subsystem in a unit-of-work known as a cache-line. In theory, every CPU model may have its own definition of a cache-line, but in practice, the last 15 years of processors seem to have converged to use 64-bytes as that golden number.
 
 Now, what happens when, lets say, our read operations end up **crossing** cache-lines?
 
 <object style="margin: auto" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/cacheline-boundaries.svg"></object>
 
-As we mentioned, the unit-of-work, as far as the CPU is concerned, is a cache-line. Therefore, such reads literally cause the CPU to issue *two* read operations downstream, directed at the cache units. These sort of cache-line crossing reads *do* have a sustained effect on perfromance[^0]. But how often do they occur? Let's consider this by way of example:  
+As we mentioned, the unit-of-work, as far as the CPU is concerned, is a cache-line. Therefore, such reads literally cause the CPU to issue *two* read operations downstream, directed at the cache units. These cache-line crossing reads *do* have a sustained effect on perfromance[^0]. But how often do they occur? Let's consider this by way of example:  
 Imagine we are processing a single array sequentially, reading 32-bit integers at a time, or 4-bytes; if for some reason, our starting address is *not* divisible by 4, cross cache-line reads would occur at a rate of `4/64` or `6.25%` of our reads. Even this pretty small rate of cross cache-line access usually remains in the *realm of theory* since we have the memory allocator and compiler working in tandem, behind the scenes, to make this go away:
 
 * The default allocator always returns memory aligned at least to machine word size on the one hand.
@@ -88,10 +88,9 @@ Now that it is clear that we won’t be 32-byte aligned, we finally realize that
 
 Let's try and see if we can get some damning evidence for all of this, by launching `perf`, this time tracking the generic `cache-references` HW counter:
 
-
 Fine, we have a problem, the first step is acknowledging/accepting reality, so I'm told. Let’s consider our memory access patterns when reading/writing with respect to alignment:
 
-* For writing, we're all over the place: we always advance the write pointers according to how the data was partitioned, e.g. it is completely data-dependent, and there is little we can say about our write addresses. In addition, as it happens, Intel CPUs, as almost all other modern CPUs employ another common trick in the form of [store buffer, or write-combining buffers (WCBs)](https://en.wikipedia.org/wiki/Write_combining). I'll refrain from describing them here, but the bottom line is we both can’t/don't need to care about the writing side of our algorithm.
+* For writing, we're all over the place: we always advance the write pointers according to how the data was partitioned, e.g. it is completely data-dependent, and there is little we can say about our write addresses. In addition, as it happens, Intel CPUs, as almost all other modern CPUs, employ another common trick in the form of [store buffer, or write-combining buffers (WCBs)](https://en.wikipedia.org/wiki/Write_combining). I'll refrain from describing them here, but the bottom line is we both can’t/don't need to care about the writing side of our algorithm.
 * For reading, the situation is entirely different: We *always* advance the read pointers by 8 elements (32-bytes) on the one hand, and we even have a special intrinsic: `Avx.LoadAlignedVector256() / VMOVDQA`[^1] that helps us ensure that our reading is properly aligned to 32-bytes.
 
 <table style="margin-bottom: 0em">
@@ -106,23 +105,23 @@ As such, my motivation for using `Avx.LoadAlignedVector256() / VMOVDQA` can be e
 </table>
 {: .notice--info}
 
-With this long introduction out of the way, it's time we do something about these cross-cacheline reads. Initially, I got "something" working quickly: remember that we needed to deal with the *remainder* of the array, when we had less than 8-elements, anyway. In the original code at the end of the 3<sup>rd</sup> post, we did so right after out vectorized loop. If we move that scalar code from the end of the function to its beginning while also modifying it to perform scalar partitioning until both `readLeft`/`readRight` pointers are aligned to 32 bytes, our work is complete. There is a slight wrinkle in this otherwise simple approach:
+With this long introduction out of the way, it's time we do something about these cross-cache line reads. Initially, I got "something" working quickly: remember that we needed to deal with the *remainder* of the array, when we had less than 8-elements, anyway. In the original code at the end of the 3<sup>rd</sup> post, we did so right after out vectorized loop. If we move that scalar code from the end of the function to its beginning while also modifying it to perform scalar partitioning until both `readLeft`/`readRight` pointers are aligned to 32 bytes, our work is complete. There is a slight wrinkle in this otherwise simple approach:
 
-* Previously we had anywhere between `0-7` elements left as a remainder for scalar partitioning per partition call.
+* Previously, we had anywhere between `0-7` elements left as a remainder for scalar partitioning per partition call.
   * `3.5` elements on average.
 * Aligning from the edges of our partition with scalar code means we will now have `0-7` elements per-side...
   * So `3.5 x 2 == 7` elements on average.
 
-In other words, doing this sort of pre-alignment inwards is an optimization is not a clean win: We end up with more scalar work than before on the one hand (which is unfortunate), but on the other hand, we can change the vector loading code to use `Avx.LoadAlignedVector256()` and *know for sure* that we will no longer be causing the CPU to issue a single cross cache-line read (The latter being the performance boost).  
+In other words, doing this sort of inwards pre-alignment optimization is not a clean win: We end up with more scalar work than before on the one hand (which is unfortunate), but on the other hand, we can change the vector loading code to use `Avx.LoadAlignedVector256()` and *know for sure* that we will no longer be causing the CPU to issue a single cross cache-line read (The latter being the performance boost).  
 It's understandable if your gut reaction is thinking that adding 3.5 scalar operations doesn't sound like much of a trade-off, but we have to consider that:
 
-* Each scalar comparison comes with a likely branch mis-prediction, as discussed before, so it has a higher cost than what you might be initially pricing in.
+* Each scalar comparison comes with a likely branch misprediction, as discussed before, so it has a higher cost than what you might be initially pricing in.
 * More importantly: we can't forget that this is a recursive function, with ever *decreasing* partition sizes. If you go back to the initial stats we collected in previous posts, you'll be quickly reminded that we partition upwards of 340k times for 1 million element arrays, so this scalar work does pile up...
 
 I won't bother showing the entire code listing for [`02_DoublePumpAligned.cs`](https://github.com/damageboy/VxSort/blob/research/VxSortResearch/Unstable/AVX2/Happy/02_DoublePumpAligned.cs), but I will show the rewritten scalar partition block; originally it was right after the double-pumped loop and looked like this:
 
 ```csharp
-    // ... 
+    // ...
     while (readLeft < readRight) {
         var v = *readLeft++;
 
@@ -134,7 +133,7 @@ I won't bother showing the entire code listing for [`02_DoublePumpAligned.cs`](h
     }
 ```
 
-The aligned variant, with the alignment code now at the top of the function looks like this:
+The aligned variant, with the alignment code now at the top of the function, looks like this:
 
 ```csharp
     const ulong ALIGN = 32;
@@ -194,13 +193,13 @@ Next up is a very cool optimization and a natural progression from the last one.
 
 <object style="margin: auto" type="image/svg+xml" data="../talks/intrinsics-sorting-2019/overlap-partition-with-hint.svg"></object>
 
-We could go about it the other way around! Instead of aligning *inwards* in each respective direction, we could align ***outwards*** and enlarge the partitioned segment to include a few more (up to 7) elements on the outer rims of each partition and <u>re-partition</u> them using the new pivot we've just selected. If this works, we end up doing both 100% aligned reads and eliminating all scalar work in one optimization! This might *sound simple* and **safe** but this is the sort of humbling experience that QuickSort is quick at dispensing (sorry, I had to...) at people trying to nudge it in the wrong way. At some point I was finally able to screw my own head on properly with respect to this re-partitioning attempt and figure out what precisely are the critical constraints we must respect for this to work.
+We could go about it the other way around! Instead of aligning *inwards* in each respective direction, we could align ***outwards*** and enlarge the partitioned segment to include a few more (up to 7) elements on the outer rims of each partition and <u>re-partition</u> them using the new pivot we've just selected. If this works, we end up doing both 100% aligned reads and eliminating all scalar work in one optimization! This might *sound simple* and **safe**, but this is the sort of humbling experience that QuickSort is quick at dispensing (sorry, I had to...) at people trying to nudge it in the wrong way. At some point I was finally able to screw my own head on properly with respect to this re-partitioning attempt and figure out what precisely are the critical constraints we must respect for this to work.
 
 <table style="margin-bottom: 0em">
 <tr>
 <td style="border: none; padding-top: 0; padding-bottom: 0; vertical-align: top"><span class="uk-label">Note</span></td>
 <td style="border: none; padding-top: 0; padding-bottom: 0"><div markdown="1">
-This is a slightly awkward optimization when you consider that I'm suggesting we should **partition more data** in order to *speed up* our code. This sounds bonkers, unless we dig deep within ourselves and find some mechanical empathy: We need to remind ourselves that not all work is equal in the eyes of the CPU. When we are doing scalar partitioning on *n* elements, we are really telling the CPU to execute *n* branches, which are completely data-dependent. To put it simply: The CPU "hates" this sort of work. It has to guess what happens next, and will do so no better than flipping a coin, so at a success rate of roughly 50% for truly random data. What's worse, as mentioned before, in the end of part 3, whenever the CPU mis-predicts, there's a huge penalty to pay in the form of a full pipeline flush which roughly costs us 14-15 cycles on a modern CPU. Paying this penalty **once**, is roughly equivalent to partitioning 2 x 8 element vectors in full with our branch-less vectorized partition block! This is the reason that doing "more" work might be faster. It's because what we think is more is actually less, when we empathize and understand the CPU.
+This is a slightly awkward optimization when you consider that I'm suggesting we should **partition more data** in order to *speed up* our code. This sounds bonkers, unless we dig deep within ourselves and find some mechanical empathy: We need to remind ourselves that not all work is equal in the eyes of the CPU. When we are doing scalar partitioning on *n* elements, we are really telling the CPU to execute *n* branches, which are completely data-dependent. To put it simply: The CPU "hates" this sort of work. It has to guess what happens next, and will do so no better than flipping a coin, so at a success rate of roughly 50% for truly random data. What's worse, as mentioned before, in the end of part 3, whenever the CPU mispredicts, there's a huge penalty to pay in the form of a full pipeline flush which roughly costs us 14-15 cycles on a modern CPU. Paying this penalty **once**, is roughly equivalent to partitioning 2 x 8 element vectors in full with our branch-less vectorized partition block! This is the reason that doing "more" work might be faster. It's because what we think is more is actually less, when we empathize and understand the CPU.
 </div>
 </td>
 </tr>
@@ -231,7 +230,7 @@ All this information is hard to integrate at first, but what it boils down to is
 What we need are permutation entries that are ***stable***. I'm coining this phrase freely as I'm going along:  
 Stable partitioning means that the partitioning operation **must not** *reorder* values that need to go on the left amongst themselves (we keep their internal ordering amongst themselves). Likewise, it **must not** reorder the values that go on the right amongst themselves. If we manage to do this, we're in the clear: The combination of stable permutation and predictable comparison results means that the overlapping elements will stay put while other elements will be partitioned properly on both edges of our overlapping partition. After this weird permutation, we just need to forget we ever read those extra elements, and the whole thing just... works? ... yes!
 
-Let's start with cementing this idea of what stable parittioning is: Up to this point, there was no such requirement, and the initial partition tables I generated failed to satisfy this requirement.
+Let's start with cementing this idea of what stable partitioning is: Up to this point, there was no such requirement, and the initial partition tables I generated failed to satisfy this requirement.
 Here's a simple example for stable/unstable permutation entries, let's imagine we compared to a pivot value of 500:
 
 | Bit                        | 0    | 1    | 2    | 3    | 4    | 5    | 6    | 7    |
@@ -247,7 +246,7 @@ In the above example, the unstable permutation is a perfectly *<u>valid</u>* per
 
 Armed with new permutation entries, I proceeded with my overlapping re-partitioning hack: The idea was that I would find the optimal alignment point on the left and on the right (assuming one was available, e.g. there was enough room on that side) and read that data with our good ole `LoadVectorAligned256` intrinsic, then partition that data into the temporary area. But there is one additional twist: We need to remember how many elements *do not belong* to this partition (e.g. originate from our overlap hack) and remember not to copy them back at the end of the function. To my amazement, that was kind of it. It just works! (I've conveniently ignored a small edge-cases here in words, but not in the code :).
 
-The end result is super delicate. To be clear: I've just described how I partition the initial 2x8 elements (8 on each side); out of those initial 8, I *always* have a subset I must **never** reorder (the overlap), and a subset I need to re-order, as is normal in partitioning, with respect to some pivot. We know that whatever *possible* pivot value *might* be selected from our internal partition, it will always be larger/smaller than the elements in the overlapping areas. Knowing that, we can rely on having stable permutation entries that **do not** reorder those extra elements. We literally get to eat our cake and keep it whole: For the 99% case we **KILL** scalar partitioning all-together, literally doing *zero* scalar work, at the same time aligning everything to `Vector256<T>` size and being nice to our processor. Just to make this victory a tiny touch sweeter, even our *initial* 2x8 reads used for the alignment itself are aligned reads! I don't know about your life, but mine, is usually not filled with such joy... So this, understanably, made me quite happy.
+The end result is super delicate. To be clear: I've just described how I partition the initial 2x8 elements (8 on each side); out of those initial 8, I *always* have a subset I must **never** reorder (the overlap), and a subset I need to re-order, as is normal in partitioning, with respect to some pivot. We know that whatever *possible* pivot value *might* be selected from our internal partition, it will always be larger/smaller than the elements in the overlapping areas. Knowing that, we can rely on having stable permutation entries that **do not** reorder those extra elements. We literally get to eat our cake and keep it whole: For the 99% case we **KILL** scalar partitioning all-together, literally doing *zero* scalar work, at the same time aligning everything to `Vector256<T>` size and being nice to our processor. Just to make this victory a tiny touch sweeter, even our *initial* 2x8 reads used for the alignment itself are aligned reads! I don't know about your life, but mine, is usually not filled with such joy... So this, understandably, made me quite happy.
 
 The final alignment through overlapping partitioning (which I called "overligned" in my code-base), is available in full in [`03_DoublePumpOverlined.cs`](https://github.com/damageboy/VxSort/blob/research/VxSortResearch/Unstable/AVX2/Happy/03_DoublePumpOverlined.cs). It implements this overlapping alignment approach, with some extra small points for consideration:
 
@@ -264,7 +263,7 @@ The final alignment through overlapping partitioning (which I called "overligned
 #### Sub-optimization- Converting branches to arithmetic: :+1:
 
 By this time, my code contained quite a few branches to deal with various edge cases around alignment, and I pulled another rabbit out of the optimization hat that is worth mentioning: We can convert simple branches into arithmetic operations.  
-C/C++/Rust/Go developers who are used to standing on the shoulders of giants (referring to the LLVM compiler which powers a lot of hyper-optimized code-bases here) might look at this with puzzlemenmt, but this is an old geezer trick that comes in handy since the C# JIT isn't smart enough to this for us at the time I'm writing this.
+C/C++/Rust/Go developers who are used to standing on the shoulders of giants (referring to the LLVM compiler which powers a lot of hyper-optimized code-bases here) might look at this with puzzlement, but this is an old geezer trick that comes in handy since the C# JIT isn't smart enough to this for us at the time I'm writing this.
 
 Many times, we end up having branches with super simple code behind them, here's a real example I used to have in my code, as part of some early version of overlinement:
 
@@ -276,7 +275,7 @@ if (leftAlign < 0) {
 }
 ```
 
-This looks awfully friendly, and it is, unless `leftAlign` and therefore the entire branch is determined by random data we read from the array, making the CPU mis-predict this branch at an alarming rate.  
+This looks awfully friendly, and it is, unless `leftAlign` and therefore the entire branch is determined by random data we read from the array, making the CPU mispredict this branch at an alarming rate.  
 The good news is that we can re-write this, entirely in C#, and replace the potential mis-prediction with a constant, predictable (and often shorter!) data dependency. Let's start by inspecting the re-written "branch":
 
 ```csharp
@@ -288,7 +287,7 @@ var leftAlignMask = leftAlign >> 31;
 readLeft += 8 & leftALignMask;
 ```
 
-That's it! This turns out to be a quite effective way, again, for simple branches, at converting a potential mis-prediction event costing us 15 cycles, with a 100% constant 3-4 cycles data-dependency for the CPU: It can be thought as a "signaling" mechanism where we tell the CPU not to speculate on the result of the branch but instead complete the `readLeft +=` statement only after waiting for the right-shift (`>> 31`) and the bitwise and (`&`) operation to complete. I referred to this as an old geezer's optimization since modern processors already support this internally in the form of a `CMOV` instruction, which is more versatile, faster and takes up less bytes in the instruction stream while having the same "do no speculte on this" effect on the CPU. The only issue is that we don't have that available to us in the C#/CoreCLR JIT (I think that Mono's JIT, pecuiliarly does support this both with the internal JIT and naturally with LLVM). As a side note, I'll point out that this is such an old-dog trick that LLVM can even detect such code and de-optimize it back into a "normal" branch and then proceed to optimize it again into `CMOV`, which I think is just a very cool thing :)
+That's it! This turns out to be a quite effective way, again, for simple branches, at converting a potential misprediction event costing us 15 cycles, with a 100% constant 3-4 cycles data-dependency for the CPU: It can be thought as a "signaling" mechanism where we tell the CPU not to speculate on the result of the branch but instead complete the `readLeft +=` statement only after waiting for the right-shift (`>> 31`) and the bitwise and (`&`) operation to complete. I referred to this as an old geezer's optimization since modern processors already support this internally in the form of a `CMOV` instruction, which is more versatile, faster and takes up less bytes in the instruction stream while having the same "do no speculate on this" effect on the CPU. The only issue is that we don't have that available to us in the C#/CoreCLR JIT (I think that Mono's JIT, peculiarly does support this both with the internal JIT and naturally with LLVM). As a side note, I'll point out that this is such an old-dog trick that LLVM can even detect such code and de-optimize it back into a "normal" branch and then proceed to optimize it again into `CMOV`, which I think is just a very cool thing :)
 
 If I'm completely honest, I'm not sure why exactly using this branch to branchless trick even had an effect on the performance of the partitioning function, since these branches should be super easy to predict. I ended up replacing about 5-6 super simple/small branches this way, and while I have my suspicions, I do not know for sure how doing this at the top of the `VectorizeInPlace` function helped by an extra 1-2%. Since we're already talking real numbers, it's probably a good time to show where we end up with the entire overlined version:
 
@@ -305,12 +304,12 @@ There is an important caveat to mention about these results, though:
   | Event              | Cycles |   ns | Humanized                |
   | ------------------ | -----: | ---: | ------------------------ |
   | L1 cache read      |      4 |  1.3 | One heart beat (0.5 s)   |
-  | Branch mis-predict |     14 |  4.6 | Yawn                     |
+  | Branch mispredict |     14 |  4.6 | Yawn                     |
   | L2 cache read      |     14 |  4.6 | Yawn                     |
   | L3 cache read      |     68 | 22.6 | A correct ristretto pull |
   | Main memory read   |    229 |   76 | Brushing your teeth      |
   
-  The humanized column makes it clear that it is ridiculous to consider optimizing yawns when we're wasting time brushing teeth all day long. 
+  The humanized column makes it clear that it is ridiculous to consider optimizing yawns when we're wasting time brushing teeth all day long.
 
 * The last thing I should probably mention is that I still ended up leaving a few pennies on the floor here: When I partition into the temporary space, I could have done so in such a way that by the time I go back to reading that data as part of copying it back, I could make sure that *those* final reads would also end up being aligned to `Vector256<T>`. I didn't bother doing so, because I think it would have very marginal effects as the current method for copying back the temporary memory is probably already fast enough. I doubt that replacing `Unsafe.CopyUnalignedBlock` with some hand-rolled AVX2 copying code would be greatly beneficial here.
 
@@ -322,7 +321,7 @@ Oh, I wish it were true, remember this little gem, that we have to use in every 
 
 ```csharp
 int * nextPtr;
-if ((byte *) readLeft   - (byte *) writeLeft) <= 
+if ((byte *) readLeft   - (byte *) writeLeft) <=
     (byte *) writeRight - (byte *) readRight)) {
     nextPtr = readLeft;
     readLeft += 8;
@@ -332,7 +331,7 @@ if ((byte *) readLeft   - (byte *) writeLeft) <=
 }
 ```
 
-This is it! We ended up sneaking up a data based branch into our code in the form of this side-selection logic. Whenever we try to pick a side we would read from next, this is where we put the CPU in a tough spot. We're asking it to speculate on something it *can't possibly speculate on successfully*. Our question is: "Oh CPU, CPU in the socket, Which side is closer to being over-written of them all?", to which the answer is completely data-driven! In other words, it depends on how the last round(s) of partitioning mutated all 4 pointers involved in the comparison. While it might sound like an easy thing for the CPU to check, we have to remember it is actually required to *speculate* this ahead of time, since every time the CPU is demanded to answer this question, it it is **still in the middle** of processing a few of the previous iterations of this very same hot-loop due to the length of the pipeline and the nature of speculative execution. So the CPU guesses, at best, on stale data, and we know, as the grand designers of this mess that in reality, at least for random data, the best guess is no better here than flipping a coin. Quite sad. You have to admit it is quite ironic how we managed to do this whole big circle around our own tails just to come-back to having a branch mis-prediction based on the random array data.
+This is it! We ended up sneaking up a data-based branch into our code in the form of this side-selection logic. Whenever we try to pick a side, we would read from next this is where we put the CPU in a tough spot. We're asking it to speculate on something it *can't possibly speculate on successfully*. Our question is: "Oh CPU, CPU in the socket, Which side is closer to being over-written of them all?", to which the answer is completely data-driven! In other words, it depends on how the last round(s) of partitioning mutated all 4 pointers involved in the comparison. While it might sound like an easy thing for the CPU to check, we have to remember it is actually required to *speculate* this ahead of time, since every time the CPU is demanded to answer this question, it it is **still in the middle** of processing a few of the previous iterations of this very same hot-loop due to the length of the pipeline and the nature of speculative execution. So the CPU guesses, at best, on stale data, and we know, as the grand designers of this mess that in reality, at least for random data, the best guess is no better here than flipping a coin. Quite sad. You have to admit it is quite ironic how we managed to do this whole big circle around our own tails just to come-back to having a branch misprediction based on the random array data.
 
 Mis-predicting here is unavoidable. Or at least I have no idea on how to avoid it in C# with the current JIT in August 2019 (But oh, just you wait for part 6, I have something in store there for you..., hint hint, wink wink).
 
@@ -351,11 +350,11 @@ Consider this alternative version:
 This code has a few effects:
 
 * It make me want to puke
-* It eliminates branch mis-prediction in our vectorized partitioning path almost entirely:
-  * I measured < 5% mis-prediction with this
+* It eliminates branch misprediction in our vectorized partitioning path almost entirely:
+  * I measured < 5% misprediction with this
 * It generates SO much additional code that its simply just not worth it!
 
-So while this attempt seems futile for now, we see that it fails for the "wrong" reason. We **did** manage to eliminate the mis-prediction, it simply looks like the price is too high. This is again a mid-way conclusion I will get back to in a future post.
+So while this attempt seems futile for now, we see that it fails for the "wrong" reason. We **did** manage to eliminate the misprediction, it simply looks like the price is too high. This is again a mid-way conclusion I will get back to in a future post.
 
 ---
 
