@@ -61,7 +61,7 @@ I tried to keep most of these experiments in separate implementations, both the 
 
 While some worked, and some didn't, I think a bunch of these were worth mentioning, so here goes:
 
-### Aligning to CPU Cache-lines: :+1:
+### Do we have an alignment problem?
 
 With modern computer hardware, CPUs *might* access memory more efficiently when it is naturally aligned: in other words, when the *address* we use is a multiple of some magical constant. The constant is classically the machine word size, 4/8 bytes on 32/64 bit machines. These constants are related to how the CPU is physically wired and constructed internally. Historically, older processors used to be very limited, either disallowing or severely limiting performance, with non-aligned memory access. To this day, very simple micro-controllers (like the ones you might find in IoT devices, for example) will exhibit such limitations around memory alignment, essentially forcing memory access to conform to multiples of 4/8. With more modern (read: more expensive) CPUs, these requirements have become increasingly relaxed. Most programmers can simply afford to *ignore* this issue. The last decade or so worth of modern processors are oblivious to this problem per-se, as long as we access memory within a **single cache-line**, or 64-bytes on almost any modern-day processors.
 
@@ -81,15 +81,15 @@ So far, I’ve told you why/when you *shouldn’t* care about alignment. This wa
 
 * The memory handed to us for partitioning/sorting is rarely aligned to 32-bytes, except for dumb luck.  
   The allocator, allocating an array of 32-bit integers simply doesn’t care about 32-**byte** alignment.
-* Even if it were magically aligned to 32-bytes, it would do *us* little good; Once a single partition operation is complete, the next sub-division, inherent with QuickSort, is determined by the (random) data.  
+* Even if it were magically aligned to 32-bytes, it would do us little good; Once a *single* partition operation is complete, further sub-divisions, inherent with QuickSort, are determined by the (random) new placement of the last pivot we used.  
   There is no way we will get lucky enough that *every partition* will be 32-byte aligned.
 
 Now that it is clear that we won’t be 32-byte aligned, we finally realize that as we go over the array sequentially (left to right and right to left as we do) issuing **unaligned** 32-byte reads on top of a 64-byte cache-line, we end up reading across cache-lines every **other** read! Or at a rate of 50%! This just escalated from being "...generally not a problem" into a "Houston, we have a problem" very quickly.
 
-Let's try and see if we can get some damning evidence for all of this, by launching `perf`, this time tracking the oddly specific `mem_inst_retired.split_loads` HW counter:
+You've endured through a lot of hand waving so far, let's try to see if we can get some damning evidence for all of this, by launching `perf`, this time tracking the oddly specific `mem_inst_retired.split_loads` HW counter:
 
 ```bash
-$ perf record -Fmax -e mem_inst_retired.split_loads \
+$ COMPlus_PerfMapEnabled=1 perf record -Fmax -e mem_inst_retired.split_loads \
     ./Example --type-list DoublePumpJedi --size-list 100000 \
         --max-loops 1000 --no-check
 $ perf report --stdio -F overhead,sym | head -20
@@ -102,11 +102,110 @@ $ perf report --stdio -F overhead,sym | head -20
      2.99%  [.] __memmove_avx_unaligned_erms
 ```
 
-Fine, we have a problem, the first step is acknowledging/accepting reality: Our code generates a lot of split memory operations, and unsuprisingly, 86.68% of them come from our vectorized partitioning. Let's do somwe simple math to double check it all adds up:
+We ran the same sort operation 1,000 times and got `87,102,613` split-loads, with `86.68%` attributed to our partitioning function. This means `(87102613 * 0.8668) / 1000` or `75,500` split-loads *per sort* of `100,000` elements. To seal the deal, we need to figure out how many vector loads per sort we are performing in the first place; Luckily I can generate an answer quickly: I have statistics collection code embedded in my code, so I can issue this command:
 
-We ran the same sort 1,000 times and got 87102613 split-loads, with 86.68% attributed to our partitioning, which means `(87102613 * 0.8668) / 1000` split loads per sort of 100,000 elements.
+```bash
+$ ./Example --type-list DoublePumpJedi \
+      --size-list 100000 --max-loops 10000 \
+      --no-check --stats-file jedi-100k-stats.json
+```
 
- so I'm told. Let’s consider our memory access patterns when reading/writing with respect to alignment:
+And in return I get this beutiful thing back:
+
+<div>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
+
+<table class="table datatable"
+  data-json="../_posts/jedi-stats.json"
+  data-id-field="name"
+  data-pagination="false"
+  data-intro="Each row in this table contains statistics collected & averaged out of thousands of runs with random data" data-position="left"
+  data-show-pagination-switch="false">
+  <thead data-intro="The header can be used to sort/filter by clicking" data-position="right">
+    <tr>
+        <th data-field="MethodName" data-sortable="true"
+            data-filter-control="select">
+          <span
+              data-intro="The name of the benchmarked method"
+              data-position="top">Method<br/>Name</span>
+        </th>
+        <th data-field="ProblemSize" data-sortable="true"
+            data-value-type="int"
+            data-filter-control="select">
+            <div data-intro="The size of the sorting problem being benchmarked (# of integers)"  data-position="bottom" class="rotated-header-container">
+            <div class="rotated-header">Size</div>
+            </div>
+        </th>
+        <th data-field="MaxDepthScaledDataTable" data-sortable="true"
+            data-value-type="inline-bar-horizontal">
+            <div data-intro="The maximal depth of recursion reached while sorting"  data-position="top" class="rotated-header-container">
+              <div class="rotated-header">Max</div>
+              <div class="rotated-header">Depth</div>
+            </div>
+        </th>
+        <th data-field="NumPartitionOperationsScaledDataTable" data-sortable="true"
+            data-value-type="inline-bar-horizontal">
+            <div data-intro="# of partitioning operations per sort" data-position="bottom" class="rotated-header-container">
+              <div class="rotated-header">Part</div>
+              <div class="rotated-header">itions</div>
+            </div>
+        </th>
+        <th data-field="NumVectorizedLoadsScaledDataTable" data-sortable="true"
+            data-value-type="inline-bar-horizontal">
+            <div data-intro="# of vectorized load operations" data-position="top" class="rotated-header-container">
+              <div class="rotated-header">Vector</div>
+              <div class="rotated-header">Loads</div>
+            </div>
+        </th>
+        <th data-field="NumVectorizedStoresScaledDataTable" data-sortable="true"
+            data-value-type="inline-bar-horizontal">
+            <div data-intro="# of vectorized store operations" data-position="bottom" class="rotated-header-container">
+              <div class="rotated-header">Vector</div>
+              <div class="rotated-header">Stores</div>
+            </div>
+        </th>
+        <th data-field="NumPermutationsScaledDataTable" data-sortable="true"
+            data-value-type="inline-bar-horizontal">
+            <div data-intro="# of vectorized permutation operations" data-position="top" class="rotated-header-container">
+              <div class="rotated-header">Vector</div>
+              <div class="rotated-header">Permutes</div>
+            </div>
+        </th>
+        <th data-field="AverageSmallSortSizeScaledDataTable" data-sortable="true"
+            data-value-type="inline-bar-horizontal">
+            <div data-intro="For hybrid sorting, the average size that each small sort operation was called with (e.g. InsertionSort)"
+                 data-position="bottom" class="rotated-header-container">
+              <div class="rotated-header">Small</div>
+              <div class="rotated-header">Sort</div>
+              <div class="rotated-header">Size</div>
+            </div>
+        </th>
+        <th data-field="NumScalarComparesScaledDataTable" data-sortable="true"
+            data-value-type="inline-bar-horizontal">
+            <div data-intro="How many branches were executed in each sort operation that were based on the unsorted array elements"
+                 data-position="top" class="rotated-header-container">
+              <div class="rotated-header">Data</div>
+              <div class="rotated-header">Based</div>
+              <div class="rotated-header">Branches</div>
+            </div>
+        </th>
+        <th data-field="PercentSmallSortCompares" data-sortable="true"
+            data-value-type="float2-percentage">
+            <div data-intro="What percent of</br>⬅<br/>branches happenned as part of small-sorts"
+              data-position="bottom" class="rotated-header-container">
+              <div class="rotated-header">Small</div>
+              <div class="rotated-header">Sort</div>
+              <div class="rotated-header">Branches</div>
+            </div>
+        </th>
+    </tr>
+  </thead>
+</table>
+</div>
+
+In total, we perform `173,597` vector loads per sort operation of `100,000` elements in `4,194` partitioning calls. Every partitioning call has a `4/32` or `12.5%` of ending up being 32-byte aligned: In other words `21700` of the total vector reads should be aligned by sheer chance, which leaves `173597-21700` or `151,898` that should be *unaligned*, of which, I claim that that ½ would cause split-loads: `50%` of `151,898` is `75,949` while we measured `75,500`! I don't know how your normal day goes about, but in mine, reality and my hallucinations rarely go hand-in-hand like this.
+
+Fine, we now **know** we have a problem. The first step was acknowledging/accepting reality: Our code does indeed generate a lot of split memory operations. Let’s consider our memory access patterns when reading/writing with respect to alignment, and see if we can do something about it:
 
 * For writing, we're all over the place: we always advance the write pointers according to how the data was partitioned, e.g. it is completely data-dependent, and there is little we can say about our write addresses. In addition, as it happens, Intel CPUs, as almost all other modern CPUs, employ another common trick in the form of [store buffers, or write-combining buffers (WCBs)](https://en.wikipedia.org/wiki/Write_combining). I'll refrain from describing them here, but the bottom line is we both can’t/don't need to care about the writing side of our algorithm.
 * For reading, the situation is entirely different: We *always* advance the read pointers by 8 elements (32-bytes) on the one hand, and we even have a special intrinsic: `Avx.LoadAlignedVector256() / VMOVDQA`[^1] that helps us ensure that our reading is properly aligned to 32-bytes.
@@ -123,6 +222,8 @@ As such, my motivation for using `Avx.LoadAlignedVector256() / VMOVDQA` can be e
 </table>
 {: .notice--info}
 
+#### Aligning to CPU Cache-lines, aligning inwards: :-1:
+
 With this long introduction out of the way, it's time we do something about these cross-cache line reads. Initially, I got "something" working quickly: remember that we needed to deal with the *remainder* of the array, when we had less than 8-elements, anyway. In the original code at the end of the 3<sup>rd</sup> post, we did so right after out vectorized loop. If we move that scalar code from the end of the function to its beginning while also modifying it to perform scalar partitioning until both `readLeft`/`readRight` pointers are aligned to 32 bytes, our work is complete. There is a slight wrinkle in this otherwise simple approach:
 
 * Previously, we had anywhere between `0-7` elements left as a remainder for scalar partitioning per partition call.
@@ -136,7 +237,7 @@ It's understandable if while reading this, your gut reaction is thinking that ad
 * Each scalar comparison comes with a likely branch misprediction, as discussed before, so it has a higher cost than what you might be initially pricing in.
 * More importantly: we can't forget that this is a recursive function, with ever *decreasing* partition sizes. If you go back to the initial stats we collected in previous posts, you'll be quickly reminded that we partition upwards of 340k times for 1 million element arrays, so this scalar work both piles up, and represents a larger portion of our workload as the partition sizes decrease...
 
-I won't bother showing the entire code listing for [`02_DoublePumpAligned.cs`](https://github.com/damageboy/VxSort/blob/research/VxSortResearch/Unstable/AVX2/Happy/02_DoublePumpAligned.cs), but I will show the rewritten scalar partition block; originally it was right after the double-pumped loop and looked like this:
+I won't bother showing the entire code listing for [`02_DoublePumpAligned.cs`](https://github.com/damageboy/VxSort/blob/research/VxSortResearch/Unstable/AVX2/Happy/02_DoublePumpAligned.cs), but I will show the rewritten scalar partition block, which is now tasked with aligning our pointers before we go full vectorized partitioning. Originally it was right after the double-pumped loop and looked like this:
 
 ```csharp
     // ...
@@ -188,20 +289,8 @@ What it does now is check if alignment is necessary, and then proceeds to align 
 
 Where do we end up performance wise with this optimization? (to be clear, these results are compared to the latest a baseline version that now uses `32` as the `InsertionSort` threshold):
 
-| Method                   | N        |     Mean (ns) | Time / N (ns) | Ratio |
-| ------------------------ | -------- | ------------: | ------------: | ----: |
-| AVX2DoublePumpedMicroOpt | 100      |         895.9 |        8.9585 |  1.00 |
-| AVX2DoublePumpedAligned  | 100      |       2,879.6 |       28.7956 |  3.21 |
-| AVX2DoublePumpedMicroOpt | 1000     |      19,093.2 |       19.0932 |  1.00 |
-| AVX2DoublePumpedAligned  | 1000     |      25,468.0 |       25.4680 |  1.34 |
-| AVX2DoublePumpedMicroOpt | 10000    |     278,365.7 |       27.8366 |  1.00 |
-| AVX2DoublePumpedAligned  | 10000    |     272,146.9 |       27.2147 |  0.98 |
-| AVX2DoublePumpedMicroOpt | 100000   |   2,806,369.0 |       28.0637 |  1.00 |
-| AVX2DoublePumpedAligned  | 100000   |   2,614,231.4 |       26.1423 |  0.93 |
-| AVX2DoublePumpedMicroOpt | 1000000  |  24,250,413.3 |       24.2504 |  1.00 |
-| AVX2DoublePumpedAligned  | 1000000  |  23,771,945.4 |       23.7719 |  0.98 |
-| AVX2DoublePumpedMicroOpt | 10000000 | 266,767,552.8 |       26.6768 |  1.00 |
-| AVX2DoublePumpedAligned  | 10000000 | 258,396,465.8 |       26.4285 |  0.97 |
+BLA BLA TABLE GOES HERE.
+
 
 I know it does not seem like the most impressive improvement, but we somehow managed to speed up the function by around 2% while doubling the amount of scalar work done! This means that the pure benefit from alignment is larger than what the results are showing right now since it's being masked, to some extent, by the extra scalar work we tacked on. If only there was a way we could skip that scalar work all together... If only there was a way...
 
