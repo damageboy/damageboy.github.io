@@ -86,9 +86,27 @@ So far, I’ve told you why/when you *shouldn’t* care about alignment. This wa
 
 Now that it is clear that we won’t be 32-byte aligned, we finally realize that as we go over the array sequentially (left to right and right to left as we do) issuing **unaligned** 32-byte reads on top of a 64-byte cache-line, we end up reading across cache-lines every **other** read! Or at a rate of 50%! This just escalated from being "...generally not a problem" into a "Houston, we have a problem" very quickly.
 
-Let's try and see if we can get some damning evidence for all of this, by launching `perf`, this time tracking the generic `cache-references` HW counter:
+Let's try and see if we can get some damning evidence for all of this, by launching `perf`, this time tracking the oddly specific `mem_inst_retired.split_loads` HW counter:
 
-Fine, we have a problem, the first step is acknowledging/accepting reality, so I'm told. Let’s consider our memory access patterns when reading/writing with respect to alignment:
+```bash
+$ perf record -Fmax -e mem_inst_retired.split_loads \
+    ./Example --type-list DoublePumpJedi --size-list 100000 \
+        --max-loops 1000 --no-check
+$ perf report --stdio -F overhead,sym | head -20
+
+# To display the perf.data header info, please use --header/--header-only options.
+# Event count (approx.): 87102613
+# Overhead  Symbol 
+    86.68%  [.] ...DoublePumpJedi::VectorizedPartitionInPlace(int32*,int32*)
+     5.74%  [.] ...DoublePumpJedi::Sort(int32*,int32*,int32)
+     2.99%  [.] __memmove_avx_unaligned_erms
+```
+
+Fine, we have a problem, the first step is acknowledging/accepting reality: Our code generates a lot of split memory operations, and unsuprisingly, 86.68% of them come from our vectorized partitioning. Let's do somwe simple math to double check it all adds up:
+
+We ran the same sort 1,000 times and got 87102613 split-loads, with 86.68% attributed to our partitioning, which means `(87102613 * 0.8668) / 1000` split loads per sort of 100,000 elements.
+
+ so I'm told. Let’s consider our memory access patterns when reading/writing with respect to alignment:
 
 * For writing, we're all over the place: we always advance the write pointers according to how the data was partitioned, e.g. it is completely data-dependent, and there is little we can say about our write addresses. In addition, as it happens, Intel CPUs, as almost all other modern CPUs, employ another common trick in the form of [store buffers, or write-combining buffers (WCBs)](https://en.wikipedia.org/wiki/Write_combining). I'll refrain from describing them here, but the bottom line is we both can’t/don't need to care about the writing side of our algorithm.
 * For reading, the situation is entirely different: We *always* advance the read pointers by 8 elements (32-bytes) on the one hand, and we even have a special intrinsic: `Avx.LoadAlignedVector256() / VMOVDQA`[^1] that helps us ensure that our reading is properly aligned to 32-bytes.
@@ -295,6 +313,28 @@ If I'm completely honest, I'm not sure why exactly using this branch to branchle
 BIG TABLE GOES HERE!!!!
 
 This is great! I chose to compare this to the micro-optimized version rather than the previous aligned version, since both of them revolve around the same basic idea. Getting a 15-20% bump across the board like this is nothing to snicker at!
+
+
+```bash
+$ perf record -Fmax -e mem_inst_retired.split_loads \
+   ./Example --type-list DoublePumpOvelined --size-list 100000 \
+       --max-loops 1000 --no-check
+$ perf report --stdio -F overhead,sym | head -20
+# To display the perf.data header info, please use --header/--header-only options.
+# Samples: 129  of event 'mem_inst_retired.split_loads'
+# Event count (approx.): 12900387
+# Overhead  Symbol 
+    30.23%  [.] DoublePumpOverlined...::Sort(int32*,int32*,int64,int32)
+    28.68%  [.] DoublePumpOverlined...::VectorizedPartitionInPlace(int32*,int32*,int64)
+    13.95%  [.] __memmove_avx_unaligned_erms
+     0.78%  [.] JIT_MemSet_End
+```
+
+
+We just split loads reduced by 95%, and our vectorized partitioning function is not even the first one in the list.
+It seems like some form of reality is agreeing we did good here..
+
+
 There is an important caveat to mention about these results, though:
 
 * The performance improvements are not spread evenly through-out the size of the sorting problem.
