@@ -102,7 +102,7 @@ $ perf report --stdio -F overhead,sym | head -20
      2.99%  [.] __memmove_avx_unaligned_erms
 ```
 
-We ran the same sort operation 1,000 times and got `87,102,613` split-loads, with `86.68%` attributed to our partitioning function. This means `(87102613 * 0.8668) / 1000` or `75,500` split-loads *per sort* of `100,000` elements. To seal the deal, we need to figure out how many vector loads per sort we are performing in the first place; Luckily I can generate an answer quickly: I have statistics collection code embedded in my code, so I can issue this command:
+We ran the same sort operation `1,000` times and got `87,102,613` split-loads, with `86.68%` attributed to our partitioning function. This means `(87102613 * 0.8668) / 1000` or `75,500` split-loads *per sort* of `100,000` elements. To seal the deal, we need to figure out how many vector loads per sort we are performing in the first place; Luckily I can generate an answer quickly: I have statistics collection code embedded in my code, so I can issue this command:
 
 ```bash
 $ ./Example --type-list DoublePumpJedi \
@@ -116,9 +116,10 @@ And in return I get this beutiful thing back:
 <tr>
 <td style="border: none; padding-top: 0; padding-bottom: 0; vertical-align: top"><span class="uk-label">Note</span></td>
 <td style="border: none; padding-top: 0; padding-bottom: 0"><div markdown="1">
-These numbers are vastly different than the ones we last saw in the end of the 3<sup>rd</sup> post, for example. There is a good reason for this: We've spend the previous post tweaking the code in a few considerable ways:
-* We've changed the cut-off point for vectorized sorting from 16 ⮞ 40, there-by reducing the amount of vectorized partitions we're performing in the first place
-* We've change the permutation entry loading code to read 8-byte values from memroy, rather than full 32-byte `Vector256<int>` entries.
+These numbers are vastly different than the ones we last saw in the end of the 3<sup>rd</sup> post, for example. There is a good reason for this: We've spent the previous post tweaking the code in a few considerable ways:
+* Changing the cut-off point for vectorized sorting from 16 ⮞ 40, there-by reducing the amount of vectorized partitions we're performing in the first place
+* Changing the permutation entry loading code to read 8-byte values from memroy, rather than full 32-byte `Vector256<int>` entries,
+  cutting the number of `Vector256<int>` loads by half.
 </div>
 </td>
 </tr>
@@ -291,10 +292,201 @@ What it does now is check when alignment is necessary, then proceeds to align wh
 
 Where do we end up performance wise with this optimization? 
 
-BLA BLA TABLE GOES HERE.
+<div markdown="1">
+<div class="stickemup">
 
+{% codetabs %}
 
-The whole attempt ends up mostly as a failure, so it would seem. We're getting a light improvement, if at all. But if stop to remember that we somehow managed both to speed up the function by around 1% while doubling the amount of scalar work done, our failure here becomes much more nuanced: The pure benefit from alignment itself is larger than what the results are showing right now since it's being masked, to some extent, by the extra scalar work we tacked on. If only there was a way we could skip that scalar work all together... If only there was a way... If only...
+{% codetab <i class='glyphicon glyphicon-stats'></i> Scaling %}
+<div>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
+<div data-intro="Size of the sorting problem, 10..10,000,000 in powers of 10" data-position="bottom">
+<div data-intro="Performance scale: Array.Sort (solid gray) is always 100%, and the other methods are scaled relative to it" data-position="left">
+<div data-intro="Click legend items to show/hide series" data-position="right">
+<div class="benchmark-chart-container">
+<canvas data-chart="line">
+N,100,1K,10K,100K,1M,10M
+Jedi,         1   , 1   , 1  , 1   , 1    , 1
+Aligned, 1.082653616,    1.091733385,    0.958578753,    0.959159569,    0.964604818,    0.980102965
+<!-- 
+{ 
+ "data" : {
+  "datasets" : [
+  { 
+    "backgroundColor": "rgba(66,66,66,0.35)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": -30, "hachureGap": 9, "fillWeight": 0.3	}
+  },
+  { 
+    "backgroundColor": "rgba(33,220,33,.9)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": 60, "hachureGap": 3	}
+  }  
+  ]
+ },
+ "options": {
+    "title": { "text": "AVX2 Aligned Sorting - Scaled to Jedi", "display": true },
+    "scales": { 
+      "yAxes": [{
+       "ticks": {
+         "fontFamily": "Indie Flower",
+         "min": 0.90, 
+         "callback": "ticksPercent"
+        },
+        "scaleLabel": {
+          "labelString": "Scaling (%)",
+          "display": true
+        }
+      }]
+    }
+ },
+ "defaultOptions": {{ page.chartjs | jsonify }}
+}
+--> </canvas>
+
+</div>
+</div>
+</div>
+</div>
+</div>
+
+{% endcodetab %}
+
+{% codetab <i class='glyphicon glyphicon-stats'></i> Time/N %}
+
+<div>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
+<div data-intro="Size of the sorting problem, 10..10,000,000 in powers of 10" data-position="bottom">
+<div data-intro="Time in nanoseconds spent sorting per element. Array.Sort (solid gray) is the baseline, again" data-position="left">
+<div data-intro="Click legend items to show/hide series" data-position="right">
+<div class="benchmark-chart-container">
+<canvas data-chart="line">
+N,100,1K,10K,100K,1M,10M
+Jedi, 18.3938  ,20.7342  ,24.6347  ,26.9067  ,23.9922  ,25.5122 
+Aligned, 19.9128, 22.6363, 23.6143, 25.8078, 23.143, 25.0046
+<!-- 
+{ 
+ "data" : {
+  "datasets" : [
+  { 
+    "backgroundColor": "rgba(66,66,66,0.35)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": -30, "hachureGap": 9, "fillWeight": 0.3	}
+  },
+  { 
+    "backgroundColor": "rgba(33,220,33,.9)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": 60, "hachureGap": 3	}
+  }
+  ]
+ },
+ "options": {
+    "title": { "text": "AVX2 Jedi Sorting + Aligned - log(Time/N)", "display": true },
+    "scales": { 
+      "yAxes": [{ 
+        "type": "logarithmic",
+        "ticks": {
+          "min": 15,
+          "max": 28,
+          "callback": "ticksNumStandaard",
+          "fontFamily": "Indie Flower"          
+        },
+        "scaleLabel": {
+          "labelString": "Time/N (ns)",
+          "fontFamily": "Indie Flower",
+          "display": true
+        }
+      }]
+    }
+ },
+ "defaultOptions": {{ page.chartjs | jsonify }}
+}
+--> </canvas>
+
+</div>
+</div>
+</div>
+</div>
+</div>
+{% endcodetab %}
+
+{% codetab <i class='glyphicon glyphicon-list-alt'></i> Benchmarks %}
+
+<div>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
+<table class="table datatable"
+  data-json="../_posts/Bench.BlogPt5_1_Int32_-report.datatable.json"
+  data-id-field="name"
+  data-pagination="false"
+  data-page-list="[9, 18]"
+  data-intro="Each row in this table represents a benchmark result" data-position="left"
+  data-show-pagination-switch="false">
+  <thead data-intro="The header can be used to sort/filter by clicking" data-position="right">
+    <tr>
+        <th data-field="TargetMethodColumn.Method" data-sortable="true"
+         data-filter-control="select">
+          <span
+              data-intro="The name of the benchmarked method"
+              data-position="top">
+            Method<br/>Name
+          </span>
+        </th>
+        <th data-field="N" data-sortable="true"
+            data-value-type="int" data-filter-control="select">
+            <span
+              data-intro="The size of the sorting problem being benchmarked (# of integers)"
+              data-position="top">
+            Problem<br/>Size
+            </span>
+        </th>
+        <th data-field="TimePerNDataTable" data-sortable="true"
+            data-value-type="float2-interval-muted">
+            <span
+              data-intro="Time in nanoseconds spent sorting each element in the array (with confidence intervals in parenthesis)"
+              data-position="top">
+              Time /<br/>Element (ns)
+            </span>
+        </th>
+        <th data-field="RatioDataTable" data-sortable="true"
+            data-value-type="inline-bar-horizontal-percentage">
+            <span data-intro="Each result is scaled to its baseline (Array.Sort in this case)"
+                  data-position="top">
+                  Scaling
+            </span>
+        </th>
+        <th data-field="Measurements" data-sortable="true" data-value-type="inline-bar-vertical">
+            <span data-intro="Raw benchmark results visualize how stable the result it. Longest/Shortest runs marked with <span style='color: red'>Red</span>/<span style='color: green'>Green</span>" data-position="top">Measurements</span>
+        </th>
+    </tr>
+  </thead>
+</table>
+</div>
+
+{% endcodetab %}
+
+{% codetab <i class='glyphicon glyphicon-info-sign'></i> Setup %}
+
+```bash
+BenchmarkDotNet=v0.12.0, OS=clear-linux-os 32120
+Intel Core i7-7700HQ CPU 2.80GHz (Kaby Lake), 1 CPU, 4 logical and 4 physical cores
+.NET Core SDK=3.1.100
+  [Host]     : .NET Core 3.1.0 (CoreCLR 4.700.19.56402, CoreFX 4.700.19.56404), X64 RyuJIT
+  Job-DEARTS : .NET Core 3.1.0 (CoreCLR 4.700.19.56402, CoreFX 4.700.19.56404), X64 RyuJIT
+
+InvocationCount=3  IterationCount=15  LaunchCount=2
+UnrollFactor=1  WarmupCount=10
+
+$ grep 'stepping\|model\|microcode' /proc/cpuinfo | head -4
+model           : 158
+model name      : Intel(R) Core(TM) i7-7700HQ CPU @ 2.80GHz
+stepping        : 9
+microcode       : 0xb4
+```
+
+{% endcodetab %}
+
+{% endcodetabs %}
+</div>
+
+The whole attempt ends up mostly as a failure, so it would seem. We're getting a light improvement, in the high counts, due to the higher scalar ops, we are getting worse performance in the lower counts... It's kind of a mixed bad, and a bit unimpressive at a first glance.  
+However, if stop to remember that we somehow managed both to speed up the function by around 1% while doubling the amount of scalar work done, our failure here becomes much more nuanced: The pure benefit from alignment itself is larger than what the results are showing right now since it's being masked, to some extent, by the extra scalar work we tacked on. If only there was a way we could skip that scalar work all together... If only there was a way... If only...
+</div>
 
 ### (Re-)Partitioning overlapping regions: :+1:
 
@@ -406,7 +598,199 @@ As a side note, I'll point out that this is such an old-dog trick that LLVM can 
 
 I ended up replacing about 5-6 super simple/small branches this way, and while I have my suspicions, I do not know for sure how doing this at the top of the `VectorizeInPlace` function helped by an extra 1-2%. Since we're already talking real numbers, it's probably a good time to show where we end up with the entire overlined version:
 
-BIG TABLE GOES HERE!!!!
+<div markdown="1">
+<div class="stickemup">
+
+{% codetabs %}
+
+{% codetab <i class='glyphicon glyphicon-stats'></i> Scaling %}
+<div>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
+<div data-intro="Size of the sorting problem, 10..10,000,000 in powers of 10" data-position="bottom">
+<div data-intro="Performance scale: Array.Sort (solid gray) is always 100%, and the other methods are scaled relative to it" data-position="left">
+<div data-intro="Click legend items to show/hide series" data-position="right">
+<div class="benchmark-chart-container">
+<canvas data-chart="line">
+N,100,1K,10K,100K,1M,10M
+Jedi,         1   , 1   , 1  , 1   , 1    , 1
+Overlined, 1.012312,    0.995069647,    0.920883127,    0.933117588,    0.979602786,    0.97037962
+<!-- 
+{ 
+ "data" : {
+  "datasets" : [
+  { 
+    "backgroundColor": "rgba(66,66,66,0.35)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": -30, "hachureGap": 9, "fillWeight": 0.3	}
+  },
+  { 
+    "backgroundColor": "rgba(33,220,33,.9)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": 60, "hachureGap": 3	}
+  }  
+  ]
+ },
+ "options": {
+    "title": { "text": "AVX2 Overlined Sorting - Scaled to Jedi", "display": true },
+    "scales": { 
+      "yAxes": [{
+       "ticks": {
+         "fontFamily": "Indie Flower",
+         "min": 0.90, 
+         "callback": "ticksPercent"
+        },
+        "scaleLabel": {
+          "labelString": "Scaling (%)",
+          "display": true
+        }
+      }]
+    }
+ },
+ "defaultOptions": {{ page.chartjs | jsonify }}
+}
+--> </canvas>
+
+</div>
+</div>
+</div>
+</div>
+</div>
+
+{% endcodetab %}
+
+{% codetab <i class='glyphicon glyphicon-stats'></i> Time/N %}
+
+<div>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
+<div data-intro="Size of the sorting problem, 10..10,000,000 in powers of 10" data-position="bottom">
+<div data-intro="Time in nanoseconds spent sorting per element. Array.Sort (solid gray) is the baseline, again" data-position="left">
+<div data-intro="Click legend items to show/hide series" data-position="right">
+<div class="benchmark-chart-container">
+<canvas data-chart="line">
+N,100,1K,10K,100K,1M,10M
+Jedi, 19.4547,  20.8907,  24.1415,  26.7816,  23.6249,  25.3966
+Aligned, 20.092,  20.7878,  22.2315,  24.9904,  23.143,  24.6443
+
+<!-- 
+{ 
+ "data" : {
+  "datasets" : [
+  { 
+    "backgroundColor": "rgba(66,66,66,0.35)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": -30, "hachureGap": 9, "fillWeight": 0.3	}
+  },
+  { 
+    "backgroundColor": "rgba(33,220,33,.9)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": 60, "hachureGap": 3	}
+  }
+  ]
+ },
+ "options": {
+    "title": { "text": "AVX2 Jedi Sorting + Overlined - log(Time/N)", "display": true },
+    "scales": { 
+      "yAxes": [{ 
+        "type": "logarithmic",
+        "ticks": {
+          "min": 15,
+          "max": 28,
+          "callback": "ticksNumStandaard",
+          "fontFamily": "Indie Flower"          
+        },
+        "scaleLabel": {
+          "labelString": "Time/N (ns)",
+          "fontFamily": "Indie Flower",
+          "display": true
+        }
+      }]
+    }
+ },
+ "defaultOptions": {{ page.chartjs | jsonify }}
+}
+--> </canvas>
+
+</div>
+</div>
+</div>
+</div>
+</div>
+{% endcodetab %}
+
+{% codetab <i class='glyphicon glyphicon-list-alt'></i> Benchmarks %}
+
+<div>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
+<table class="table datatable"
+  data-json="../_posts/Bench.BlogPt5_2_Int32_-report.datatable.json"
+  data-id-field="name"
+  data-pagination="false"
+  data-page-list="[9, 18]"
+  data-intro="Each row in this table represents a benchmark result" data-position="left"
+  data-show-pagination-switch="false">
+  <thead data-intro="The header can be used to sort/filter by clicking" data-position="right">
+    <tr>
+        <th data-field="TargetMethodColumn.Method" data-sortable="true"
+         data-filter-control="select">
+          <span
+              data-intro="The name of the benchmarked method"
+              data-position="top">
+            Method<br/>Name
+          </span>
+        </th>
+        <th data-field="N" data-sortable="true"
+            data-value-type="int" data-filter-control="select">
+            <span
+              data-intro="The size of the sorting problem being benchmarked (# of integers)"
+              data-position="top">
+            Problem<br/>Size
+            </span>
+        </th>
+        <th data-field="TimePerNDataTable" data-sortable="true"
+            data-value-type="float2-interval-muted">
+            <span
+              data-intro="Time in nanoseconds spent sorting each element in the array (with confidence intervals in parenthesis)"
+              data-position="top">
+              Time /<br/>Element (ns)
+            </span>
+        </th>
+        <th data-field="RatioDataTable" data-sortable="true"
+            data-value-type="inline-bar-horizontal-percentage">
+            <span data-intro="Each result is scaled to its baseline (Array.Sort in this case)"
+                  data-position="top">
+                  Scaling
+            </span>
+        </th>
+        <th data-field="Measurements" data-sortable="true" data-value-type="inline-bar-vertical">
+            <span data-intro="Raw benchmark results visualize how stable the result it. Longest/Shortest runs marked with <span style='color: red'>Red</span>/<span style='color: green'>Green</span>" data-position="top">Measurements</span>
+        </th>
+    </tr>
+  </thead>
+</table>
+</div>
+
+{% endcodetab %}
+
+{% codetab <i class='glyphicon glyphicon-info-sign'></i> Setup %}
+
+```bash
+BenchmarkDotNet=v0.12.0, OS=clear-linux-os 32120
+Intel Core i7-7700HQ CPU 2.80GHz (Kaby Lake), 1 CPU, 4 logical and 4 physical cores
+.NET Core SDK=3.1.100
+  [Host]     : .NET Core 3.1.0 (CoreCLR 4.700.19.56402, CoreFX 4.700.19.56404), X64 RyuJIT
+  Job-DEARTS : .NET Core 3.1.0 (CoreCLR 4.700.19.56402, CoreFX 4.700.19.56404), X64 RyuJIT
+
+InvocationCount=3  IterationCount=15  LaunchCount=2
+UnrollFactor=1  WarmupCount=10
+
+$ grep 'stepping\|model\|microcode' /proc/cpuinfo | head -4
+model           : 158
+model name      : Intel(R) Core(TM) i7-7700HQ CPU @ 2.80GHz
+stepping        : 9
+microcode       : 0xb4
+```
+
+{% endcodetab %}
+
+{% endcodetabs %}
+</div>
+
 
 This is great! I chose to compare this to the micro-optimized version rather than the previous aligned version, since both of them revolve around the same basic idea. Getting a 15-20% bump across the board like this is nothing to snicker at!
 
@@ -423,6 +807,8 @@ There is an important caveat to mention about these results, though:
   <object style="margin: auto" type="image/svg+xml" data="../assets/images/latency.svg"></object>
   The small number of cycles we tack on to the memory operations is very real when we compare it to L1/L2 cache latency. But once we compare it to L3 or RAM latency, it becomes abundantly clear why we are seeing diminishing returns for this optimization.
 * The last thing I should probably mention is that I still ended up leaving a few pennies on the floor here: When I partition into the temporary space, I could have done so in such a way that by the time I go back to reading that data as part of copying it back, I could make sure that *those* final reads would also end up being aligned to `Vector256<T>`. I didn't bother doing so, because I think it would have very marginal effects as the current method for copying back the temporary memory is probably already fast enough. I doubt that replacing `Unsafe.CopyUnalignedBlock` with some hand-rolled AVX2 copying code would be greatly beneficial here.
+
+</div>
 
 Finally, for this optimization, we must never forget our moto of trust no one and nothing. Let's double check what's the current state of affairs as far as `perf` is concerned:
 
