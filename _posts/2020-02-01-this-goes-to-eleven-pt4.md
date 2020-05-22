@@ -727,7 +727,7 @@ When the right side has less than `8` elements, we *have to* read from the right
 
 ```csharp
 int* nextPtr;
-if (writeRight - readRight < N) {
+if ((byte *) writeRight - (byte *) readRight < N * sizeof(int)) {
         // ...
 } else {
         // ...
@@ -740,18 +740,6 @@ This branch is just as "correct" as the previous one, but it is less taxing in a
   We've saved an additional 5 bytes worth of opcodes from the main loop!
 * Less data dependencies for the CPU to potentially wait for.  
   (The CPU doesn't have to wait for the `writeLeft`/`readLeft` pointer mutation and subtraction to complete)
-
-<table style="margin-bottom: 0em">
-<tr>
-<td style="border: none; padding-top: 0; padding-bottom: 0; vertical-align: top"><span class="uk-label">Note</span></td>
-<td style="border: none; padding-top: 0; padding-bottom: 0"><div markdown="1">
-Thanks to the branch being simpler, we can get rid of the previous optimization of forcefully casting to `byte *`.  
-The JIT does recognize *this* pattern, and it makes the wiser decision of directly comparing the subtraction result to the constant we provided to it, converted to byte units at JIT time.
-</div>
-</td>
-</tr>
-</table>
-{: .notice--info}
 
 Naturally this ends up slightly faster, and can verify this with BDN once again:
 
