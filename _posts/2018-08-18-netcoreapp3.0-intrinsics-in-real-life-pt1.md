@@ -28,7 +28,7 @@ In order to keep people motivated:
 
 ## The What/Why of Intrinsics
 
-Processor intrinsics are a way to directly embed specific CPU instructions via special, fake method calls that the JIT replaces at code-generation time. Many of these instructions are considered exotic, and normal language syntax does cannot map them cleanly.  
+Processor intrinsics are a way to directly embed specific CPU instructions via special, fake method calls that the JIT replaces at code-generation time. Many of these instructions are considered exotic, and normal language syntax cannot map them cleanly.  
 The general rule is that a single intrinsic "function" becomes a single CPU instruction.
 
 Intrinsics are not really new to the CLR, and staples of .NET rely on having them around. For example, practically all of the methods in the [`Interlocked`](https://docs.microsoft.com/en-us/dotnet/api/system.threading.interlocked?view=netframework-4.7.2) class in `System.Threading` are essentially intrinsics, even if not referred to as such in the documentation. The same holds true for a vast set of vectorized mathematical operations exposed through the types in [`System.Numerics`](https://docs.microsoft.com/en-us/dotnet/api/system.numerics?view=netframework-4.7.2).

@@ -31,7 +31,7 @@ Since there’s a lot to over go over here, I’ve split it up into no less than
 
 I'll start by repeating my own words from the first [blog post where I discussed intrinsics]({% post_url 2018-08-18-netcoreapp3.0-intrinsics-in-real-life-pt1 %}#the-whatwhy-of-intrinsics) in the CoreCLR 3.0 alpha days:
 
-> Processor intrinsics are a way to directly embed specific CPU instructions via special, fake method calls that the JIT replaces at code-generation time. Many of these instructions are considered exotic, and normal language syntax does cannot map them cleanly.  
+> Processor intrinsics are a way to directly embed specific CPU instructions via special, fake method calls that the JIT replaces at code-generation time. Many of these instructions are considered exotic, and normal language syntax cannot map them cleanly.  
 > The general rule is that a single intrinsic "function" becomes a single CPU instruction.
 
 You can go and re-read that introduction if you care for a more general and gentle introduction to processor intrinsics. For this series, we are going to focus on vectorized intrinsics in Intel processors. This is the largest group of CPU specific intrinsics in our processors, and I want to start by showing this by the numbers. I gathered some statistics by processing Intel's own [data-3.4.6.xml](https://software.intel.com/sites/landingpage/IntrinsicsGuide/files/data-3.4.6.xml). This XML file is part of the [Intel Intrinsics Guide](https://software.intel.com/sites/landingpage/IntrinsicsGuide/), an invaluable resource on intrinsics in itself, and the "database" behind the guide. What I learned was that:
