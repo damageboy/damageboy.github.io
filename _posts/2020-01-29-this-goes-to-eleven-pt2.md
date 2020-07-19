@@ -68,7 +68,7 @@ After our short introduction to vectorized intrinsics, we need to discuss SIMD r
 
 Just like scalar CPU registers, SIMD registers have a constant bit-width. In Intel these come at 64, 128, 256 and recently 512 bit wide registers. Unlike scalar registers, though, SIMD registers, end up *containing multiple* data-elements of another primitive type. The same register can and will be used to process a wide-range of primitive data-types, depending on which instruction is using it, as we will shortly demonstrate.
 
-For now, this is all I care to explain about SIMD Registers at the CPU level: We need to be aware of their existence (we'll see them in disassembly dumps anywat), and since we are dealing with high-perfomance code we kind of need to know how many of them exist inside our CPU.
+For now, this is all I care to explain about SIMD Registers at the CPU level: We need to be aware of their existence (we'll see them in disassembly dumps anyway), and since we are dealing with high-perfomance code we kind of need to know how many of them exist inside our CPU.
 
 #### SIMD Intrinsic Types in C\\#
 
@@ -284,7 +284,7 @@ vpermd ymm1, ymm2, ymm1 ; 3 cycles latency
 This post was all about laying the groundwork before this whole mess comes together.  
 Remember, we’re re-implementing QuickSort with AVX2 intrinsics in this series, which for the most part, means re-implementing the partitioning function from our scalar code listing in the previous post.  
 I’m sure wheels are turning in many heads now as you are trying to figure out what comes next…  
-I think it might be a good time as any to end this post and leave you with a suggestion: Try to take a piece of paper or your favorite text editor, and see if you can some cobble up these instructions into something that can partition numbers given a selected pivot.
+I think it might be a good time as any to end this post and leave you with a suggestion: Try to take a piece of paper or your favorite text editor, and see if you can cobble up these instructions into something that can partition numbers given a selected pivot.
 
 When you’re ready, head on to the [next post]({% post_url 2020-01-30-this-goes-to-eleven-pt3 %}) to see how the whole thing comes together, and how fast we can get it to run with a basic version…
 
