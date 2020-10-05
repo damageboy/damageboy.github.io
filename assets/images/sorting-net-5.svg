@@ -1,0 +1,53 @@
+<svg:svg xmlns:svg="http://www.w3.org/2000/svg" width="152" height="98">
+    <svg:desc>
+        CreationDate: Sun Oct  4 22:28:56 2020
+        Creator: perl module Algorithm::Networksort version 1.05.
+    </svg:desc>
+    <svg:title>Network for N=5, using Bose-Nelson Algorithm.</svg:title>
+    <svg:defs>
+        <!-- Define the input lines. -->
+        <svg:g id="inputline" style="fill:none; stroke:black; stroke-width:2" >
+            <svg:desc>Input line.</svg:desc>
+            <svg:circle cx="18" cy="0" r="2" />
+            <svg:line x1="18" y1="0" x2="134" y2="0" />
+            <svg:circle cx="134" cy="0" r="2" />
+        </svg:g>
+        <!-- Now the comparator lines, which come in different lengths. -->
+        <svg:g id="comparator1" style="fill:black; stroke:black; stroke-width:2" >
+            <svg:desc>Comparator size 1.</svg:desc>
+            <svg:circle cx="0" cy="0" r="2" />
+            <svg:line x1="0" y1="0" x2="0" y2="14" />
+            <svg:circle cx="0" cy="14" r="2" />
+        </svg:g>
+        <svg:g id="comparator2" style="fill:black; stroke:black; stroke-width:2" >
+            <svg:desc>Comparator size 2.</svg:desc>
+            <svg:circle cx="0" cy="0" r="2" />
+            <svg:line x1="0" y1="0" x2="0" y2="28" />
+            <svg:circle cx="0" cy="28" r="2" />
+        </svg:g>
+        <svg:g id="comparator3" style="fill:black; stroke:black; stroke-width:2" >
+            <svg:desc>Comparator size 3.</svg:desc>
+            <svg:circle cx="0" cy="0" r="2" />
+            <svg:line x1="0" y1="0" x2="0" y2="42" />
+            <svg:circle cx="0" cy="42" r="2" />
+        </svg:g>
+    </svg:defs>
+
+    <!-- Draw the input lines. -->
+    <svg:use xlink:href="#inputline" y = "21" />
+    <svg:use xlink:href="#inputline" y = "35" />
+    <svg:use xlink:href="#inputline" y = "49" />
+    <svg:use xlink:href="#inputline" y = "63" />
+    <svg:use xlink:href="#inputline" y = "77" />
+
+    <!-- Draw the comparator lines. -->
+    <svg:use xlink:href="#comparator1" x = "27" y = "21" />
+    <svg:use xlink:href="#comparator1" x = "27" y = "63" />
+    <svg:use xlink:href="#comparator2" x = "41" y = "49" />
+    <svg:use xlink:href="#comparator1" x = "55" y = "49" />
+    <svg:use xlink:href="#comparator3" x = "69" y = "21" />
+    <svg:use xlink:href="#comparator2" x = "83" y = "21" />
+    <svg:use xlink:href="#comparator3" x = "97" y = "35" />
+    <svg:use xlink:href="#comparator2" x = "111" y = "35" />
+    <svg:use xlink:href="#comparator1" x = "125" y = "35" />
+</svg:svg>

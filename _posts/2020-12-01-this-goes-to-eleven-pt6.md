@@ -13,8 +13,7 @@ header:
       url: "https://github.com/damageboy/vxsort"
     - label: "Nuget"
       url: "https://www.nuget.org/packages/VxSort"
-hidden: true
-published: false
+published: true
 date: 2020-02-03 05:22:28 +0300
 classes: wide
 #categories: coreclr intrinsics vectorization quicksort sorting
@@ -24,14 +23,94 @@ I ended up going down the rabbit hole re-implementing array sorting with AVX2 in
 
 Since there’s a lot to go over here, I’ll split it up into a few parts:
 
-1. In [part 1]({% post_url 2020-01-28-this-goes-to-eleven-pt1 %}), we did a short refresher on `QuickSort` and how it compares to `Array.Sort`. If you don’t need any refresher, you can skip over it and get right down to part 2 and onwards , although I really recommend skimming through, mostly because I’ve got really good visualizations for that should be in the back of everyone’s mind as we’ll be dealing with vectorization & optimization later.
-2. In [part 2]({% post_url 2020-01-29-this-goes-to-eleven-pt2 %}), we go over the basics of Vectorized HW Intrinsics, discussed vector types, and a handful of vectorized instructions we’ll actually be using in part 3, but we still will not be sorting anything.
-3. In [part 3]({% post_url 2020-01-30-this-goes-to-eleven-pt3 %}) we go through the initial code for the vectorized sorting and we’ll finally start seeing some payoff. We’ll finish with some agony courtesy of CPU’s Branch Predictor, just so we don't get too cocky.
-4. In this part, we go over a handful of optimization approaches that I attempted trying to get the vectorized partition to run faster, we'll see what worked and what didn't.
-5. In part 5, we’ll see how we can almost get rid of 100% of the remaining scalar code, by implementing small-constant size array sorting. We’ll use, drum roll…, yet more AVX2 vectorization and gain a considerable amount of performance / efficiency in the process.
-6. Finally, in part 6, I’ll list the outstanding stuff / ideas I have for getting more juice and functionality out of my vectorized code.
+1. In [part 1]({% post_url 2020-01-28-this-goes-to-eleven-pt1 %}), we start with a refresher on `QuickSort` and how it compares to `Array.Sort()`.
+2. In [part 2]({% post_url 2020-01-29-this-goes-to-eleven-pt2 %}), we go over the basics of vectorized hardware intrinsics, vector types, and go over a handful of vectorized instructions we’ll use in part 3. We still won't be sorting anything.
+3. In [part 3]({% post_url 2020-01-30-this-goes-to-eleven-pt3 %}), we go through the initial code for the vectorized sorting, and start seeing some payoff. We finish agonizing courtesy of the CPU’s branch predictor, throwing a wrench into our attempts.
+4. In [part 4]({% post_url 2020-02-01-this-goes-to-eleven-pt4 %}), we go over a handful of optimization approaches that I attempted trying to get the vectorized partition to run faster, seeing what worked and what didn't.
+5. In [part 5]({% post_url 2020-02-02-this-goes-to-eleven-pt5 %}), we'll take a deep dive into how to deal with memory alignment issues.
+6. In part 6, we’ll take a pause from the vectorized partitioning, to get rid of almost 100% of the remaining scalar code, by implementing small, constant size array sorting with yet more AVX2 vectorization.
+7. In part 7, We'll circle back and try to deal with a nasty slowdown left in our vectorized partitioning code
+8. In part 8, I'll tell you the sad story of a very twisted optimization I managed to pull off while failing miserably at the same time.
+9. In part 9, I'll try some algorithmic improvements to milk those last drops of perf, or at least those that I can think of, from this code.
 
-## (Trying) to squeeze some more vectorized juice
+## And now for something completely different
+
+So far, in this never ending series, we started off with a non-vectorized version of Introspective-sort, for benchmark/reference purposes, and gone all the way to having a pretty decently vectorized and sped-up partitioning function. All this work was solely focused on the *partitioning* aspect of out sorter. If you recall, any decent quick-sort-ish function (e.g. .NET own `Array.Sort`, C++'s `std::sort`) is normally built as a hybrid sorter: mixing up various approaches depending on the sort problem size. While its been quite a journey for the partitioning part of this sorter thus far: if you recall, we've started with a very impressive 2.7x speed up in the end of part 3 of this series, while managing to squeeze a lot of perf our of this one partitioning function, just by staring at it really hard (and then some...), and managed to speed the whole thing up to roughly 3.5x by doing so. But we should remember, that even for our first vectorized version, insertion-sort, which was our small-array sorting apparatus was already taking a very considerable amount of our total runtime. It was already around 23% of the total runtime for sorting 1 million elements before we started hammering out the partitioning function. What about now? Lets fire up our trusty linux `perf` tool to figure out what we're dealing with:
+
+```bash
+$ COMPlus_PerfMapEnabled=1  perf record -F max -e instructions ./Example \
+       --type-list DoublePumpedNaive --size-list 1000000
+...
+$ perf report --stdio -F overhead,sym | head -15
+...
+# Overhead  Symbol
+    65.66%  [.] ... ::VectorizedPartitionInPlace(int32*,int32*,int32*)[Optimized]
+    22.43%  [.] ... ::InsertionSort(!!0*,!!0*)[Optimized]
+     5.43%  [.] ... ::QuickSortInt(int32*,int32*,int32*,int32*)[OptimizedTier1]
+     4.00%  [.] ... ::Memmove(uint8&,uint8&,uint64)[OptimizedTier1]
+```
+
+As fun as focusing on vectorizing the partitioning aspect of the sort was, it is important to remember the law of diminishing returns, or alternatively [Amdhal's Law](https://en.wikipedia.org/wiki/Amdahl%27s_law) which reminds us, in the case of our sorting algorithm, that even if we end up improving the partitioning more and more, we will still be limited by the speed of the insertion sort. We've neglected, thus far, to pay any substantial attention to the small-sorting aspect of our algorithm, and it has become a relative weight on our necks.
+
+## Vectorizing Small-Sorting
+
+Thankfully, there are quite a lot of options if "all" we want to do if sort a small set of numbers, with a final/maximal size. For one, we're not hand-cuffed anymore the the harsh memory-allocation constraints of having to implement in-place sorting. We can always weasel our way out of it, by allocating a small set of elements (tens-few thousands) if we have to, for pure speed. Let's consider our options here:
+
+* [Counting Sort](https://en.wikipedia.org/wiki/Counting_sort)
+* [Radix Sort](https://en.wikipedia.org/wiki/Radix_sort)
+* [Bitonic Sort](https://en.wikipedia.org/wiki/Bitonic_sorter)
+
+For simplicity reasons, I've decided to forgo using Counting Sort and Radix Sort: The former might be perfect for sorting multiple types very quickly, but would only be applicable for small **ranges** of small numbers, rather than small array; in other words, we not only need to ensure we have a small number of elements to keep the allocation size reasonable, we have to also ensure the range between the smallest and largest number is low to begin with. That's asking quite a lot. As for Radix-Sort, I'm a great fan of the algorithm, but it has it's own set of unique problems when it comes to generalized sorting: Dealing with floating point numbers is [not trivial](http://codercorner.com/RadixSortRevisited.htm), to begin with, and while it does not impose limitations on the range within the array we are sorting, there is a common step to both Radix and Counting Sort that would mean we need to have the ability to issue scattered writes to memory.  
+Unfortunately, scattered writes are not a part of AVX2 at all! AVX2 does support [scattered reading](https://software.intel.com/sites/landingpage/IntrinsicsGuide/#!=undefined&techs=AVX2&text=_mm_i32gather_epi32) from memory, but nothing when it comes to writing. For scattered writing we'd need to use AVX512, which means that in 2020, a large number of x86 machines simply don't have it (All of AMD, and most of the Intel product line in pure market-share numbers). Now in true fairness, we implement the relevant part of Radix/Couting sort with scalar code, but my gut told me I should go look elsewhere, if my minimal target is AVX2, and so we arrive at...
+
+## Bitonic Sorting
+
+### Sorting Networks
+
+Bitonic Merge Sort is a parallel sorting algorithm that can be used to construct a sorting network, which is fascinating topic on its own; first studied in 1954, and filed as [patent US3029413A](https://patents.google.com/patent/US3029413A/en) in 1957 by [Daniel G O'connor](https://patents.google.com/?inventor=Daniel+G+O'connor) & [Raymond J Nelson](https://patents.google.com/?inventor=Raymond+J+Nelson).  
+But what is a sorting network? To quote the great Donald E. Knuth, from his 1968 book "The Art of Computer Programming, Volume 3", where on section 5.4.3 the concept of "Networks for Sorting" is succinctly defined:
+
+> ...to insist on an *oblivious* sequence of comparisons, in the sense that whenever we compare K<sub>i</sub> versus K<sub>j</sub>, the subsequent comparisons for the case K<sub>i</sub> < K<sub>j</sub> are exactly the same as for the case K<sub>i</sub> > K<sub>j</sub>, but with *i* and <u>j</u> interchanged
+
+While the definition: a sequence (network) of independent comparisons (and swaps) may seem deceivingly simple, the theory behind constructing such a network is very deep and complex. More to the point, testing a sorting network is indeed a working sorting network is known to be a co-NP-complete problem. More to the point, since some of the comparisons in a given network can be parallelized, while other have to be serialized, for sorting networks, two optimization "targets" can be considered: 
+
+* The optimal size target: attempting to find a network with the minimum number of comparators
+* The optimal depth target: attempting to find a network with the minimum number of layers, e.g.
+
+Here is table, from this [excellent paper](https://arxiv.org/pdf/1507.01428.pdf), from 2015, giving the depth (e.g. # of layers of independent comparators required) and the number of comparisons required to sort a given
+
+| *n*                                                    | 1    | 2    | 3    | 4    | 5    | 6    | 7    | 8    | 9    | 10   | 11   | 12   | 13           | 14           | 15           | 16           | 17           |
+| :----------------------------------------------------- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ------------ | ------------ | ------------ | ------------ | ------------ |
+| Depth                                                  | 0    | 1    | 3    | 3    | 5    | 5    | 6    | 6    | 7    | 7    | 8    | 8    | 9            | 9            | 9            | 9            | 10           |
+| Size, upper bound<br />*(lower bound, when different)* | 0    | 1    | 3    | 5    | 9    | 12   | 16   | 19   | 25   | 29   | 35   | 39   | 45<br />*43* | 51<br />*47* | 56<br />*51* | 60<br />*55* | 71<br />*60* |
+
+{: .notice--info}
+
+It should be noted, that it was only in December 7th, 2019, that [Jannis Harder](https://twitter.com/jix_) [proved](https://github.com/jix/sortnetopt) the lower-bound for n=11 and improved the lower-bound for n=12.
+
+It is common practice to represent comparator networks graphically as a Knuth diagram, as shown in the animated figure below. Inputs enter from the left following their respective channels, depicted as horizontal lines, with values traveling from left to right, and comparators as vertical lines connecting two channels, performing a compare and swap operation from the top dot to the bottom one. The layers are made explicit, separated by dashed vertical lines. 
+
+<object class="animated-border" width="100%" type="image/svg+xml" data="/assets/images/sorting-network-5-31415-as-paths.svg"></object>
+
+In the above figure, as the sequence `3, 1, 4, 1, 5` enters the sorting network from the left, comparisons resulting in a swap are marked with the numbers swapped appearing in <span style="color:red"><b>red</b></span>, while comparison not resulting in a swap appear with the color <span style="color:#00aa00"><b>green</b></span>. The sorting network in above, constructed in 5 layers with a total of 9 comparators, is both size optimal and depth-optimal. However, in general, there is not always a single network that is optimal for both criteria.
+
+### Bitonic Merge Sort
+
+Bitonic Merge Sorting is an algorithm that *creates* efficient (even if *not the most* efficient) sorting networks. The resulting sorting network consists of $$ O(n\log ^{2}(n))$$ comparators and have a depth of $$O(\log ^{2}(n))$$, where is $$n$$ the number of items to be sorted. In other words, we can use this algorithm to *create* a sequence of comparisons, with a very high degree of parallelism to completely sort an input array. For example, for an input size of 1,024 elements, the depth of the sorting network can be as low as $$ \log ^{2}(n) = \log ^{2}(1024) = 10$$. This has made Bitonic sorting extremely popular on GPUs where performing 1024 and more comparisons completely in parallel is not in the realm of pure imagination. Even though we are not writing GPU code here, but merely vectorized CPU code, Bitonic sorting is still a very beneficial scheme for us too: We can perform `X` vector wide comparisons in a single cycle (where for 32-bit elements `X` is  `8` or `16` elements with AVX2 and AVX512 respectively on an Intel vectorized CPU). Beyond that, there is still additional instruction-level parallelism to be squeezed here: since Bitonic sort networks *ensure* that we have $$ n $$ parallel comparisons to be perform at every level of the network, this makes the life of a pipelined architecture performing instruction scheduling for such an algorithm especially easy: all those comparisons, even when they do not fit within a single vectorized CPU register can *still* be issued and dispatched completely independently within the CPU with no data dependencies whatsoever; this means that our processor is free to process these operations with no bubbles in its pipeline at all!
+
+Bitonic Merge Sorting was invented by [Ken Batcher](https://en.wikipedia.org/wiki/Ken_Batcher) in 1964, while he worked on a parallel computer for the... Goodyear Aerospace corporation (yes, the Goodyear that made that... Zeppelin...). Unfortunately for me, I could only find a [later paper]() is from 1968, where the basic idea is discussed:
+
+> We will call a sequence of numbers bitonic if it is the juxtaposition of two monotonic sequences, one ascending, the other descending. We also say it re-mains bitonic if it is split anywhere and the two parts interchanged. Since any two monotonic sequences can be put together to form a bitonic sequence a network which rearranges a bitonic sequence into monotonic order (a bitonic sorter) can be used as a merging network.
+
+Let's try to reconstruct this in plain(er) English: A bitonic sorter works by getting a list of numbers split into two *monotonic sequences*, or two sub-lists of ascending numbers. Once we have two such lists, it can merge them (hence the name: Bitonic Merge Sorting)
+
+
+
+
+
+
+
+
 
 I thought it would be nice to show a bunch of things I ended up trying to improve performance.
 I tried to keep most of these experiments in separate implementations, both the ones that yielded positive results and the failures. These can be seen in the original repo under the [Happy](https://github.com/damageboy/VxSort/tree/research/VxSortResearch/Unstable/AVX2/Happy) and [Sad](https://github.com/damageboy/VxSort/tree/research/VxSortResearch/Unstable/AVX2/Sad) folders.
@@ -94,7 +173,27 @@ The same unrolling technique can be used to mitigate our bad speculation, to som
 
 I won't show the entire code listing for this, as it really ended up blowing up, and complicating the code. You can look into it here. What I will show is where we are after unrolling by 4 vectorized blocks, we are finally able to alleviate our mis-prediction pains for the first time:
 
-### Out of juice?
+### Out of juice?I ended up going down the rabbit hole re-implementing array sorting with AVX2 intrinsics, and there's no reason I should go down alone.
+
+Since there’s a lot to go over here, I’ll split it up into a few parts:
+
+In part 1, we start with a refresher on QuickSort and how it compares to Array.Sort().
+
+In part 2, we go over the basics of vectorized hardware intrinsics, vector types, and go over a handful of vectorized instructions we’ll use in part 3. We still won't be sorting anything.
+
+In part 3, we go through the initial code for the vectorized sorting, and start seeing some payoff. We finish agonizing courtesy of the CPU’s branch predictor, throwing a wrench into our attempts.
+
+In part 4, we go over a handful of optimization approaches that I attempted trying to get the vectorized partition to run faster, seeing what worked and what didn't.
+
+In this part, we'll take a deep dive into how to deal with memory alignment issues.
+
+In part 6, we’ll take a pause from the vectorized partitioning, to get rid of almost 100% of the remaining scalar code, by implementing small, constant size array sorting with yet more AVX2 vectorization.
+
+In part 7, We'll circle back and try to deal with a nasty slowdown left in our vectorized partitioning code
+
+In part 8, I'll tell you the sad story of a very twisted optimization I managed to pull off while failing miserably at the same time.
+
+In part 9, I'll try some algorithmic improvements to milk those last drops of perf, or at least those that I can think of, from this code.
 
 Well, I'm personally out of ideas about to optimize the vectorized code for now.
 
