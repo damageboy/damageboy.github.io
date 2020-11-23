@@ -496,7 +496,7 @@ The whole attempt ends up as a mediocre improvement, so it would seem:
 * We're are seeing a speedup/improvement, in the high counts.
 * We seem to be slowing down due to the higher scalar operation count, in the low problem sizes.
 
-It's kind of a mixed bad, and perhaps slightly unimpressive at first glance. However, when we stop to remember that we somehow managed both to speed up the function while doubling the amount of scalar work done, the interpretation of the results becomes more nuanced: The pure benefit from alignment itself is larger than what the results are showing right now since it's being masked, to some extent, by the extra scalar work we tacked on. If only there was a way we could skip that scalar work all together... If only there was a way... If only...
+It's kind of a mixed bag, and perhaps slightly unimpressive at first glance. However, when we stop to remember that we somehow managed both to speed up the function while doubling the amount of scalar work done, the interpretation of the results becomes more nuanced: The pure benefit from alignment itself is larger than what the results are showing right now since it's being masked, to some extent, by the extra scalar work we tacked on. If only there was a way we could skip that scalar work all together... If only there was a way... If only...
 </div>
 
 ### (Re-)Partitioning overlapping regions: :+1: :+1:
