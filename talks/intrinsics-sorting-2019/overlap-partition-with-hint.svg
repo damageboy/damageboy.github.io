@@ -1,0 +1,1309 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   inkscape:version="1.0 (1.0+r73+1)"
+   sodipodi:docname="overlap-partition-with-hint.svg"
+   version="1.1"
+   id="el_KrSQfpjQ0"
+   xml:space="preserve"
+   viewBox="0 0 856 129"><sodipodi:namedview
+   inkscape:current-layer="el_KrSQfpjQ0"
+   inkscape:window-maximized="0"
+   inkscape:window-y="34"
+   inkscape:window-x="45"
+   inkscape:cy="128.80208"
+   inkscape:cx="378.20283"
+   inkscape:zoom="1.5711648"
+   showgrid="false"
+   id="namedview3244"
+   inkscape:window-height="1346"
+   inkscape:window-width="2530"
+   inkscape:pageshadow="2"
+   inkscape:pageopacity="0"
+   guidetolerance="10"
+   gridtolerance="10"
+   objecttolerance="10"
+   borderopacity="1"
+   bordercolor="#666666"
+   pagecolor="#ffffff" />
+<defs
+   id="defs6691">
+  <style
+   id="style6689"
+   type="text/css">
+    @import url('/assets/css/cascadia.css');
+ </style>
+
+
+</defs>
+
+
+<style
+   id="style6693">@-webkit-keyframes kf_el_Ide9xthCV6S_an_mq4TkOtPj{0%{-webkit-transform: translate(7.234375px, 230.25px) translate(-7.234375px, -230.25px) translate(0px, 100px);transform: translate(7.234375px, 230.25px) translate(-7.234375px, -230.25px) translate(0px, 100px);}50%{-webkit-transform: translate(7.234375px, 230.25px) translate(-7.234375px, -230.25px) translate(0px, 100px);transform: translate(7.234375px, 230.25px) translate(-7.234375px, -230.25px) translate(0px, 100px);}62.50%{-webkit-transform: translate(7.234375px, 230.25px) translate(-7.234375px, -230.25px) translate(0px, 0px);transform: translate(7.234375px, 230.25px) translate(-7.234375px, -230.25px) translate(0px, 0px);}100%{-webkit-transform: translate(7.234375px, 230.25px) translate(-7.234375px, -230.25px) translate(0px, 0px);transform: translate(7.234375px, 230.25px) translate(-7.234375px, -230.25px) translate(0px, 0px);}}@keyframes kf_el_Ide9xthCV6S_an_mq4TkOtPj{0%{-webkit-transform: translate(7.234375px, 230.25px) translate(-7.234375px, -230.25px) translate(0px, 100px);transform: translate(7.234375px, 230.25px) translate(-7.234375px, -230.25px) translate(0px, 100px);}50%{-webkit-transform: translate(7.234375px, 230.25px) translate(-7.234375px, -230.25px) translate(0px, 100px);transform: translate(7.234375px, 230.25px) translate(-7.234375px, -230.25px) translate(0px, 100px);}62.50%{-webkit-transform: translate(7.234375px, 230.25px) translate(-7.234375px, -230.25px) translate(0px, 0px);transform: translate(7.234375px, 230.25px) translate(-7.234375px, -230.25px) translate(0px, 0px);}100%{-webkit-transform: translate(7.234375px, 230.25px) translate(-7.234375px, -230.25px) translate(0px, 0px);transform: translate(7.234375px, 230.25px) translate(-7.234375px, -230.25px) translate(0px, 0px);}}@-webkit-keyframes kf_el_Ide9xthCV6S_an_IRqIFCBDf{0%{opacity: 0;}50%{opacity: 0;}56.25%{opacity: 1;}100%{opacity: 1;}}@keyframes kf_el_Ide9xthCV6S_an_IRqIFCBDf{0%{opacity: 0;}50%{opacity: 0;}56.25%{opacity: 1;}100%{opacity: 1;}}@-webkit-keyframes kf_el_6cJsgTcGtln_an_M03tLExcE{0%{-webkit-transform: translate(105px, 215.25px) translate(-105px, -215.25px) translate(0px, 100px);transform: translate(105px, 215.25px) translate(-105px, -215.25px) translate(0px, 100px);}43.75%{-webkit-transform: translate(105px, 215.25px) translate(-105px, -215.25px) translate(0px, 100px);transform: translate(105px, 215.25px) translate(-105px, -215.25px) translate(0px, 100px);}56.25%{-webkit-transform: translate(105px, 215.25px) translate(-105px, -215.25px) translate(0px, 0px);transform: translate(105px, 215.25px) translate(-105px, -215.25px) translate(0px, 0px);}100%{-webkit-transform: translate(105px, 215.25px) translate(-105px, -215.25px) translate(0px, 0px);transform: translate(105px, 215.25px) translate(-105px, -215.25px) translate(0px, 0px);}}@keyframes kf_el_6cJsgTcGtln_an_M03tLExcE{0%{-webkit-transform: translate(105px, 215.25px) translate(-105px, -215.25px) translate(0px, 100px);transform: translate(105px, 215.25px) translate(-105px, -215.25px) translate(0px, 100px);}43.75%{-webkit-transform: translate(105px, 215.25px) translate(-105px, -215.25px) translate(0px, 100px);transform: translate(105px, 215.25px) translate(-105px, -215.25px) translate(0px, 100px);}56.25%{-webkit-transform: translate(105px, 215.25px) translate(-105px, -215.25px) translate(0px, 0px);transform: translate(105px, 215.25px) translate(-105px, -215.25px) translate(0px, 0px);}100%{-webkit-transform: translate(105px, 215.25px) translate(-105px, -215.25px) translate(0px, 0px);transform: translate(105px, 215.25px) translate(-105px, -215.25px) translate(0px, 0px);}}@-webkit-keyframes kf_el_6cJsgTcGtln_an_ueGqnuXA2{0%{opacity: 0;}43.75%{opacity: 0;}50%{opacity: 1;}100%{opacity: 1;}}@keyframes kf_el_6cJsgTcGtln_an_ueGqnuXA2{0%{opacity: 0;}43.75%{opacity: 0;}50%{opacity: 1;}100%{opacity: 1;}}@-webkit-keyframes kf_el_fBNIyiSw3fF_an_6d9HveHUh{0%{-webkit-transform: translate(150.375px, 173.25px) translate(-150.375px, -173.25px) translate(0px, 100px);transform: translate(150.375px, 173.25px) translate(-150.375px, -173.25px) translate(0px, 100px);}25%{-webkit-transform: translate(150.375px, 173.25px) translate(-150.375px, -173.25px) translate(0px, 100px);transform: translate(150.375px, 173.25px) translate(-150.375px, -173.25px) translate(0px, 100px);}37.50%{-webkit-transform: translate(150.375px, 173.25px) translate(-150.375px, -173.25px) translate(0px, 0px);transform: translate(150.375px, 173.25px) translate(-150.375px, -173.25px) translate(0px, 0px);}100%{-webkit-transform: translate(150.375px, 173.25px) translate(-150.375px, -173.25px) translate(0px, 0px);transform: translate(150.375px, 173.25px) translate(-150.375px, -173.25px) translate(0px, 0px);}}@keyframes kf_el_fBNIyiSw3fF_an_6d9HveHUh{0%{-webkit-transform: translate(150.375px, 173.25px) translate(-150.375px, -173.25px) translate(0px, 100px);transform: translate(150.375px, 173.25px) translate(-150.375px, -173.25px) translate(0px, 100px);}25%{-webkit-transform: translate(150.375px, 173.25px) translate(-150.375px, -173.25px) translate(0px, 100px);transform: translate(150.375px, 173.25px) translate(-150.375px, -173.25px) translate(0px, 100px);}37.50%{-webkit-transform: translate(150.375px, 173.25px) translate(-150.375px, -173.25px) translate(0px, 0px);transform: translate(150.375px, 173.25px) translate(-150.375px, -173.25px) translate(0px, 0px);}100%{-webkit-transform: translate(150.375px, 173.25px) translate(-150.375px, -173.25px) translate(0px, 0px);transform: translate(150.375px, 173.25px) translate(-150.375px, -173.25px) translate(0px, 0px);}}@-webkit-keyframes kf_el_fBNIyiSw3fF_an_ozbSS8v2U{0%{opacity: 0;}25%{opacity: 0;}31.25%{opacity: 1;}100%{opacity: 1;}}@keyframes kf_el_fBNIyiSw3fF_an_ozbSS8v2U{0%{opacity: 0;}25%{opacity: 0;}31.25%{opacity: 1;}100%{opacity: 1;}}@-webkit-keyframes kf_el_aDrAPLs2DAQ_an_dIjTLqO_B{0%{-webkit-transform: translate(105.75px, 57.375px) translate(-105.75px, -57.375px) translate(0px, -100px);transform: translate(105.75px, 57.375px) translate(-105.75px, -57.375px) translate(0px, -100px);}12.50%{-webkit-transform: translate(105.75px, 57.375px) translate(-105.75px, -57.375px) translate(0px, 0px);transform: translate(105.75px, 57.375px) translate(-105.75px, -57.375px) translate(0px, 0px);}100%{-webkit-transform: translate(105.75px, 57.375px) translate(-105.75px, -57.375px) translate(0px, 0px);transform: translate(105.75px, 57.375px) translate(-105.75px, -57.375px) translate(0px, 0px);}}@keyframes kf_el_aDrAPLs2DAQ_an_dIjTLqO_B{0%{-webkit-transform: translate(105.75px, 57.375px) translate(-105.75px, -57.375px) translate(0px, -100px);transform: translate(105.75px, 57.375px) translate(-105.75px, -57.375px) translate(0px, -100px);}12.50%{-webkit-transform: translate(105.75px, 57.375px) translate(-105.75px, -57.375px) translate(0px, 0px);transform: translate(105.75px, 57.375px) translate(-105.75px, -57.375px) translate(0px, 0px);}100%{-webkit-transform: translate(105.75px, 57.375px) translate(-105.75px, -57.375px) translate(0px, 0px);transform: translate(105.75px, 57.375px) translate(-105.75px, -57.375px) translate(0px, 0px);}}@-webkit-keyframes kf_el_2wZbRpJG8_V_an_vSCZL8n7Y{0%{-webkit-transform: translate(150px, 158.25px) translate(-150px, -158.25px) translate(0px, 100px);transform: translate(150px, 158.25px) translate(-150px, -158.25px) translate(0px, 100px);}18.75%{-webkit-transform: translate(150px, 158.25px) translate(-150px, -158.25px) translate(0px, 100px);transform: translate(150px, 158.25px) translate(-150px, -158.25px) translate(0px, 100px);}31.25%{-webkit-transform: translate(150px, 158.25px) translate(-150px, -158.25px) translate(0px, 0px);transform: translate(150px, 158.25px) translate(-150px, -158.25px) translate(0px, 0px);}100%{-webkit-transform: translate(150px, 158.25px) translate(-150px, -158.25px) translate(0px, 0px);transform: translate(150px, 158.25px) translate(-150px, -158.25px) translate(0px, 0px);}}@keyframes kf_el_2wZbRpJG8_V_an_vSCZL8n7Y{0%{-webkit-transform: translate(150px, 158.25px) translate(-150px, -158.25px) translate(0px, 100px);transform: translate(150px, 158.25px) translate(-150px, -158.25px) translate(0px, 100px);}18.75%{-webkit-transform: translate(150px, 158.25px) translate(-150px, -158.25px) translate(0px, 100px);transform: translate(150px, 158.25px) translate(-150px, -158.25px) translate(0px, 100px);}31.25%{-webkit-transform: translate(150px, 158.25px) translate(-150px, -158.25px) translate(0px, 0px);transform: translate(150px, 158.25px) translate(-150px, -158.25px) translate(0px, 0px);}100%{-webkit-transform: translate(150px, 158.25px) translate(-150px, -158.25px) translate(0px, 0px);transform: translate(150px, 158.25px) translate(-150px, -158.25px) translate(0px, 0px);}}@-webkit-keyframes kf_el_2wZbRpJG8_V_an_9UrQqY2Il{0%{opacity: 0;}18.75%{opacity: 0;}25%{opacity: 1;}100%{opacity: 1;}}@keyframes kf_el_2wZbRpJG8_V_an_9UrQqY2Il{0%{opacity: 0;}18.75%{opacity: 0;}25%{opacity: 1;}100%{opacity: 1;}}@-webkit-keyframes kf_el_aDrAPLs2DAQ_an_VxYUKIHIe{0%{opacity: 0;}6.25%{opacity: 1;}100%{opacity: 1;}}@keyframes kf_el_aDrAPLs2DAQ_an_VxYUKIHIe{0%{opacity: 0;}6.25%{opacity: 1;}100%{opacity: 1;}}#el_KrSQfpjQ0 *{-webkit-animation-duration: 8s;animation-duration: 8s;-webkit-animation-iteration-count: infinite;animation-iteration-count: infinite;-webkit-animation-play-state: paused;animation-play-state: paused;-webkit-animation-timing-function: cubic-bezier(0, 0, 1, 1);animation-timing-function: cubic-bezier(0, 0, 1, 1);}#el_wc0YklI6WB{-webkit-transform: matrix(1.3333333,0,0,1.3333333,-2.145833,-52.277602);transform: matrix(1.3333333,0,0,1.3333333,-2.145833,-52.277602);}#el_k1d0jtpFJS{-webkit-transform: matrix(0.75000002,0,0,0.75000002,-4.3906252,39.208202);transform: matrix(0.75000002,0,0,0.75000002,-4.3906252,39.208202);opacity: 1;fill: #bdd7ee;fill-opacity: 1;fill-rule: evenodd;stroke: none;stroke-width: 1.33333;stop-opacity: 1;}#el_5mX1b0cR66{-webkit-transform: matrix(0.75000002,0,0,0.75000002,-4.3906252,39.208202);transform: matrix(0.75000002,0,0,0.75000002,-4.3906252,39.208202);opacity: 1;fill: #bdd7ee;fill-opacity: 1;fill-rule: evenodd;stroke: none;stroke-width: 1.33333;stop-opacity: 1;}#el_ZrqDj202qt{-webkit-transform: matrix(0.75000002,0,0,0.75000002,-4.3906252,39.208202);transform: matrix(0.75000002,0,0,0.75000002,-4.3906252,39.208202);opacity: 1;fill: #bdd7ee;fill-opacity: 1;fill-rule: evenodd;stroke: none;stroke-width: 1.33333;stop-opacity: 1;}#el_lySaf380ed{-webkit-transform: matrix(0.75000002,0,0,0.75000002,-4.3906252,39.208202);transform: matrix(0.75000002,0,0,0.75000002,-4.3906252,39.208202);opacity: 1;fill: #ddebf7;fill-opacity: 1;fill-rule: evenodd;stroke: none;stroke-width: 1.33333;stop-opacity: 1;}#el_igxYS3G1FC{-webkit-transform: matrix(0.75000002,0,0,0.75000002,-4.3906252,39.208202);transform: matrix(0.75000002,0,0,0.75000002,-4.3906252,39.208202);opacity: 1;fill: #ddebf7;fill-opacity: 1;fill-rule: evenodd;stroke: none;stroke-width: 1.33333;stop-opacity: 1;}#el_7YyHdDhb56{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 9px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_HiyJymMBPV{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 9px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_k5n_DlYmbE{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 9px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_kEcoT7SDTq{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 9px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_OoLXuJ1fMP{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 9px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_J17d-67H7QG{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 9px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_pQwppM3vGZj{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 9px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_fkCbx5Xn8H6{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 9px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_TJK2kAi9eqx{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 9px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_lrOWDHw-ZsS{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 9px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_-KwejIcUTbn{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 9px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_qlSXGbKX8E5{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 9px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_4HuzgThj1CF{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 11px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_0SD5Y1S98l8{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 11px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_LbukR-hUYuQ{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_sGnZZhbIJhZ{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_Ksl6kFPvKiB{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_B56PPDKS6sw{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_5eOM-kB0PxA{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_RwTOMRFe0uZ{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_KafVxG1tghj{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_G5MRulrwtix{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_jcbzzKdLXm3{opacity: 1;fill: none;stroke: #000000;stroke-width: 0.75;stroke-linecap: butt;stroke-linejoin: bevel;stroke-miterlimit: 2;stroke-dasharray: 6.75, 2.25, 2.25, 2.25, 2.25, 2.25;stroke-dashoffset: 75.5;stroke-opacity: 1;stop-opacity: 1;}#el_qQcE1kKQkVt{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_0vJuePRa5vf{opacity: 1;fill: none;stroke: #000000;stroke-width: 0.75;stroke-linecap: butt;stroke-linejoin: bevel;stroke-miterlimit: 2;stroke-dasharray: 6.75, 2.25, 2.25, 2.25, 2.25, 2.25;stroke-dashoffset: 75.5;stroke-opacity: 1;stop-opacity: 1;}#el_fLwwIq5s9Hv{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_4bKrzFcPKGJ{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_AQ3wVnarsKx{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_LwVNPMWKNht{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_u1zIhFGaGfp{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_Xss3a23Gnf0{opacity: 1;fill: none;stroke: #000000;stroke-width: 0.75;stroke-linecap: butt;stroke-linejoin: bevel;stroke-miterlimit: 2;stroke-dasharray: 6.75, 2.25, 2.25, 2.25, 2.25, 2.25;stroke-dashoffset: 75.5;stroke-opacity: 1;stop-opacity: 1;}#el_BsS_72oQiEG{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el__FMji1AX9sl{opacity: 1;fill: none;stroke: #000000;stroke-width: 0.75;stroke-linecap: butt;stroke-linejoin: bevel;stroke-miterlimit: 2;stroke-dasharray: 6.75, 2.25, 2.25, 2.25, 2.25, 2.25;stroke-dashoffset: 75.5;stroke-opacity: 1;stop-opacity: 1;}#el_nNCzoF-oKCM{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_fBNIyiSw3fF{-webkit-transform: translate(0px, -101.24981px);transform: translate(0px, -101.24981px);-webkit-animation-fill-mode: backwards;animation-fill-mode: backwards;opacity: 0;-webkit-animation-name: kf_el_fBNIyiSw3fF_an_ozbSS8v2U;animation-name: kf_el_fBNIyiSw3fF_an_ozbSS8v2U;-webkit-animation-timing-function: cubic-bezier(0, 0, 1, 1);animation-timing-function: cubic-bezier(0, 0, 1, 1);}#el_KDb4hLTU7Zx{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 11px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el__ZOm0hPFtfl{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 11px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_xPZKaAybwFq{opacity: 1;fill: none;stroke: #000000;stroke-width: 0.75;stroke-linecap: butt;stroke-linejoin: bevel;stroke-miterlimit: 2;stroke-dasharray: 1.5, 1.5;stroke-dashoffset: 75.5;stroke-opacity: 1;stop-opacity: 1;}#el_YogbpLIUrtv{opacity: 1;fill: none;stroke: #000000;stroke-width: 0.75;stroke-linecap: butt;stroke-linejoin: bevel;stroke-miterlimit: 2;stroke-dasharray: 1.5, 1.5;stroke-dashoffset: 230;stroke-opacity: 1;stop-opacity: 1;}#el_xrWGb9T3F4R{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 9px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_JBLx6ra5BNB{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 9px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_e96iemIhfWU{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 9px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_py0SOHwxxRd{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 9px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_KpW7nJt5QVx{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 9px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_SQkDxrWyoJq{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 9px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_hedRCJFa40R{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 9px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_JsCUqF-CTus{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 9px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_TCCrO1FQNkH{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 9px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_MUDSkMVC9lc{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 9px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_3iOdTUSJJRQ{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 9px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_HAHuDRF6SgT{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 9px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_Kei0eXMdEXt{opacity: 1;fill: none;stroke: #000000;stroke-width: 0.75;stroke-linecap: butt;stroke-linejoin: bevel;stroke-miterlimit: 2;stroke-dasharray: 1.5, 1.5;stroke-dashoffset: 75.5;stroke-opacity: 1;stop-opacity: 1;}#el_-ly1DjPpDgV{opacity: 1;fill: none;stroke: #000000;stroke-width: 0.75;stroke-linecap: butt;stroke-linejoin: bevel;stroke-miterlimit: 2;stroke-dasharray: 1.5, 1.5;stroke-dashoffset: 75.5;stroke-opacity: 1;stop-opacity: 1;}#el_181dIgdSeYC{opacity: 1;fill: none;stroke: #000000;stroke-width: 0.75;stroke-linecap: butt;stroke-linejoin: bevel;stroke-miterlimit: 2;stroke-dasharray: 1.5, 1.5;stroke-dashoffset: 75.5;stroke-opacity: 1;stop-opacity: 1;}#el_WCw7POpZTKF{opacity: 1;fill: none;stroke: #000000;stroke-width: 0.75;stroke-linecap: butt;stroke-linejoin: bevel;stroke-miterlimit: 2;stroke-dasharray: 1.5, 1.5;stroke-dashoffset: 75.5;stroke-opacity: 1;stop-opacity: 1;}#el_l39-x-99wUS{opacity: 1;fill: none;stroke: #000000;stroke-width: 0.75;stroke-linecap: butt;stroke-linejoin: bevel;stroke-miterlimit: 2;stroke-dasharray: 1.5, 1.5;stroke-dashoffset: 75.5;stroke-opacity: 1;stop-opacity: 1;}#el_6SpZPm0YyXl{opacity: 1;fill: none;stroke: #000000;stroke-width: 0.75;stroke-linecap: butt;stroke-linejoin: bevel;stroke-miterlimit: 2;stroke-dasharray: 1.5, 1.5;stroke-dashoffset: 75.5;stroke-opacity: 1;stop-opacity: 1;}#el_L7wN5ch1ZHk{opacity: 1;fill: none;stroke: #000000;stroke-width: 0.75;stroke-linecap: butt;stroke-linejoin: bevel;stroke-miterlimit: 2;stroke-dasharray: 1.5, 1.5;stroke-dashoffset: 230;stroke-opacity: 1;stop-opacity: 1;}#el_lbCqVCcbO62{opacity: 1;fill: none;stroke: #000000;stroke-width: 0.75;stroke-linecap: butt;stroke-linejoin: bevel;stroke-miterlimit: 2;stroke-dasharray: 1.5, 1.5;stroke-dashoffset: 230;stroke-opacity: 1;stop-opacity: 1;}#el_Ide9xthCV6S{-webkit-transform: translate(0px, -158.24981px);transform: translate(0px, -158.24981px);-webkit-animation-fill-mode: backwards;animation-fill-mode: backwards;opacity: 0;-webkit-animation-name: kf_el_Ide9xthCV6S_an_IRqIFCBDf;animation-name: kf_el_Ide9xthCV6S_an_IRqIFCBDf;-webkit-animation-timing-function: cubic-bezier(0, 0, 1, 1);animation-timing-function: cubic-bezier(0, 0, 1, 1);}#el_FJrNpkzSiHD{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 11px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_gf8ltMWvOZe{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 11px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_chrBELlB0EO{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 11px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_TxL10RGOxb0{font-variant: normal;font-weight: normal;font-stretch: normal;font-size: 11px;font-family: 'Cascadia Code'fill: #000000;fill-opacity: 1;fill-rule: nonzero;stroke: none;stop-opacity: 1;}#el_lb960863hEV{opacity: 1;fill: none;stroke: #000000;stroke-width: 0.75;stroke-linecap: butt;stroke-linejoin: bevel;stroke-miterlimit: 2;stroke-dasharray: 1.5, 1.5;stroke-dashoffset: 75.5;stroke-opacity: 1;stop-opacity: 1;}#el_MnOToXCAPt9{opacity: 1;fill: none;stroke: #000000;stroke-width: 0.75;stroke-linecap: butt;stroke-linejoin: bevel;stroke-miterlimit: 2;stroke-dasharray: 1.5, 1.5;stroke-dashoffset: 230;stroke-opacity: 1;stop-opacity: 1;}#el_2wZbRpJG8_V{-webkit-transform: translate(0px, -86.249805px);transform: translate(0px, -86.249805px);-webkit-animation-fill-mode: backwards;animation-fill-mode: backwards;opacity: 0;-webkit-animation-name: kf_el_2wZbRpJG8_V_an_9UrQqY2Il;animation-name: kf_el_2wZbRpJG8_V_an_9UrQqY2Il;-webkit-animation-timing-function: cubic-bezier(0, 0, 1, 1);animation-timing-function: cubic-bezier(0, 0, 1, 1);}#el_qDpNKS8fYOi{-webkit-transform: translate(0.375px, 46.125px);transform: translate(0.375px, 46.125px);}#el_0yZgRv0AxGT{opacity: 1;fill: #db9d00;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_qs6C5c7vWuS{opacity: 1;fill: url(#pattern4703);fill-opacity: 1;fill-rule: evenodd;stroke: none;stroke-width: 0.999998;stop-opacity: 1;}#el_Io2P7QlXPUb{-webkit-transform: translate(-12.375px, 45px);transform: translate(-12.375px, 45px);}#el_iiApIvmLbeo{opacity: 1;fill: #db9d00;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_nOXscwZp4eH{opacity: 1;fill: url(#pattern4701);fill-opacity: 1;fill-rule: evenodd;stroke: none;stroke-width: 0.999998;stop-opacity: 1;}#el_ElmwT9jcCln{-webkit-transform: translate(231.00049px, 49.1248px);transform: translate(231.00049px, 49.1248px);}#el_xVPEAW8He_S{opacity: 1;fill: #ffc000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stroke-width: 0.999998;stop-opacity: 1;}#el_Zc79B4gHCmR{opacity: 1;fill: url(#pattern4685);fill-opacity: 1;fill-rule: evenodd;stroke: none;stroke-width: 0.999998;stop-opacity: 1;}#el_O993BPHOR9g{-webkit-transform: translate(-7.12452px, 42.7498px);transform: translate(-7.12452px, 42.7498px);}#el_bcd5QPOh-YG{opacity: 1;fill: #ffc000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stroke-width: 0.999998;stop-opacity: 1;}#el_ppjjw3ctGgF{opacity: 1;fill: url(#pattern4666);fill-opacity: 1;fill-rule: evenodd;stroke: none;stroke-width: 0.999998;stop-opacity: 1;}#el_s9VrwrCqBkY{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_5l_BYWAD3ww{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_EG1uJILyUME{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_v9ECZ-RQJgb{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_EU4rLVjZCek{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_d-5y6Y7c5aV{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_xjkbIEJUTNe{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_7dL3fL5tt-M{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_3QNSK9Y-8sa{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_yFe01JTet2D{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_gFkyDE6HW9g{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_Er4rpg82fiY{opacity: 1;fill: none;stroke: #000000;stroke-width: 0.75;stroke-linecap: butt;stroke-linejoin: bevel;stroke-miterlimit: 2;stroke-dasharray: 1.5, 1.5;stroke-dashoffset: 75.5;stroke-opacity: 1;stop-opacity: 1;}#el_6uWhicPGUi9{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_H8UFxFzGrk7{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_kYlFuONnnMR{opacity: 1;fill: none;stroke: #000000;stroke-width: 0.75;stroke-linecap: butt;stroke-linejoin: bevel;stroke-miterlimit: 2;stroke-dasharray: 1.5, 1.5;stroke-dashoffset: 75.5;stroke-opacity: 1;stop-opacity: 1;}#el_DJ5Dd882JS1{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_1Rj8MjisTxE{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_IzvLK-nB6Tu{opacity: 1;fill: none;stroke: #000000;stroke-width: 0.75;stroke-linecap: butt;stroke-linejoin: bevel;stroke-miterlimit: 2;stroke-dasharray: 1.5, 1.5;stroke-dashoffset: 75.5;stroke-opacity: 1;stop-opacity: 1;}#el_dPJjKRM04w5{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_z0HeJE3wj8W{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_6o-r0-UlmX2{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_6cJsgTcGtln{-webkit-transform: translate(0px, -143.24981px);transform: translate(0px, -143.24981px);-webkit-animation-fill-mode: backwards;animation-fill-mode: backwards;opacity: 0;-webkit-animation-name: kf_el_6cJsgTcGtln_an_ueGqnuXA2;animation-name: kf_el_6cJsgTcGtln_an_ueGqnuXA2;-webkit-animation-timing-function: cubic-bezier(0, 0, 1, 1);animation-timing-function: cubic-bezier(0, 0, 1, 1);}#el_ijRnAXRAtV9{-webkit-transform: translate(11.625px, -30.75px);transform: translate(11.625px, -30.75px);}#el_nJczWvDJdKm{opacity: 1;fill: #ffc000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_4Yc8JerSV4x{opacity: 1;fill: url(#pattern4715);fill-opacity: 1;fill-rule: evenodd;stroke: none;stroke-width: 0.999998;stop-opacity: 1;}#el_KxAwXMrb_1Y{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_1o3xDcYlTu3{-webkit-transform: translate(-2.24952px, -46.5002px);transform: translate(-2.24952px, -46.5002px);}#el_-3jwW5e3f4-{opacity: 1;fill: #ffc000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stroke-width: 0.999998;stop-opacity: 1;}#el_zvcry0LTO8P{opacity: 1;fill: url(#pattern4715);fill-opacity: 1;fill-rule: evenodd;stroke: none;stroke-width: 0.999998;stop-opacity: 1;}#el_PvsvKiDfYNG{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_Fw1uu5VaqgM{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_8hj-gFHCJJK{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_lq1hXWggEkX{opacity: 1;fill: none;stroke: #000000;stroke-width: 0.75;stroke-linecap: butt;stroke-linejoin: bevel;stroke-miterlimit: 2;stroke-dasharray: 1.5, 1.5;stroke-dashoffset: 75.5;stroke-opacity: 1;stop-opacity: 1;}#el_csTqLBToHni{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_5E0cu5kt5v3{opacity: 1;fill: none;stroke: #000000;stroke-width: 0.75;stroke-linecap: butt;stroke-linejoin: bevel;stroke-miterlimit: 2;stroke-dasharray: 1.5, 1.5;stroke-dashoffset: 230;stroke-opacity: 1;stop-opacity: 1;}#el_UpKgI-xJVgk{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_2eqzPP7z5dI{opacity: 1;fill: #000000;fill-opacity: 1;fill-rule: evenodd;stroke: none;stop-opacity: 1;}#el_aDrAPLs2DAQ{-webkit-animation-fill-mode: backwards;animation-fill-mode: backwards;opacity: 0;-webkit-animation-name: kf_el_aDrAPLs2DAQ_an_VxYUKIHIe;animation-name: kf_el_aDrAPLs2DAQ_an_VxYUKIHIe;-webkit-animation-timing-function: cubic-bezier(0, 0, 1, 1);animation-timing-function: cubic-bezier(0, 0, 1, 1);}#el_2wZbRpJG8_V_an_vSCZL8n7Y{-webkit-animation-fill-mode: backwards;animation-fill-mode: backwards;-webkit-transform: translate(150px, 158.25px) translate(-150px, -158.25px) translate(0px, 100px);transform: translate(150px, 158.25px) translate(-150px, -158.25px) translate(0px, 100px);-webkit-animation-name: kf_el_2wZbRpJG8_V_an_vSCZL8n7Y;animation-name: kf_el_2wZbRpJG8_V_an_vSCZL8n7Y;-webkit-animation-timing-function: cubic-bezier(0, 0, 1, 1);animation-timing-function: cubic-bezier(0, 0, 1, 1);}#el_aDrAPLs2DAQ_an_dIjTLqO_B{-webkit-animation-fill-mode: backwards;animation-fill-mode: backwards;-webkit-transform: translate(105.75px, 57.375px) translate(-105.75px, -57.375px) translate(0px, -100px);transform: translate(105.75px, 57.375px) translate(-105.75px, -57.375px) translate(0px, -100px);-webkit-animation-name: kf_el_aDrAPLs2DAQ_an_dIjTLqO_B;animation-name: kf_el_aDrAPLs2DAQ_an_dIjTLqO_B;-webkit-animation-timing-function: cubic-bezier(0, 0, 1, 1);animation-timing-function: cubic-bezier(0, 0, 1, 1);}#el_fBNIyiSw3fF_an_6d9HveHUh{-webkit-animation-fill-mode: backwards;animation-fill-mode: backwards;-webkit-transform: translate(150.375px, 173.25px) translate(-150.375px, -173.25px) translate(0px, 100px);transform: translate(150.375px, 173.25px) translate(-150.375px, -173.25px) translate(0px, 100px);-webkit-animation-name: kf_el_fBNIyiSw3fF_an_6d9HveHUh;animation-name: kf_el_fBNIyiSw3fF_an_6d9HveHUh;-webkit-animation-timing-function: cubic-bezier(0, 0, 1, 1);animation-timing-function: cubic-bezier(0, 0, 1, 1);}#el_6cJsgTcGtln_an_M03tLExcE{-webkit-animation-fill-mode: backwards;animation-fill-mode: backwards;-webkit-transform: translate(105px, 215.25px) translate(-105px, -215.25px) translate(0px, 100px);transform: translate(105px, 215.25px) translate(-105px, -215.25px) translate(0px, 100px);-webkit-animation-name: kf_el_6cJsgTcGtln_an_M03tLExcE;animation-name: kf_el_6cJsgTcGtln_an_M03tLExcE;-webkit-animation-timing-function: cubic-bezier(0, 0, 1, 1);animation-timing-function: cubic-bezier(0, 0, 1, 1);}#el_Ide9xthCV6S_an_mq4TkOtPj{-webkit-animation-fill-mode: backwards;animation-fill-mode: backwards;-webkit-transform: translate(7.234375px, 230.25px) translate(-7.234375px, -230.25px) translate(0px, 100px);transform: translate(7.234375px, 230.25px) translate(-7.234375px, -230.25px) translate(0px, 100px);-webkit-animation-name: kf_el_Ide9xthCV6S_an_mq4TkOtPj;animation-name: kf_el_Ide9xthCV6S_an_mq4TkOtPj;-webkit-animation-timing-function: cubic-bezier(0, 0, 1, 1);animation-timing-function: cubic-bezier(0, 0, 1, 1);}#el_KrSQfpjQ0:hover *{-webkit-animation-play-state: running;animation-play-state: running;}</style>
+
+
+  <metadata
+   id="metadata8">
+    <rdf:rdf>
+      <cc:work
+   rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+
+
+        <dc:type
+   rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+
+
+        <dc:title />
+
+
+      </cc:work>
+
+
+    </rdf:rdf>
+
+
+  <rdf:RDF>
+  <cc:Work
+   rdf:about="">
+    <dc:format>image/svg+xml</dc:format>
+
+    <dc:type
+   rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+
+    <dc:title />
+
+  </cc:Work>
+
+</rdf:RDF>
+
+</metadata>
+
+
+  <defs
+   id="defs6">
+    <pattern
+   xlink:href="#pattern4666"
+   id="pattern4715"
+   patternTransform="matrix(-0.08095596,0.00647439,0.02749481,0.34379744,167.85488,121.21204)" />
+
+
+    <pattern
+   xlink:href="#pattern4666"
+   id="pattern4703"
+   patternTransform="matrix(0.28046969,0.00833633,-0.01007598,0.33899775,168.60488,80.71204)" />
+
+
+    <pattern
+   xlink:href="#pattern4685"
+   id="pattern4701"
+   patternTransform="matrix(0.27022044,-0.00773917,0.00791695,0.27642644,-74.020127,37.962039)" />
+
+
+    <pattern
+   xlink:href="#pattern4676"
+   id="pattern4685"
+   patternTransform="matrix(0.27022044,-0.00773917,0.00791695,0.27642644,-41.020126,97.96204)" />
+
+
+    <pattern
+   xlink:href="#pattern3698"
+   id="pattern4674"
+   patternTransform="translate(-8.7902293,-4.3684895e-6)" />
+
+
+    <pattern
+   xlink:href="#pattern3698"
+   id="pattern4666"
+   patternTransform="matrix(0.28046969,0.00833633,-0.01007598,0.33899775,168.60488,100.21204)" />
+
+
+    <clipPath
+   clipPathUnits="userSpaceOnUse"
+   id="clipPath18">
+      <path
+   d="M -1.25,-1.25 H 843.5 v 598 H -1.25 Z"
+   clip-rule="evenodd"
+   id="path16" />
+
+
+    </clipPath>
+
+
+    <clipPath
+   clipPathUnits="userSpaceOnUse"
+   id="clipPath26">
+      <path
+   d="M 0.75,0.75 H 841.5 v 594 H 0.75 Z"
+   clip-rule="evenodd"
+   id="path24" />
+
+
+    </clipPath>
+
+
+    <clipPath
+   clipPathUnits="userSpaceOnUse"
+   id="clipPath34">
+      <path
+   d="M 0.75,0.75 H 658.5 v 286.5 H 0.75 Z"
+   clip-rule="evenodd"
+   id="path32" />
+
+
+    </clipPath>
+
+
+    <clipPath
+   clipPathUnits="userSpaceOnUse"
+   id="clipPath282">
+      <path
+   d="M -1.25,-1.25 H 843.5 v 598 H -1.25 Z"
+   clip-rule="evenodd"
+   id="path280" />
+
+
+    </clipPath>
+
+
+    <clipPath
+   clipPathUnits="userSpaceOnUse"
+   id="clipPath290">
+      <path
+   d="M 0.75,0.75 H 841.5 v 594 H 0.75 Z"
+   clip-rule="evenodd"
+   id="path288" />
+
+
+    </clipPath>
+
+
+    <clipPath
+   clipPathUnits="userSpaceOnUse"
+   id="clipPath298">
+      <path
+   d="M 0.75,0.75 H 658.5 v 286.5 H 0.75 Z"
+   clip-rule="evenodd"
+   id="path296" />
+
+
+    </clipPath>
+
+
+    <clipPath
+   clipPathUnits="userSpaceOnUse"
+   id="clipPath306">
+      <path
+   d="M 167.25,186.75 H 252 V 201 h -84.75 z"
+   clip-rule="evenodd"
+   id="path304" />
+
+
+    </clipPath>
+
+
+    <clipPath
+   clipPathUnits="userSpaceOnUse"
+   id="clipPath318">
+      <path
+   d="M -1.25,-1.25 H 843.5 v 598 H -1.25 Z"
+   clip-rule="evenodd"
+   id="path316" />
+
+
+    </clipPath>
+
+
+    <clipPath
+   clipPathUnits="userSpaceOnUse"
+   id="clipPath326">
+      <path
+   d="M 0.75,0.75 H 841.5 v 594 H 0.75 Z"
+   clip-rule="evenodd"
+   id="path324" />
+
+
+    </clipPath>
+
+
+    <clipPath
+   clipPathUnits="userSpaceOnUse"
+   id="clipPath334">
+      <path
+   d="M 0.75,0.75 H 658.5 v 286.5 H 0.75 Z"
+   clip-rule="evenodd"
+   id="path332" />
+
+
+    </clipPath>
+
+
+    <clipPath
+   clipPathUnits="userSpaceOnUse"
+   id="clipPath342">
+      <path
+   d="M 434.25,186.75 H 519 V 201 h -84.75 z"
+   clip-rule="evenodd"
+   id="path340" />
+
+
+    </clipPath>
+
+
+    <clipPath
+   clipPathUnits="userSpaceOnUse"
+   id="clipPath354">
+      <path
+   d="M -1.25,-1.25 H 843.5 v 598 H -1.25 Z"
+   clip-rule="evenodd"
+   id="path352" />
+
+
+    </clipPath>
+
+
+    <clipPath
+   clipPathUnits="userSpaceOnUse"
+   id="clipPath362">
+      <path
+   d="M 0.75,0.75 H 841.5 v 594 H 0.75 Z"
+   clip-rule="evenodd"
+   id="path360" />
+
+
+    </clipPath>
+
+
+    <clipPath
+   clipPathUnits="userSpaceOnUse"
+   id="clipPath370">
+      <path
+   d="M 0.75,0.75 H 658.5 v 286.5 H 0.75 Z"
+   clip-rule="evenodd"
+   id="path368" />
+
+
+    </clipPath>
+
+
+    <clipPath
+   clipPathUnits="userSpaceOnUse"
+   id="clipPath378">
+      <path
+   d="M 0.75,272.25 H 105 V 286.5 H 0.75 Z"
+   clip-rule="evenodd"
+   id="path376" />
+
+
+    </clipPath>
+
+
+    <clipPath
+   clipPathUnits="userSpaceOnUse"
+   id="clipPath394">
+      <path
+   d="M -1.25,-1.25 H 843.5 v 598 H -1.25 Z"
+   clip-rule="evenodd"
+   id="path392" />
+
+
+    </clipPath>
+
+
+    <clipPath
+   clipPathUnits="userSpaceOnUse"
+   id="clipPath402">
+      <path
+   d="M 0.75,0.75 H 841.5 v 594 H 0.75 Z"
+   clip-rule="evenodd"
+   id="path400" />
+
+
+    </clipPath>
+
+
+    <clipPath
+   clipPathUnits="userSpaceOnUse"
+   id="clipPath410">
+      <path
+   d="M 0.75,0.75 H 658.5 v 286.5 H 0.75 Z"
+   clip-rule="evenodd"
+   id="path408" />
+
+
+    </clipPath>
+
+
+    <clipPath
+   clipPathUnits="userSpaceOnUse"
+   id="clipPath418">
+      <path
+   d="m 548.25,272.25 h 109.5 v 14.25 h -109.5 z"
+   clip-rule="evenodd"
+   id="path416" />
+
+
+    </clipPath>
+
+
+    <clipPath
+   clipPathUnits="userSpaceOnUse"
+   id="clipPath434">
+      <path
+   d="M -1.25,-1.25 H 843.5 v 598 H -1.25 Z"
+   clip-rule="evenodd"
+   id="path432" />
+
+
+    </clipPath>
+
+
+    <clipPath
+   clipPathUnits="userSpaceOnUse"
+   id="clipPath442">
+      <path
+   d="M 0.75,0.75 H 841.5 v 594 H 0.75 Z"
+   clip-rule="evenodd"
+   id="path440" />
+
+
+    </clipPath>
+
+
+    <clipPath
+   clipPathUnits="userSpaceOnUse"
+   id="clipPath450">
+      <path
+   d="M -2.25,-2.25 H 661.5 v 292.5 H -2.25 Z"
+   clip-rule="evenodd"
+   id="path448" />
+
+
+    </clipPath>
+
+
+    <pattern
+   patternUnits="userSpaceOnUse"
+   width="8.7902375"
+   height="32.575921"
+   patternTransform="translate(169.35488,121.96204)"
+   id="pattern3698">
+      <path
+   id="path3696"
+   d="M 0.14511886,0.03795415 8.6451186,32.537967"
+   style="fill:none;stroke:#000000;stroke-width:0.3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+
+
+    </pattern>
+
+
+    <pattern
+   patternUnits="userSpaceOnUse"
+   width="8.7902372"
+   height="32.575919"
+   patternTransform="translate(190.35488,120.46204)"
+   id="pattern4676">
+      <rect
+   transform="scale(-1,1)"
+   style="fill:url(#pattern4674);stroke:none;stroke-width:1"
+   width="8.7902374"
+   height="32.57592"
+   x="-8.7902374"
+   y="0"
+   id="rect4672" />
+
+
+    </pattern>
+
+
+  </defs>
+
+
+  <g
+   id="el_wc0YklI6WB">
+    <path
+   id="el_k1d0jtpFJS"
+   d="m 69.853516,43.722656 v 21 h 38.000004 1 38 38 22 22 v -21 h -22 -22 -38 -38 -1 z" />
+
+
+    <path
+   id="el_5mX1b0cR66"
+   d="m 417.85352,43.722656 v 21 h 30 1 22 v -21 h -22 -1 z" />
+
+
+    <path
+   id="el_ZrqDj202qt"
+   d="m 507.85352,43.722656 v 21 h 39 38 37 1 38 v -21 h -38 -1 -37 -38 z" />
+
+
+    <path
+   id="el_lySaf380ed"
+   d="m 227.85352,43.722656 v 21 h 38 1 38 38 38 v -21 h -38 -38 -38 -1 z" />
+
+
+    <path
+   id="el_igxYS3G1FC"
+   d="m 659.85352,43.722656 v 21 h 39 38 37 1 38 v -21 h -38 -1 -37 -38 z" />
+
+
+    <text
+   id="el_7YyHdDhb56"
+   x="50.25"
+   y="53.299999"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     x="50.25 55.5"
+     y="53.299999"
+     id="el_GqBIr8yUD5"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">64</tspan></text>
+
+
+    <text
+   id="el_HiyJymMBPV"
+   x="60.75"
+   y="53.299999"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     x="60.75"
+     y="53.299999"
+     id="el_vLSi9PnM0c"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">-</tspan></text>
+
+
+    <text
+   id="el_k5n_DlYmbE"
+   x="66"
+   y="53.299999"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     x="66 71.25 76.5 81.75 87"
+     y="53.299999"
+     id="el_I9-7DItQlz"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">bytes</tspan></text>
+
+
+    <text
+   id="el_kEcoT7SDTq"
+   x="168.75"
+   y="53.299999"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     x="168.75 174"
+     y="53.299999"
+     id="el_CkBTmBNfDe"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">64</tspan></text>
+
+
+    <text
+   id="el_OoLXuJ1fMP"
+   x="179.25"
+   y="53.299999"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     x="179.25"
+     y="53.299999"
+     id="el__KndOg8sKQH"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">-</tspan></text>
+
+
+    <text
+   id="el_J17d-67H7QG"
+   x="184.5"
+   y="53.299999"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     x="184.5 189.75 195 200.25 205.5"
+     y="53.299999"
+     id="el_D87_gPYu5vO"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">bytes</tspan></text>
+
+
+    <text
+   id="el_pQwppM3vGZj"
+   x="378.75"
+   y="53.299999"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     x="378.75 384"
+     y="53.299999"
+     id="el_2dzw6iIEpeJ"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">64</tspan></text>
+
+
+    <text
+   id="el_fkCbx5Xn8H6"
+   x="389.25"
+   y="53.299999"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     x="389.25"
+     y="53.299999"
+     id="el_zSplzgwgVAX"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">-</tspan></text>
+
+
+    <text
+   id="el_TJK2kAi9eqx"
+   x="394.5"
+   y="53.299999"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     x="394.5 399.75 405 410.25 415.5"
+     y="53.299999"
+     id="el__JM2iYpSMEQ"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">bytes</tspan></text>
+
+
+    <text
+   id="el_lrOWDHw-ZsS"
+   x="492.75"
+   y="53.299999"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     x="492.75 498"
+     y="53.299999"
+     id="el_NZc2IdFERP0"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">64</tspan></text>
+
+
+    <text
+   id="el_-KwejIcUTbn"
+   x="503.25"
+   y="53.299999"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     x="503.25"
+     y="53.299999"
+     id="el_HTlRYrlpJLJ"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">-</tspan></text>
+
+
+    <text
+   id="el_qlSXGbKX8E5"
+   x="508.5"
+   y="53.299999"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     x="508.5 513.75 519 524.25 529.5"
+     y="53.299999"
+     id="el_bSuZ0zzt8GH"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">bytes</tspan></text>
+
+
+    <text
+   id="el_4HuzgThj1CF"
+   x="285"
+   y="83.300003"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     x="285 291.75 298.5"
+     y="83.300003"
+     id="el_e_6D9Wt-mXk"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">...</tspan></text>
+
+
+    <text
+   id="el_0SD5Y1S98l8"
+   x="352.5"
+   y="83.300003"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     x="352.5 359.25 366"
+     y="83.300003"
+     id="el_4WbCpWwkxV5"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">...</tspan></text>
+
+
+    <path
+   id="el_LbukR-hUYuQ"
+   d="m 48.75,71.25 h 232.5 v 1.5 H 48.75 Z" />
+
+
+    <path
+   id="el_sGnZZhbIJhZ"
+   d="m 309.75,71.25 h 39 v 1.5 h -39 z" />
+
+
+    <path
+   id="el_Ksl6kFPvKiB"
+   d="m 377.25,71.25 h 228 v 1.5 h -228 z" />
+
+
+    <path
+   id="el_B56PPDKS6sw"
+   d="m 48.75,86.25 h 117 v 1.5 h -117 z" />
+
+
+    <path
+   id="el_5eOM-kB0PxA"
+   d="m 167.25,86.25 h 112.5 v 1.5 h -112.5 z" />
+
+
+    <path
+   id="el_RwTOMRFe0uZ"
+   d="m 309.75,86.25 h 37.5 v 1.5 h -37.5 z" />
+
+
+    <path
+   id="el_KafVxG1tghj"
+   d="m 377.25,86.25 h 112.5 v 1.5 h -112.5 z" />
+
+
+    <path
+   id="el_G5MRulrwtix"
+   d="m 491.25,86.25 h 112.5 v 1.5 h -112.5 z" />
+
+
+    <path
+   id="el_jcbzzKdLXm3"
+   d="M 47.625,57.375 V 72" />
+
+
+    <path
+   id="el_qQcE1kKQkVt"
+   d="m 47.25,71.25 h 1.5 v 16.5 h -1.5 z" />
+
+
+    <path
+   id="el_0vJuePRa5vf"
+   d="M 166.5,57.375 V 72" />
+
+
+    <path
+   id="el_fLwwIq5s9Hv"
+   d="m 165.75,72 h 1.5 v 15.75 h -1.5 z" />
+
+
+    <path
+   id="el_4bKrzFcPKGJ"
+   d="m 279.75,72 h 1.5 v 15.75 h -1.5 z" />
+
+
+    <path
+   id="el_AQ3wVnarsKx"
+   d="m 308.25,71.25 h 1.5 v 16.5 h -1.5 z" />
+
+
+    <path
+   id="el_LwVNPMWKNht"
+   d="m 331.5,72.75 h 0.75 v 13.5 h -0.75 z" />
+
+
+    <path
+   id="el_u1zIhFGaGfp"
+   d="m 347.25,72 h 1.5 v 15.75 h -1.5 z" />
+
+
+    <path
+   id="el_Xss3a23Gnf0"
+   d="M 376.125,57.375 V 72" />
+
+
+    <path
+   id="el_BsS_72oQiEG"
+   d="m 375.75,71.25 h 1.5 v 16.5 h -1.5 z" />
+
+
+    <path
+   id="el__FMji1AX9sl"
+   d="M 490.5,57.375 V 72" />
+
+
+    <path
+   id="el_nNCzoF-oKCM"
+   d="m 489.75,72 h 1.5 v 15.75 h -1.5 z" />
+
+
+    <g
+   data-animator-type="0"
+   data-animator-group="true"
+   id="el_fBNIyiSw3fF_an_6d9HveHUh">
+  <g
+   id="el_fBNIyiSw3fF">
+      <text
+   y="201.05"
+   x="156.75"
+   id="el_KDb4hLTU7Zx"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     id="el_gb-PPmkHgdI"
+     y="201.05"
+     x="156.75 163.5 170.25 177 183.75 190.5 197.25 204 210.75"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">Partition</tspan></text>
+
+
+      <text
+   y="201.05"
+   x="450.75"
+   id="el__ZOm0hPFtfl"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     id="el_wy1FP9pDoA2"
+     y="201.05"
+     x="450.75 457.5 464.25 471 477.75 484.5 491.25 498 504.75"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">Partition</tspan></text>
+
+
+      <path
+   d="m 150.375,173.82583 v 28.5"
+   id="el_xPZKaAybwFq" />
+
+
+      <path
+   d="m 519.375,173.25 v 28.5"
+   id="el_YogbpLIUrtv" />
+
+
+    </g>
+
+</g>
+
+
+    <g
+   data-animator-type="0"
+   data-animator-group="true"
+   id="el_aDrAPLs2DAQ_an_dIjTLqO_B">
+  <g
+   id="el_aDrAPLs2DAQ">
+      <text
+   y="67.550003"
+   x="107.25"
+   id="el_xrWGb9T3F4R"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     id="el_QTTQpc0oKAy"
+     y="67.550003"
+     x="107.25 112.5"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">32</tspan></text>
+
+
+      <text
+   y="67.550003"
+   x="117.75"
+   id="el_JBLx6ra5BNB"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     id="el_8VblE6SkbaR"
+     y="67.550003"
+     x="117.75"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">-</tspan></text>
+
+
+      <text
+   y="67.550003"
+   x="123"
+   id="el_e96iemIhfWU"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     id="el_uFB-xlD9T8w"
+     y="67.550003"
+     x="123 128.25 133.5 138.75 144"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">bytes</tspan></text>
+
+
+      <text
+   y="67.550003"
+   x="225.75"
+   id="el_py0SOHwxxRd"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     id="el_RJUW6ohjI2r"
+     y="67.550003"
+     x="225.75 231"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">32</tspan></text>
+
+
+      <text
+   y="67.550003"
+   x="236.25"
+   id="el_KpW7nJt5QVx"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     id="el_tCnvIo_owbh"
+     y="67.550003"
+     x="236.25"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">-</tspan></text>
+
+
+      <text
+   y="67.550003"
+   x="241.5"
+   id="el_SQkDxrWyoJq"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     id="el_J1qdqicNMI8"
+     y="67.550003"
+     x="241.5 246.75 252 257.25 262.5"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">bytes</tspan></text>
+
+
+      <text
+   y="67.550003"
+   x="435.75"
+   id="el_hedRCJFa40R"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     id="el_hOQ51vIoQkX"
+     y="67.550003"
+     x="435.75 441"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">32</tspan></text>
+
+
+      <text
+   y="67.550003"
+   x="446.25"
+   id="el_JsCUqF-CTus"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     id="el_3h2zEXoSdsK"
+     y="67.550003"
+     x="446.25"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">-</tspan></text>
+
+
+      <text
+   y="67.550003"
+   x="451.5"
+   id="el_TCCrO1FQNkH"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     id="el_RY6I8Q1PeiR"
+     y="67.550003"
+     x="451.5 456.75 462 467.25 472.5"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">bytes</tspan></text>
+
+
+      <text
+   y="67.550003"
+   x="549.75"
+   id="el_MUDSkMVC9lc"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     id="el_AMWwLtUCPHi"
+     y="67.550003"
+     x="549.75 555"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">32</tspan></text>
+
+
+      <text
+   y="67.550003"
+   x="560.25"
+   id="el_3iOdTUSJJRQ"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     id="el_8ARGgA6UFDo"
+     y="67.550003"
+     x="560.25"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">-</tspan></text>
+
+
+      <text
+   y="67.550003"
+   x="565.5"
+   id="el_HAHuDRF6SgT"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     id="el_qRcUehQQjXB"
+     y="67.550003"
+     x="565.5 570.75 576 581.25 586.5"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">bytes</tspan></text>
+
+
+      <path
+   d="M 105.75,57.375 V 72"
+   id="el_Kei0eXMdEXt" />
+
+
+      <path
+   d="M 105.75,72.75 V 87"
+   id="el_-ly1DjPpDgV" />
+
+
+      <path
+   d="M 224.25,57.375 V 72"
+   id="el_181dIgdSeYC" />
+
+
+      <path
+   d="M 224.25,72.75 V 87"
+   id="el_WCw7POpZTKF" />
+
+
+      <path
+   d="M 434.25,57.375 V 72"
+   id="el_l39-x-99wUS" />
+
+
+      <path
+   d="M 434.25,72.75 V 87"
+   id="el_6SpZPm0YyXl" />
+
+
+      <path
+   d="M 548.25,57.375 V 72"
+   id="el_L7wN5ch1ZHk" />
+
+
+      <path
+   d="M 548.25,72.75 V 87"
+   id="el_lbCqVCcbO62" />
+
+
+    </g>
+
+</g>
+
+
+    <g
+   data-animator-type="0"
+   data-animator-group="true"
+   id="el_Ide9xthCV6S_an_mq4TkOtPj">
+  <g
+   id="el_Ide9xthCV6S">
+      <text
+   y="286.54999"
+   x="8.25"
+   id="el_FJrNpkzSiHD"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     id="el_RMit0RlarjO"
+     y="286.54999"
+     x="8.25 15 21.75 28.5 35.25"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">Extra</tspan></text>
+
+
+      <text
+   y="286.54999"
+   x="48.75"
+   id="el_gf8ltMWvOZe"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     id="el_iXxFADSi_Ps"
+     y="286.54999"
+     x="48.75 55.5 62.25 69 75.75 82.5 89.25"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">Overlap</tspan></text>
+
+
+      <text
+   y="286.54999"
+   x="549.75"
+   id="el_chrBELlB0EO"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     id="el_DWlNEZzf2NC"
+     y="286.54999"
+     x="549.75 556.5 563.25 570 576.75"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">Extra</tspan></text>
+
+
+      <text
+   y="286.54999"
+   x="590.25"
+   id="el_TxL10RGOxb0"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+     id="el_j5e1UE2Wbfh"
+     y="286.54999"
+     x="590.25 597 603.75 610.5 617.25 624 630.75"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Cascadia Code';-inkscape-font-specification:'Cascadia Code Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">Overlap</tspan></text>
+
+
+      <path
+   d="m 105.37452,230.25 v 57"
+   id="el_lb960863hEV" />
+
+
+      <path
+   d="m 547.875,230.25 v 57"
+   id="el_MnOToXCAPt9" />
+
+
+    </g>
+
+</g>
+
+
+    <g
+   data-animator-type="0"
+   data-animator-group="true"
+   id="el_2wZbRpJG8_V_an_vSCZL8n7Y">
+  <g
+   id="el_2wZbRpJG8_V">
+      <g
+   id="el_qDpNKS8fYOi">
+        <path
+   d="m 308.625,112.125 h 23.25 v 15 h -23.25 z"
+   id="el_0yZgRv0AxGT" />
+
+
+        <path
+   id="el_qs6C5c7vWuS"
+   d="m 308.625,112.125 h 23.25 v 15 h -23.25 z" />
+
+
+      </g>
+
+
+      <g
+   id="el_Io2P7QlXPUb">
+        <path
+   d="m 343.875,113.25 h 17.25 v 15 h -17.25 z"
+   id="el_iiApIvmLbeo" />
+
+
+        <path
+   d="m 343.875,113.25 h 17.25 v 15 h -17.25 z"
+   id="el_nOXscwZp4eH" />
+
+
+      </g>
+
+
+      <g
+   id="el_ElmwT9jcCln">
+        <path
+   d="m 145.49951,109.1252 v 15 h 29.25001 28.5 28.5 27.75 0.75 28.5 v -15 h -28.5 -0.75 -27.75 -28.5 -28.5 z"
+   id="el_xVPEAW8He_S" />
+
+
+        <path
+   id="el_Zc79B4gHCmR"
+   d="m 145.87451,109.1252 v 15 h 29.25001 28.5 28.5 27.75 0.75 28.5 v -15 h -28.5 -0.75 -27.75 -28.5 -28.5 z" />
+
+
+      </g>
+
+
+      <g
+   id="el_O993BPHOR9g">
+        <path
+   d="m 157.12452,115.5002 v 15 h 16.5 0.75 28.5 28.5 28.5 28.5 v -15 h -28.5 -28.5 -28.5 -28.5 -0.75 z"
+   id="el_bcd5QPOh-YG" />
+
+
+        <path
+   id="el_ppjjw3ctGgF"
+   d="m 157.12452,115.5002 v 15 h 16.5 0.75 28.5 28.5 28.5 28.5 v -15 h -28.5 -28.5 -28.5 -28.5 -0.75 z" />
+
+
+      </g>
+
+
+      <path
+   d="m 150,158.25 h 15.75 V 159 H 150 Z"
+   id="el_s9VrwrCqBkY" />
+
+
+      <path
+   d="m 167.25,158.25 h 114 V 159 h -114 z"
+   id="el_5l_BYWAD3ww" />
+
+
+      <path
+   d="m 309,158.25 h 39.75 V 159 H 309 Z"
+   id="el_EG1uJILyUME" />
+
+
+      <path
+   d="M 376.5,158.25 H 489.75 V 159 H 376.5 Z"
+   id="el_v9ECZ-RQJgb" />
+
+
+      <path
+   d="m 491.25,158.25 h 28.5 V 159 h -28.5 z"
+   id="el_EU4rLVjZCek" />
+
+
+      <path
+   d="m 150,172.5 h 15.75 v 0.75 H 150 Z"
+   id="el_d-5y6Y7c5aV" />
+
+
+      <path
+   d="m 167.25,172.5 h 114 v 0.75 h -114 z"
+   id="el_xjkbIEJUTNe" />
+
+
+      <path
+   d="m 309,172.5 h 39.75 v 0.75 H 309 Z"
+   id="el_7dL3fL5tt-M" />
+
+
+      <path
+   d="m 376.5,172.5 h 113.25 v 0.75 H 376.5 Z"
+   id="el_3QNSK9Y-8sa" />
+
+
+      <path
+   d="m 491.25,172.5 h 28.5 v 0.75 h -28.5 z"
+   id="el_yFe01JTet2D" />
+
+
+      <path
+   d="m 150,158.25 h 0.75 v 15 H 150 Z"
+   id="el_gFkyDE6HW9g" />
+
+
+      <path
+   d="m 224.25,159 v 13.875"
+   id="el_Er4rpg82fiY" />
+
+
+      <path
+   d="m 165.75,158.25 h 1.5 v 15 h -1.5 z"
+   id="el_6uWhicPGUi9" />
+
+
+      <path
+   d="m 280.5,158.25 h 0.75 v 15 h -0.75 z"
+   id="el_H8UFxFzGrk7" />
+
+
+      <path
+   d="m 332.25,159 v 13.875"
+   id="el_kYlFuONnnMR" />
+
+
+      <path
+   d="m 309,158.25 h 0.75 v 15 H 309 Z"
+   id="el_DJ5Dd882JS1" />
+
+
+      <path
+   d="m 348,158.25 h 0.75 v 15 H 348 Z"
+   id="el_1Rj8MjisTxE" />
+
+
+      <path
+   d="m 434.25,159 v 13.875"
+   id="el_IzvLK-nB6Tu" />
+
+
+      <path
+   d="m 376.5,158.25 h 0.75 v 15 h -0.75 z"
+   id="el_dPJjKRM04w5" />
+
+
+      <path
+   d="m 489.75,158.25 h 1.5 v 15 h -1.5 z"
+   id="el_z0HeJE3wj8W" />
+
+
+      <path
+   d="m 519,158.25 h 0.75 v 15 H 519 Z"
+   id="el_6o-r0-UlmX2" />
+
+
+    </g>
+
+</g>
+
+
+    <g
+   data-animator-type="0"
+   data-animator-group="true"
+   id="el_6cJsgTcGtln_an_M03tLExcE">
+  <g
+   id="el_6cJsgTcGtln">
+      <g
+   id="el_ijRnAXRAtV9">
+        <path
+   style="fill:#00cf88;fill-opacity:1"
+   id="el_nJczWvDJdKm"
+   d="m 507.375,246 h 29.25 v 15 h -29.25 z" />
+
+
+        <path
+   d="m 507.375,246 h 29.25 v 15 h -29.25 z"
+   id="el_4Yc8JerSV4x" />
+
+
+      </g>
+
+
+      <path
+   d="m 519,215.25 h 29.25 V 216 H 519 Z"
+   id="el_KxAwXMrb_1Y" />
+
+
+      <g
+   id="el_1o3xDcYlTu3">
+        <path
+   style="fill:#00cf88;fill-opacity:1"
+   id="el_-3jwW5e3f4-"
+   d="m 107.24952,261.7502 v 15 h 28.5 0.75 16.5 v -15 h -16.5 -0.75 z" />
+
+
+        <path
+   d="m 107.24952,261.7502 v 15 h 28.5 0.75 16.5 v -15 h -16.5 -0.75 z"
+   id="el_zvcry0LTO8P" />
+
+
+      </g>
+
+
+      <path
+   d="m 105,215.25 h 45.75 V 216 H 105 Z"
+   id="el_PvsvKiDfYNG" />
+
+
+      <path
+   d="m 105,229.5 h 45.75 v 0.75 H 105 Z"
+   id="el_Fw1uu5VaqgM" />
+
+
+      <path
+   d="m 519,229.5 h 29.25 v 0.75 H 519 Z"
+   id="el_8hj-gFHCJJK" />
+
+
+      <path
+   d="m 105.37452,216 v 13.875"
+   id="el_lq1hXWggEkX" />
+
+
+      <path
+   d="m 150,215.25 h 0.75 v 15 H 150 Z"
+   id="el_csTqLBToHni" />
+
+
+      <path
+   d="m 547.875,216 v 13.875"
+   id="el_5E0cu5kt5v3" />
+
+
+      <path
+   d="m 519,215.25 h 0.75 v 15 H 519 Z"
+   id="el_UpKgI-xJVgk" />
+
+
+    </g>
+
+</g>
+
+
+    <path
+   id="el_2eqzPP7z5dI"
+   d="m 603.75,72 h 1.5 v 15.75 h -1.5 z" />
+
+
+  </g>
+
+
+<g
+   id="g8"
+   transform="matrix(2.0735798,0,0,2.0735798,-16.369306,-15.662197)">
+  <circle
+   cx="20"
+   cy="20"
+   r="5"
+   id="circle2"
+   style="fill:none;stroke:#444a46;stroke-width:4.50209">
+    <animate
+   attributeName="r"
+   from="3"
+   to="10"
+   dur="3s"
+   begin="0s"
+   repeatCount="indefinite" />
+
+    <animate
+   attributeName="opacity"
+   from="1"
+   to="0"
+   dur="3s"
+   begin="0s"
+   repeatCount="indefinite" />
+
+  </circle>
+
+  <circle
+   cx="20"
+   cy="20"
+   r="5"
+   id="circle4"
+   style="fill:#ba0000;fill-opacity:1" />
+
+  <path
+   style="fill:#ffffff;fill-opacity:1;stroke-width:0.1;stroke-miterlimit:4;stroke-dasharray:none"
+   d="m 20.158928,22.714393 c -0.01831,0 -0.03647,-0.0035 -0.05382,-0.01043 -0.03591,-0.01428 -0.06446,-0.04245 -0.07952,-0.07817 l -0.541602,-1.283301 -0.643664,0.568989 c -0.02704,0.02778 -0.07549,0.04767 -0.125673,0.04767 -0.105386,0 -0.191265,-0.08609 -0.191265,-0.192043 v -3.492887 c 0,-0.105953 0.08588,-0.192043 0.191265,-0.192043 0.0446,0 0.08782,0.01562 0.124507,0.04534 l 2.524722,2.560099 c 0.0394,0.04842 0.05464,0.09107 0.05464,0.135462 0,0.105776 -0.08588,0.192043 -0.191265,0.192043 h -0.857549 l 0.521916,1.237781 c 0.03085,0.07316 -0.0029,0.157303 -0.07567,0.188969 l -0.599312,0.260533 c -0.01834,0.0079 -0.03803,0.01198 -0.05771,0.01198 z m -0.619739,-1.758496 c 0.01081,0 0.02142,0.0012 0.03223,0.0037 0.04534,0.01039 0.08319,0.04188 0.101146,0.08492 l 0.562981,1.33405 0.333725,-0.145145 -0.551036,-1.306838 c -0.01891,-0.0446 -0.0141,-0.09595 0.01272,-0.136275 0.02686,-0.04032 0.0722,-0.06467 0.120655,-0.06467 h 0.844401 l -2.183117,-2.213616 v 3.037768 l 0.630377,-0.557575 c 0.02661,-0.02357 0.06096,-0.03629 0.09592,-0.03629 z m -0.886492,0.735552 c -0.0041,0.0031 -0.0077,0.0064 -0.0112,0.0098 z m 2.494435,-0.81256 h 0.0019 z m 0,0"
+   id="path871" />
+
+</g>
+
+</svg>

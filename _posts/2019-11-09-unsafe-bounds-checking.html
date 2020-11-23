@@ -1,0 +1,138 @@
+<h1 id="unsafe-bounds-checking">Unsafe Bounds Checking</h1>
+
+<p>I thought I’d write a really short post on a nifty technique/trick I came up while trying to debug my own horrible unsafe code for vectorized sorting. I don’t think I’ve seen it used/shown before, and it really saved me tons of time.
+It all boils down to a combination of:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">using static</code></li>
+  <li><code class="highlighter-rouge">#if DEBUG</code></li>
+  <li>Local functions in C#</li>
+</ul>
+
+<p>Imagine this is our starting point:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+</pre></td><td class="rouge-code"><pre><span class="k">unsafe</span> <span class="k">void</span> <span class="nf">GenerateRollingSum</span><span class="p">(</span><span class="kt">int</span> <span class="p">*</span><span class="n">p</span><span class="p">,</span> <span class="kt">int</span> <span class="n">lengthInVectors</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// This get's folded as a constant by the</span>
+    <span class="c1">// JIT and I hate typing this all over the place</span>
+    <span class="kt">var</span> <span class="n">N</span> <span class="p">=</span> <span class="n">Vector256</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;.</span><span class="n">Count</span><span class="p">;</span>
+
+    <span class="kt">var</span> <span class="n">acc</span> <span class="p">=</span> <span class="n">Avx</span><span class="p">.</span><span class="nf">LoadDquVector256</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+    <span class="kt">var</span> <span class="n">pEnd</span> <span class="p">=</span> <span class="n">p</span> <span class="p">+</span> <span class="n">lengthInVectors</span> <span class="p">*</span> <span class="n">N</span><span class="p">;</span>
+    <span class="kt">var</span> <span class="n">pRead</span> <span class="p">=</span> <span class="n">p</span> <span class="p">+</span> <span class="m">1</span><span class="p">;</span>
+    <span class="kt">var</span> <span class="n">pWrite</span> <span class="p">=</span> <span class="n">p</span><span class="p">;</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">p</span> <span class="p">&lt;</span> <span class="n">pEnd</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kt">var</span> <span class="n">data</span> <span class="p">=</span> <span class="n">Avx</span><span class="p">.</span><span class="nf">LoadDquVector256</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+      <span class="n">acc</span> <span class="p">=</span> <span class="n">Avx</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">acc</span><span class="p">);</span>
+      <span class="n">Avx</span><span class="p">.</span><span class="nf">Store</span><span class="p">(</span><span class="n">pWrite</span><span class="p">,</span> <span class="n">acc</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>I’m providing here a very <strong>wrong</strong> implementation, obviously, for the purpose of this post. Keen eyes will immediately notice that this method is going to make us very unhappy as it is writing partially into the same memory it is about to read in the next iteration. It’s definitely not going to work. But at the same time, it’s important to note that it isn’t going to crash or generate any exception, except for not doing it’s job.</p>
+
+<p>Unfortunately, for me, I’ve managed to write many variations of this bug, so I had to come up with something that would negate my in-built idiocy, here’s what I normally write with code like this these days:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+</pre></td><td class="rouge-code"><pre><span class="c1">// We import all the static methods in Avx</span>
+<span class="k">using</span> <span class="nn">static</span> <span class="n">System</span><span class="p">.</span><span class="n">Runtime</span><span class="p">.</span><span class="n">Intrinsics</span><span class="p">.</span><span class="n">X86</span><span class="p">.</span><span class="n">Avx</span><span class="p">;</span>
+
+<span class="k">unsafe</span> <span class="k">void</span> <span class="nf">GenerateRollingSum</span><span class="p">(</span><span class="kt">int</span> <span class="p">*</span><span class="n">p</span><span class="p">,</span> <span class="kt">int</span> <span class="n">lengthInVectors</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// This get's folded as a constant by the</span>
+    <span class="c1">// JIT and I hate typing this all over the place</span>
+    <span class="kt">var</span> <span class="n">N</span> <span class="p">=</span> <span class="n">Vector256</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;.</span><span class="n">Count</span><span class="p">;</span>
+
+    <span class="kt">var</span> <span class="n">acc</span> <span class="p">=</span> <span class="nf">LoadDquVector256</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+    <span class="kt">var</span> <span class="n">pEnd</span> <span class="p">=</span> <span class="n">p</span> <span class="p">+</span> <span class="n">lengthInVectors</span> <span class="p">*</span> <span class="n">N</span><span class="p">;</span>
+    <span class="kt">var</span> <span class="n">pRead</span> <span class="p">=</span> <span class="n">p</span> <span class="p">+</span> <span class="m">1</span><span class="p">;</span>
+    <span class="kt">var</span> <span class="n">pWrite</span> <span class="p">=</span> <span class="n">p</span><span class="p">;</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">p</span> <span class="p">&lt;</span> <span class="n">pEnd</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kt">var</span> <span class="n">data</span> <span class="p">=</span> <span class="nf">LoadDquVector256</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+      <span class="n">acc</span> <span class="p">=</span> <span class="n">Avx</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">acc</span><span class="p">);</span>
+      <span class="nf">Store</span><span class="p">(</span><span class="n">pWrite</span><span class="p">,</span> <span class="n">acc</span><span class="p">);</span>
+    <span class="p">}</span>
+
+<span class="cp">#if DEBUG
+</span>    <span class="c1">// "Hijack" LoadDquVector256 under DEBUG configuration</span>
+    <span class="c1">// and assert for various constraint violations</span>
+    <span class="n">Vector256</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="nf">LoadDquVector256</span><span class="p">(</span><span class="kt">int</span> <span class="p">*</span><span class="n">ptr</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">Debug</span><span class="p">.</span><span class="nf">Assert</span><span class="p">((</span><span class="n">ptr</span> <span class="p">+</span> <span class="n">N</span> <span class="p">-</span> <span class="m">1</span><span class="p">)</span> <span class="p">&lt;</span> <span class="n">p</span> <span class="p">+</span> <span class="n">lengthInVectors</span> <span class="p">*</span> <span class="n">N</span><span class="p">,</span>
+                   <span class="s">"Reading past end of array"</span><span class="p">);</span>
+      <span class="c1">// Finally call the real LoadDquVector256()</span>
+      <span class="k">return</span> <span class="n">Avx</span><span class="p">.</span><span class="nf">LoadDquVector256</span><span class="p">(</span><span class="n">ptr</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="c1">// "Hijack" LoadDquVector256 under DEBUG configuration</span>
+    <span class="c1">// and assert for various constraint violations</span>
+    <span class="k">void</span> <span class="nf">Store</span><span class="p">(</span><span class="kt">int</span> <span class="p">*</span><span class="n">ptr</span><span class="p">,</span> <span class="n">Vector256</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">data</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">Debug</span><span class="p">.</span><span class="nf">Assert</span><span class="p">((</span><span class="n">ptr</span> <span class="p">+</span> <span class="n">N</span> <span class="p">-</span> <span class="m">1</span><span class="p">)</span> <span class="p">&lt;</span> <span class="n">p</span> <span class="p">+</span> <span class="n">lengthInVectors</span> <span class="p">*</span> <span class="n">N</span><span class="p">,</span>
+                   <span class="s">"Writing past end of array"</span><span class="p">);</span>
+      <span class="n">Debug</span><span class="p">.</span><span class="nf">Assert</span><span class="p">((</span><span class="n">ptr</span> <span class="p">+</span> <span class="n">N</span> <span class="p">-</span> <span class="m">1</span><span class="p">)</span> <span class="p">&lt;</span> <span class="n">pRead</span><span class="p">,</span>
+                   <span class="s">"Writing will overwrite unread data"</span><span class="p">);</span>
+      <span class="c1">// Finally call the real Store()</span>
+      <span class="n">Avx</span><span class="p">.</span><span class="nf">Store</span><span class="p">(</span><span class="n">ptr</span><span class="p">,</span> <span class="n">data</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="cp">#endif
+</span><span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>As you can see, this is a nifty way to abuse <code class="highlighter-rouge">using static</code> statements with local functions. We override the <code class="highlighter-rouge">LoadDquVector256()</code> / <code class="highlighter-rouge">Store</code> intrinsics only in <code class="highlighter-rouge">DEBUG</code> mode, so there’s no performance hit that they incur in <code class="highlighter-rouge">RELEASE</code>, and we also make use of the fact that they are defined as local functions to perform some in-depth <code class="highlighter-rouge">Debug.Assert()</code>ing  that is based on the internal state of the function. Without defining these functions as local we would not be able to do so…</p>
+
+<p>This isn’t necessarily useful for vectorized code exclusively, but any code that is potentially tricky. I hope you find this useful! I don’t think I’ve seen this in the wild before.</p>

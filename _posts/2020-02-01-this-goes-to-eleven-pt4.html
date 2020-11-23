@@ -1,0 +1,2140 @@
+<p>I ended up going down the rabbit hole re-implementing array sorting with AVX2 intrinsics, and there’s no reason I should go down alone.</p>
+
+<p>Since there’s a lot to go over here, I’ll split it up into a few parts:</p>
+
+<ol>
+  <li>In <a href="/2020-01-28/this-goes-to-eleven-pt1">part 1</a>, we start with a refresher on <code class="highlighter-rouge">QuickSort</code> and how it compares to <code class="highlighter-rouge">Array.Sort()</code>.</li>
+  <li>In <a href="/2020-01-29/this-goes-to-eleven-pt2">part 2</a>, we go over the basics of vectorized hardware intrinsics, vector types, and go over a handful of vectorized instructions we’ll use in part 3. We still won’t be sorting anything.</li>
+  <li>In <a href="/2020-01-30/this-goes-to-eleven-pt3">part 3</a> we go through the initial code for the vectorized sorting, and start seeing some payoff. We finish agonizing courtesy of the CPU’s branch predictor, throwing a wrench into our attempts.</li>
+  <li>In this part, we go over a handful of optimization approaches that I attempted trying to get the vectorized partition to run faster, seeing what worked and what didn’t.</li>
+  <li>In <a href="/2020-02-02/this-goes-to-eleven-pt5">part 5</a>, we’ll take a deep dive into how to deal with memory alignment issues.</li>
+  <li>In part 6, we’ll take a pause from the vectorized partitioning, to get rid of almost 100% of the remaining scalar code, by implementing small, constant size array sorting with yet more AVX2 vectorization.</li>
+  <li>In part 7, We’ll circle back and try to deal with a nasty slowdown left in our vectorized partitioning code</li>
+  <li>In part 8, I’ll tell you the sad story of a very twisted optimization I managed to pull off while failing miserably at the same time.</li>
+  <li>In part 9, I’ll try some algorithmic improvements to milk those last drops of perf, or at least those that I can think of, from this code.</li>
+</ol>
+
+<h2 id="squeezing-some-more-juice">Squeezing some more juice</h2>
+
+<p>I thought it would be nice to show a bunch of things I ended up trying to improve performance.
+I tried to keep most of these experiments in separate implementations, both the ones that yielded positive results and the failures. These can be seen in the original repo under the <a href="https://github.com/damageboy/VxSort/tree/research/VxSortResearch/Unstable/AVX2/Happy">Happy</a> and <a href="https://github.com/damageboy/VxSort/tree/research/VxSortResearch/Unstable/AVX2/Sad">Sad</a> folders.</p>
+
+<p>While some worked, and some didn’t, I think a bunch of these were worth mentioning, so here goes:</p>
+
+<h3 id="dealing-with-small-jit-hiccups-1">Dealing with small JIT hiccups: <img class="emoji" title=":+1:" alt=":+1:" src="https://github.githubassets.com/images/icons/emoji/unicode/1f44d.png" height="20" width="20">
+</h3>
+
+<p>One of the more surprising things I’ve discovered during the optimization journey was that the JIT could generate much better code, specifically around/with pointer arithmetic. With the basic version we got working by the end of the <a href="/2020-01-30/this-goes-to-eleven-pt3">3<sup>rd</sup> post</a>, I started turning my attention to the body of the main loop. That main loop is where I presume we spend most of our execution time. I quickly encountered some red-flag raising assembly code, specifically with this single line of code, which we’ve briefly discussed before:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td>
+<td class="rouge-code"><pre><span class="k">if</span> <span class="p">(</span><span class="n">readLeft</span>   <span class="p">-</span> <span class="n">writeLeft</span> <span class="p">&lt;=</span>
+    <span class="n">writeRight</span> <span class="p">-</span> <span class="n">readRight</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// ...</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="c1">// ...</span>
+<span class="p">}</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>It looks innocent enough, but here’s the freely commented x86 asm code for it:</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+</pre></td>
+<td class="rouge-code"><pre><span class="nf">mov</span>     <span class="nb">rax</span><span class="p">,</span><span class="nb">rdx</span>       <span class="c1">; ✓  copy readLeft</span>
+<span class="nf">sub</span>     <span class="nb">rax</span><span class="p">,</span><span class="nv">r12</span>       <span class="c1">; ✓  subtract writeLeft</span>
+<span class="nf">mov</span>     <span class="nb">rcx</span><span class="p">,</span><span class="nb">rax</span>       <span class="c1">; ✘  wat?</span>
+<span class="nf">sar</span>     <span class="nb">rcx</span><span class="p">,</span><span class="mh">3Fh</span>       <span class="c1">; ✘  wat?1?</span>
+<span class="nf">and</span>     <span class="nb">rcx</span><span class="p">,</span><span class="mi">3</span>         <span class="c1">; ✘  wat?!?!?</span>
+<span class="nf">add</span>     <span class="nb">rax</span><span class="p">,</span><span class="nb">rcx</span>       <span class="c1">; ✘  wat!?!@#</span>
+<span class="nf">sar</span>     <span class="nb">rax</span><span class="p">,</span><span class="mi">2</span>         <span class="c1">; ✘  wat#$@#$@</span>
+<span class="nf">mov</span>     <span class="nb">rcx</span><span class="p">,[</span><span class="nb">rbp</span><span class="o">-</span><span class="mh">58h</span><span class="p">]</span> <span class="c1">; ✓✘ copy writeRight, but from stack?</span>
+<span class="nf">mov</span>     <span class="nv">r8</span><span class="p">,</span><span class="nb">rcx</span>        <span class="c1">; ✓✘ in the loop body?!?!?, Oh lordy!</span>
+<span class="nf">sub</span>     <span class="nv">r8</span><span class="p">,</span><span class="nb">rsi</span>        <span class="c1">; ✓  subtract readRight</span>
+<span class="nf">mov</span>     <span class="nv">r10</span><span class="p">,</span><span class="nv">r8</span>        <span class="c1">; ✘  wat?</span>
+<span class="nf">sar</span>     <span class="nv">r10</span><span class="p">,</span><span class="mh">3Fh</span>       <span class="c1">; ✘  wat?!?</span>
+<span class="nf">and</span>     <span class="nv">r10</span><span class="p">,</span><span class="mi">3</span>         <span class="c1">; ✘  wat!?!@#</span>
+<span class="nf">add</span>     <span class="nv">r8</span><span class="p">,</span><span class="nv">r10</span>        <span class="c1">; ✘  wat#$@#$@</span>
+<span class="nf">sar</span>     <span class="nv">r8</span><span class="p">,</span><span class="mi">2</span>          <span class="c1">; ✘  wat^!#$!#$</span>
+<span class="nf">cmp</span>     <span class="nb">rax</span><span class="p">,</span><span class="nv">r8</span>        <span class="c1">; ✓  finally, comapre!</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>It’s not every day that we get to see two JIT issues with one line of code, I know some people might take this as a bad sign, but in my mind this is great! To me this feels like digging for oil in Texas in the early 20s…
+We’ve practically hit the ground with a pickaxe accidentally, only to see black liquid seeping out almost immediately!</p>
+
+<h4 id="jit-bug-1-variable-not-promoted-to-register">JIT Bug 1: variable not promoted to register</h4>
+
+<p>One super weird thing that we see happening here is the difference in the asm code that copies <code class="highlighter-rouge">writeRight</code> on <span class="uk-label">L8-9</span> from the <em>stack</em> (<code class="highlighter-rouge">[rbp-58h]</code>) before performing the subtraction when compared to <span class="uk-label">L1</span> where a conceptually similar copy is performed for <code class="highlighter-rouge">readLeft</code> from a register (<code class="highlighter-rouge">rdx</code>). The code merely tries to subtract two pairs of pointers, but the generated machine code is weird: 3 out of 4 pointers were correctly lifted out of the stack into registers outside the body of the loop (<code class="highlighter-rouge">readLeft</code>, <code class="highlighter-rouge">writeLeft</code>, <code class="highlighter-rouge">readRight</code>), but the 4<sup>th</sup> one, <code class="highlighter-rouge">writeRight</code>, is the designated black-sheep of the family and is being continuously read from the stack (and later in that loop body is also written back to the stack, to make things worse).<br>
+There is no good reason for this, and this clearly smells! What do we do?</p>
+
+<p>For one thing, I’ve <a href="https://github.com/dotnet/runtime/issues/35495">opened up an issue</a> about this weirdness. The issue itself shows just how finicky the JIT is regarding this one variable, and (un)surprisingly, by fudging around the setup code this can be easily worked around for now.<br>
+As a refresher, here’s the original setup code I presented in the previous post, just before we enter the loop body:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+</pre></td>
+<td class="rouge-code"><pre><span class="k">unsafe</span> <span class="kt">int</span><span class="p">*</span> <span class="nf">VectorizedPartitionInPlace</span><span class="p">(</span><span class="kt">int</span><span class="p">*</span> <span class="n">left</span><span class="p">,</span> <span class="kt">int</span><span class="p">*</span> <span class="n">right</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">var</span> <span class="n">writeLeft</span> <span class="p">=</span> <span class="n">left</span><span class="p">;</span>
+    <span class="kt">var</span> <span class="n">writeRight</span> <span class="p">=</span> <span class="n">right</span> <span class="p">-</span> <span class="n">N</span> <span class="p">-</span> <span class="m">1</span><span class="p">;</span> <span class="c1">// &lt;- Why the hate?</span>
+    <span class="kt">var</span> <span class="n">tmpLeft</span> <span class="p">=</span> <span class="n">_tempStart</span><span class="p">;</span>
+    <span class="kt">var</span> <span class="n">tmpRight</span> <span class="p">=</span> <span class="n">_tempEnd</span> <span class="p">-</span> <span class="n">N</span><span class="p">;</span>
+
+    <span class="kt">var</span> <span class="n">pBase</span> <span class="p">=</span> <span class="n">Int32PermTables</span><span class="p">.</span><span class="n">IntPermTablePtr</span><span class="p">;</span>
+    <span class="kt">var</span> <span class="n">P</span> <span class="p">=</span> <span class="n">Vector256</span><span class="p">.</span><span class="nf">Create</span><span class="p">(</span><span class="n">pivot</span><span class="p">);</span>
+
+    <span class="nf">PartitionBlock</span><span class="p">(</span><span class="n">left</span><span class="p">,</span>          <span class="n">P</span><span class="p">,</span> <span class="k">ref</span> <span class="n">tmpLeft</span><span class="p">,</span> <span class="k">ref</span> <span class="n">tmpRight</span><span class="p">);</span>
+    <span class="nf">PartitionBlock</span><span class="p">(</span><span class="n">right</span> <span class="p">-</span> <span class="n">N</span> <span class="p">-</span> <span class="m">1</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="k">ref</span> <span class="n">tmpLeft</span><span class="p">,</span> <span class="k">ref</span> <span class="n">tmpRight</span><span class="p">);</span>
+
+    <span class="kt">var</span> <span class="n">readLeft</span>  <span class="p">=</span> <span class="n">left</span> <span class="p">+</span> <span class="n">N</span><span class="p">;</span>
+    <span class="kt">var</span> <span class="n">readRight</span> <span class="p">=</span> <span class="n">right</span> <span class="p">-</span> <span class="m">2</span><span class="p">*</span><span class="n">N</span> <span class="p">-</span> <span class="m">1</span><span class="p">;</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>And here’s a simple fix: moving the pointer declaration closer to the loop body seems to convince the JIT that we can all be friends once more:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+</pre></td>
+<td class="rouge-code"><pre><span class="k">unsafe</span> <span class="kt">int</span><span class="p">*</span> <span class="nf">VectorizedPartitionInPlace</span><span class="p">(</span><span class="kt">int</span><span class="p">*</span> <span class="n">left</span><span class="p">,</span> <span class="kt">int</span><span class="p">*</span> <span class="n">right</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// ... omitted for brevity</span>
+    <span class="kt">var</span> <span class="n">tmpLeft</span> <span class="p">=</span> <span class="n">_tempStart</span><span class="p">;</span>
+    <span class="kt">var</span> <span class="n">tmpRight</span> <span class="p">=</span> <span class="n">_tempEnd</span> <span class="p">-</span> <span class="n">N</span><span class="p">;</span>
+
+    <span class="nf">PartitionBlock</span><span class="p">(</span><span class="n">left</span><span class="p">,</span>          <span class="n">P</span><span class="p">,</span> <span class="k">ref</span> <span class="n">tmpLeft</span><span class="p">,</span> <span class="k">ref</span> <span class="n">tmpRight</span><span class="p">);</span>
+    <span class="nf">PartitionBlock</span><span class="p">(</span><span class="n">right</span> <span class="p">-</span> <span class="n">N</span> <span class="p">-</span> <span class="m">1</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="k">ref</span> <span class="n">tmpLeft</span><span class="p">,</span> <span class="k">ref</span> <span class="n">tmpRight</span><span class="p">);</span>
+
+    <span class="kt">var</span> <span class="n">writeLeft</span> <span class="p">=</span> <span class="n">left</span><span class="p">;</span>
+    <span class="kt">var</span> <span class="n">writeRight</span> <span class="p">=</span> <span class="n">right</span> <span class="p">-</span> <span class="n">N</span> <span class="p">-</span> <span class="m">1</span><span class="p">;</span> <span class="c1">// &lt;- Oh, so now we're cool?</span>
+    <span class="kt">var</span> <span class="n">readLeft</span>  <span class="p">=</span> <span class="n">left</span> <span class="p">+</span> <span class="n">N</span><span class="p">;</span>
+    <span class="kt">var</span> <span class="n">readRight</span> <span class="p">=</span> <span class="n">right</span> <span class="p">-</span> <span class="m">2</span><span class="p">*</span><span class="n">N</span> <span class="p">-</span> <span class="m">1</span><span class="p">;</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>The asm is <em>slightly</em> cleaner:</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+</pre></td>
+<td class="rouge-code"><pre><span class="nf">mov</span>     <span class="nv">r8</span><span class="p">,</span><span class="nb">rax</span>        <span class="c1">; ✓ copy readLeft</span>
+<span class="nf">sub</span>     <span class="nv">r8</span><span class="p">,</span><span class="nv">r15</span>        <span class="c1">; ✓ subtract writeLeft</span>
+<span class="nf">mov</span>     <span class="nv">r9</span><span class="p">,</span><span class="nv">r8</span>         <span class="c1">; ✘ wat?</span>
+<span class="nf">sar</span>     <span class="nv">r9</span><span class="p">,</span><span class="mh">3Fh</span>        <span class="c1">; ✘ wat?1?</span>
+<span class="nf">and</span>     <span class="nv">r9</span><span class="p">,</span><span class="mi">3</span>          <span class="c1">; ✘ wat?!?!?</span>
+<span class="nf">add</span>     <span class="nv">r8</span><span class="p">,</span><span class="nv">r9</span>         <span class="c1">; ✘ wat!?!@#</span>
+<span class="nf">sar</span>     <span class="nv">r8</span><span class="p">,</span><span class="mi">2</span>          <span class="c1">; ✘ wat#$@#$@</span>
+<span class="nf">mov</span>     <span class="nv">r9</span><span class="p">,</span><span class="nb">rsi</span>        <span class="c1">; ✓ copy writeRight</span>
+<span class="nf">sub</span>     <span class="nv">r9</span><span class="p">,</span><span class="nb">rcx</span>        <span class="c1">; ✓ subtract readRight</span>
+<span class="nf">mov</span>     <span class="nv">r10</span><span class="p">,</span><span class="nv">r9</span>        <span class="c1">; ✘ wat?1?</span>
+<span class="nf">sar</span>     <span class="nv">r10</span><span class="p">,</span><span class="mh">3Fh</span>       <span class="c1">; ✘ wat?!?!?</span>
+<span class="nf">and</span>     <span class="nv">r10</span><span class="p">,</span><span class="mi">3</span>         <span class="c1">; ✘ wat!?!@#</span>
+<span class="nf">add</span>     <span class="nv">r9</span><span class="p">,</span><span class="nv">r10</span>        <span class="c1">; ✘ wat#$@#$@</span>
+<span class="nf">sar</span>     <span class="nv">r9</span><span class="p">,</span><span class="mi">2</span>          <span class="c1">; ✘ wat^%#^#@!</span>
+<span class="nf">cmp</span>     <span class="nv">r8</span><span class="p">,</span><span class="nv">r9</span>         <span class="c1">; ✓ finally, comapre!</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>It doesn’t look like much, but we’ve managed to remove two memory accesses from the loop body (the read, shown above and a symmetrical write to the same stack variable/location towards the end of the loop).
+It’s also clear, at least from my comments that I’m not entirely pleased yet, so let’s move on to…</p>
+
+<h4 id="jit-bug-2-not-optimizing-pointer-difference-comparisons">JIT bug 2: not optimizing pointer difference comparisons</h4>
+
+<p>Calling this one a bug might be stretch, but in the world of the JIT, sub-optimal code generation can be considered just that. The original code performing the comparison is making the JIT (wrongfully) think that we want to perform <code class="highlighter-rouge">int *</code> arithmetic for <code class="highlighter-rouge">readLeft - writeLeft</code> and <code class="highlighter-rouge">writeRight - readRight</code>. In other words: The JIT emits code subtracting both pointer pairs, generating a <code class="highlighter-rouge">byte *</code> difference for each pair; which is great (I marked that with checkmarks in the listings). Then, it goes on to generate extra code converting those differences into <code class="highlighter-rouge">int *</code> units: so lots of extra arithmetic operations. This is simply useless: we just care if one side is larger than the other. What the JIT is doing here is similar in spirit to converting two distance measurements taken in <code class="highlighter-rouge">cm</code> to <code class="highlighter-rouge">km</code> just to compare which one is greater.<br>
+To work around this disappointing behaviour, I wrote this instead:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td>
+<td class="rouge-code"><pre><span class="k">if</span> <span class="p">((</span><span class="kt">byte</span> <span class="p">*)</span> <span class="n">readLeft</span>   <span class="p">-</span> <span class="p">(</span><span class="kt">byte</span> <span class="p">*)</span> <span class="n">writeLeft</span><span class="p">)</span> <span class="p">&lt;=</span>
+    <span class="p">(</span><span class="kt">byte</span> <span class="p">*)</span> <span class="n">writeRight</span> <span class="p">-</span> <span class="p">(</span><span class="kt">byte</span> <span class="p">*)</span> <span class="n">readRight</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// ...</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="c1">// ...</span>
+<span class="p">}</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>By doing this sort of seemingly useless casting 4 times, we get the following asm generated:</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre></td>
+<td class="rouge-code"><pre><span class="nf">mov</span> <span class="nb">rcx</span><span class="p">,</span> <span class="nb">rdi</span>  <span class="c1">; ✓ copy readRight</span>
+<span class="nf">sub</span> <span class="nb">rcx</span><span class="p">,</span> <span class="nv">r12</span>  <span class="c1">; ✓ subtract writeLeft</span>
+<span class="nf">mov</span> <span class="nv">r9</span><span class="p">,</span> <span class="nb">rdi</span>   <span class="c1">; ✓ copy writeRight</span>
+<span class="nf">sub</span> <span class="nv">r9</span><span class="p">,</span> <span class="nv">r13</span>   <span class="c1">; ✓ subtract readRight</span>
+<span class="nf">cmp</span> <span class="nb">rcx</span><span class="p">,</span> <span class="nv">r9</span>   <span class="c1">; ✓ compare</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>It doesn’t take a degree in reverse-engineering asm code to figure out this was a good idea.<br>
+Casting each pointer to <code class="highlighter-rouge">byte *</code> coerces the JIT to do our bidding and just perform a simpler comparison.</p>
+
+<h4 id="jit-bug-3-updating-the-write-pointers-more-efficiently">JIT Bug 3: Updating the <code class="highlighter-rouge">write*</code> pointers more efficiently</h4>
+
+<p>I discovered another missed opportunity in the pointer update code at the end of our inlined partitioning block. When we update the two <code class="highlighter-rouge">write*</code> pointers, our intention is to update two <code class="highlighter-rouge">int *</code> values with the result of the <code class="highlighter-rouge">PopCount</code> intrinsic:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td>
+<td class="rouge-code"><pre><span class="kt">var</span> <span class="n">popCount</span> <span class="p">=</span> <span class="nf">PopCount</span><span class="p">(</span><span class="n">mask</span><span class="p">);</span>
+<span class="n">writeLeft</span> <span class="p">+=</span> <span class="m">8U</span> <span class="p">-</span> <span class="n">popCount</span><span class="p">;</span>
+<span class="n">writeRight</span> <span class="p">-=</span> <span class="n">popCount</span><span class="p">;</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>Unfortunately, the JIT isn’t smart enough to see that it would be wiser to left shift <code class="highlighter-rouge">popCount</code> once by <code class="highlighter-rouge">2</code> (e.g. convert to <code class="highlighter-rouge">byte *</code> distance)  and reuse that left-shifted value <strong>twice</strong> while mutating the two pointers.
+Again, uglifying the originally clean code into the following god-awful mess get’s the job done:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td>
+<td class="rouge-code"><pre><span class="kt">var</span> <span class="n">popCount</span> <span class="p">=</span> <span class="nf">PopCount</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span> <span class="p">&lt;&lt;</span> <span class="m">2</span><span class="p">;</span>
+<span class="n">writeRight</span> <span class="p">=</span> <span class="p">((</span><span class="kt">int</span> <span class="p">*)</span> <span class="p">((</span><span class="kt">byte</span> <span class="p">*)</span> <span class="n">writeRight</span> <span class="p">-</span> <span class="n">popCount</span><span class="p">);</span>
+<span class="n">writeLeft</span> <span class="p">=</span>  <span class="p">((</span><span class="kt">int</span> <span class="p">*)</span> <span class="p">((</span><span class="kt">byte</span> <span class="p">*)</span> <span class="n">writeLeft</span> <span class="p">+</span> <span class="m">8</span><span class="p">*</span><span class="m">4U</span> <span class="p">-</span> <span class="n">popCount</span><span class="p">);</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>I’ll skip the asm this time. It’s pretty clear from the C# that we pre-left shift (or multiply by 4) the <code class="highlighter-rouge">popCount</code> result before mutating the pointers.
+We’re now generating slightly denser code by eliminating a silly instruction from a hot loop.</p>
+
+<p>All 3 of these workarounds can be seen on my repo in the <a href="https://github.com/damageboy/VxSort/tree/research">research branch</a>. I kept this pretty much as-is under <a href="https://github.com/damageboy/VxSort/blob/research/VxSortResearch/Unstable/AVX2/Happy/B4_1_DoublePumpMicroOpt.cs"><code class="highlighter-rouge">B4_1_DoublePumpMicroOpt.cs</code></a>.
+Time to see whether all these changes help in terms of performance:</p>
+
+<div>
+  <div class="stickemup">
+
+<ul class="uk-tab" data-uk-switcher="{connect:'#ba241159-1102-44c3-917f-5d765c2b25c0'}">
+
+	<li class="uk-active"><a href="#"><i class="glyphicon glyphicon-stats"></i> Scaling</a></li>
+
+	<li><a href="#"><i class="glyphicon glyphicon-stats"></i> Time/N</a></li>
+
+	<li><a href="#"><i class="glyphicon glyphicon-list-alt"></i> Benchmarks</a></li>
+
+	<li><a href="#"><i class="glyphicon glyphicon-info-sign"></i> Setup</a></li>
+
+</ul>
+
+<ul id="ba241159-1102-44c3-917f-5d765c2b25c0" class="uk-switcher uk-margin">
+
+	<li>
+<div>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
+<div data-intro="Size of the sorting problem, 10..10,000,000 in powers of 10" data-position="bottom">
+<div data-intro="Performance scale: Array.Sort (solid gray) is always 100%, and the other methods are scaled relative to it" data-position="left">
+<div data-intro="Click legend items to show/hide series" data-position="right">
+<div class="benchmark-chart-container">
+<canvas data-chart="line">
+N,100,1K,10K,100K,1M,10M
+Naive,         1   , 1   , 1  , 1   , 1    , 1
+MicroOpt, 1.01, 0.93, 0.93, 0.93, 0.89 , 0.87
+<!-- 
+{ 
+ "data" : {
+  "datasets" : [ { 
+    "backgroundColor": "rgba(66,66,66,0.35)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": -30, "hachureGap": 9, "fillWeight": 0.3	}
+  },
+  { 
+    "backgroundColor": "rgba(33,220,33,.9)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": 30, "hachureGap": 3	}
+  }]
+ },
+ "options": {
+    "title": { "text": "AVX2 Micro-optimized Sorting - Scaled to AVX2 Naive Sorting", "display": true },
+    "scales": { 
+      "yAxes": [{
+       "ticks": {
+         "fontFamily": "Indie Flower",
+         "min": 0.84, 
+         "callback": "ticksPercent"
+        },
+        "scaleLabel": {
+          "labelString": "Scaling (%)",
+          "display": true
+        }
+      }]
+    }
+ },
+ "defaultOptions": {"scales":{"xAxes":[{"scaleLabel":{"display":"true,","labelString":"N (elements)","fontFamily":"Indie Flower"},"ticks":{"fontFamily":"Indie Flower"}}]},"legend":{"display":true,"position":"bottom","labels":{"fontFamily":"Indie Flower","fontSize":14}},"title":{"position":"top","fontFamily":"Indie Flower","fontSize":16}}
+}
+--> </canvas>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+</li>
+
+	<li>
+<div>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
+<div data-intro="Size of the sorting problem, 10..10,000,000 in powers of 10" data-position="bottom">
+<div data-intro="Time in nanoseconds spent sorting per element. Array.Sort (solid gray) is the baseline, again" data-position="left">
+<div data-intro="Click legend items to show/hide series" data-position="right">
+<div class="benchmark-chart-container">
+<canvas data-chart="line">
+N,100,1K,10K,100K,1M,10M
+Naive        , 21.2415, 26.0040, 30.7502, 31.4513, 27.4290, 30.6499
+MicroOpt, 21.3374, 23.9888, 28.4617, 29.1356, 24.4974, 26.8152
+<!-- 
+{ 
+ "data" : {
+  "datasets" : [ { 
+    "backgroundColor": "rgba(66,66,66,0.35)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": -30, "hachureGap": 9, "fillWeight": 0.3	}
+  },
+  { 
+    "backgroundColor": "rgba(33,220,33,.9)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": 30, "hachureGap": 3	}
+  }]
+ },
+ "options": {
+    "title": { "text": "AVX2 Naive+Micro-optimized Sorting - log(Time/N)", "display": true },
+    "scales": { 
+      "yAxes": [{ 
+        "type": "logarithmic",
+        "ticks": {
+          "min": 20,
+          "max": 35,
+          "callback": "ticksNumStandaard",
+          "fontFamily": "Indie Flower"          
+        },
+        "scaleLabel": {
+          "labelString": "Time/N (ns)",
+          "fontFamily": "Indie Flower",
+          "display": true
+        }
+      }]
+    }
+ },
+ "defaultOptions": {"scales":{"xAxes":[{"scaleLabel":{"display":"true,","labelString":"N (elements)","fontFamily":"Indie Flower"},"ticks":{"fontFamily":"Indie Flower"}}]},"legend":{"display":true,"position":"bottom","labels":{"fontFamily":"Indie Flower","fontSize":14}},"title":{"position":"top","fontFamily":"Indie Flower","fontSize":16}}
+}
+--> </canvas>
+</div>
+</div>
+</div>
+</div>
+</div>
+</li>
+
+	<li>
+<div>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
+<table class="table datatable" data-json="../_posts/Bench.BlogPt4_1_Int32_-report.datatable.json" data-id-field="name" data-pagination="false" data-page-list="[9, 18]" data-intro="Each row in this table represents a benchmark result" data-position="left" data-show-pagination-switch="false">
+  <thead data-intro="The header can be used to sort/filter by clicking" data-position="right">
+    <tr>
+        <th data-field="TargetMethodColumn.Method" data-sortable="true" data-filter-control="select">
+          <span data-intro="The name of the benchmarked method" data-position="top">
+            Method<br>Name
+          </span>
+        </th>
+        <th data-field="N" data-sortable="true" data-value-type="int" data-filter-control="select">
+            <span data-intro="The size of the sorting problem being benchmarked (# of integers)" data-position="top">
+            Problem<br>Size
+            </span>
+        </th>
+        <th data-field="TimePerNDataTable" data-sortable="true" data-value-type="float2-interval-muted">
+            <span data-intro="Time in nanoseconds spent sorting each element in the array (with confidence intervals in parenthesis)" data-position="top">
+              Time /<br>Element (ns)
+            </span>
+        </th>
+        <th data-field="RatioDataTable" data-sortable="true" data-value-type="inline-bar-horizontal-percentage">
+            <span data-intro="Each result is scaled to its baseline (Array.Sort in this case)" data-position="top">
+                  Scaling
+            </span>
+        </th>
+        <th data-field="Measurements" data-sortable="true" data-value-type="inline-bar-vertical">
+            <span data-intro="Raw benchmark results visualize how stable the result it. Longest/Shortest runs marked with &lt;span style='color: red'&gt;Red&lt;/span&gt;/&lt;span style='color: green'&gt;Green&lt;/span&gt;" data-position="top">Measurements</span>
+        </th>
+    </tr>
+  </thead>
+</table>
+</div>
+
+</li>
+
+	<li>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+</pre></td>
+<td class="rouge-code"><pre><span class="nv">BenchmarkDotNet</span><span class="o">=</span>v0.12.0, <span class="nv">OS</span><span class="o">=</span>clear-linux-os 32120
+Intel Core i7-7700HQ CPU 2.80GHz <span class="o">(</span>Kaby Lake<span class="o">)</span>, 1 CPU, 4 logical and 4 physical cores
+.NET Core <span class="nv">SDK</span><span class="o">=</span>3.1.100
+  <span class="o">[</span>Host]     : .NET Core 3.1.0 <span class="o">(</span>CoreCLR 4.700.19.56402, CoreFX 4.700.19.56404<span class="o">)</span>, X64 RyuJIT
+  Job-DEARTS : .NET Core 3.1.0 <span class="o">(</span>CoreCLR 4.700.19.56402, CoreFX 4.700.19.56404<span class="o">)</span>, X64 RyuJIT
+
+<span class="nv">InvocationCount</span><span class="o">=</span>3  <span class="nv">IterationCount</span><span class="o">=</span>15  <span class="nv">LaunchCount</span><span class="o">=</span>2
+<span class="nv">UnrollFactor</span><span class="o">=</span>1  <span class="nv">WarmupCount</span><span class="o">=</span>10
+
+<span class="nv">$ </span><span class="nb">grep</span> <span class="s1">'stepping\|model\|microcode'</span> /proc/cpuinfo | <span class="nb">head</span> <span class="nt">-4</span>
+model           : 158
+model name      : Intel<span class="o">(</span>R<span class="o">)</span> Core<span class="o">(</span>TM<span class="o">)</span> i7-7700HQ CPU @ 2.80GHz
+stepping        : 9
+microcode       : 0xb4
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+</li>
+
+</ul>
+
+</div>
+
+  <p>This is quite better! I’ve artificially set the y-axis here to a narrow range of 80%-105% so that the differences would become more apparent. The improvement is <em>very</em> measurable. Too bad we had to uglify the code to get here, but such is life. Our results just improved by another ~7-14% across the board.<br>
+If this is the going rate for ugly, I’ll bite the bullet :)</p>
+
+  <p>I did not include any statistics collection tab for this version since there is no algorithmic change involved.</p>
+</div>
+
+<h3 id="selecting-a-better-cut-off-threshold-for-scalar-sorting-1">Selecting a better cut-off threshold for scalar sorting: <img class="emoji" title=":+1:" alt=":+1:" src="https://github.githubassets.com/images/icons/emoji/unicode/1f44d.png" height="20" width="20">
+</h3>
+
+<p>I briefly mentioned this at the end of the 3<sup>rd</sup> post: While it made sense to start with the same threshold that <code class="highlighter-rouge">Array.Sort</code> uses (<code class="highlighter-rouge">16</code>) to switch from partitioning into small array sorting, there’s no reason to assume this is the optimal threshold for <em>our</em> partitioning function: Given that the dynamics have changed with vectorized partitioning, the optimal cut-off point probably needs to move too.<br>
+In theory, we should retest the cut-off point after every optimization that succeeds in moving the needle; I won’t do this after every optimization, but I will do so again for the final version. For the meantime, let’s see how playing with the cut-off point changes the results: We’ll try <code class="highlighter-rouge">24</code>, <code class="highlighter-rouge">32</code>, <code class="highlighter-rouge">40</code>, <code class="highlighter-rouge">48</code> on top of <code class="highlighter-rouge">16</code>, and see what comes on top:</p>
+
+<div>
+  <div class="stickemup">
+
+<ul class="uk-tab" data-uk-switcher="{connect:'#7dec60a7-8c46-4545-8435-5d39e42de644'}">
+
+	<li class="uk-active"><a href="#"><i class="glyphicon glyphicon-stats"></i> Scaling</a></li>
+
+	<li><a href="#"><i class="glyphicon glyphicon-stats"></i> Time/N</a></li>
+
+	<li><a href="#"><i class="glyphicon glyphicon-list-alt"></i> Benchmarks</a></li>
+
+	<li><a href="#"><i class="glyphicon glyphicon-info-sign"></i> Setup</a></li>
+
+</ul>
+
+<ul id="7dec60a7-8c46-4545-8435-5d39e42de644" class="uk-switcher uk-margin">
+
+	<li>
+<div>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
+<div data-intro="Size of the sorting problem, 10..10,000,000 in powers of 10" data-position="bottom">
+<div data-intro="Performance scale: Array.Sort (solid gray) is always 100%, and the other methods are scaled relative to it" data-position="left">
+<div data-intro="Click legend items to show/hide series" data-position="right">
+<div class="benchmark-chart-container">
+<canvas data-chart="line">
+N,100,1K,10K,100K,1M,10M
+MicroOpt_24,0.823310023,0.882747579,0.914373696,0.902330475,0.958166708,0.971168474
+MicroOpt_32,0.817715618,0.766905542,0.839337033,0.850782566,0.973364241,0.9561571
+MicroOpt_40,0.761305361,0.749485401,0.837020549,0.842011671,0.95013881,0.958056824
+MicroOpt_48,0.758041958,0.75722345,0.823212214,0.839358026,0.966057806,0.962200074
+<!-- 
+{ 
+ "data" : {
+  "datasets" : [ 
+  { 
+    "backgroundColor": "rgba(33,33,220,.5)",
+    "hidden": "true",
+    "rough": { "fillStyle": "hachure", "hachureAngle": 30, "hachureGap": 12	}
+  },
+  { 
+    "backgroundColor": "rgba(220,33,33,.5)",
+    "hidden": "true",    
+    "rough": { "fillStyle": "hachure", "hachureAngle": 90, "hachureGap": 12	}
+  },
+  { 
+    "backgroundColor": "rgba(33,220,33,.9)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": 60, "hachureGap": 3	}
+  },
+  { 
+    "backgroundColor": "rgba(33,220,220,.5)",
+    "hidden": "true",    
+    "rough": { "fillStyle": "hachure", "hachureAngle": 120, "hachureGap": 12	}
+  }
+  ]
+ },
+ "options": {
+    "title": { "text": "AVX2 Sorting - Cut-off Tuning", "display": true },
+    "scales": { 
+      "yAxes": [{
+       "ticks": {
+         "fontFamily": "Indie Flower",
+         "min": 0.70, 
+         "callback": "ticksPercent"
+        },
+        "scaleLabel": {
+          "labelString": "Scaling (%)",
+          "display": true
+        }
+      }]
+    }
+ },
+ "defaultOptions": {"scales":{"xAxes":[{"scaleLabel":{"display":"true,","labelString":"N (elements)","fontFamily":"Indie Flower"},"ticks":{"fontFamily":"Indie Flower"}}]},"legend":{"display":true,"position":"bottom","labels":{"fontFamily":"Indie Flower","fontSize":14}},"title":{"position":"top","fontFamily":"Indie Flower","fontSize":16}}
+}
+--> </canvas>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+</li>
+
+	<li>
+<div>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
+<div data-intro="Size of the sorting problem, 10..10,000,000 in powers of 10" data-position="bottom">
+<div data-intro="Time in nanoseconds spent sorting per element. Array.Sort (solid gray) is the baseline, again" data-position="left">
+<div data-intro="Click legend items to show/hide series" data-position="right">
+<div class="benchmark-chart-container">
+<canvas data-chart="line">
+N,100,1K,10K,100K,1M,10M
+MicroOpt_24,17.6195,25.5307,25.4022,26.5767,23.3013,25.6154
+MicroOpt_32,17.3879,22.0054,25.9392,26.6394,23.3355,25.6553
+MicroOpt_40,17.3027,23.2386,26.1287,26.3959,23.4568,25.7346
+MicroOpt_48,17.0937,23.5973,25.6651,26.3667,23.2584,25.6
+<!-- 
+{ 
+ "data" : {
+  "datasets" : [ 
+  { 
+    "backgroundColor": "rgba(33,33,220,.5)",
+    "hidden": "true",
+    "rough": { "fillStyle": "hachure", "hachureAngle": 30, "hachureGap": 12	}    
+  },
+  { 
+    "backgroundColor": "rgba(220,33,33,.5)",
+    "hidden": "true",
+    "rough": { "fillStyle": "hachure", "hachureAngle": 90, "hachureGap": 12	}
+  },
+  { 
+    "backgroundColor": "rgba(33,220,33,.9)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": 60, "hachureGap": 3	}
+  },
+  { 
+    "backgroundColor": "rgba(33,220,220,.5)",
+    "hidden": "true",
+    "rough": { "fillStyle": "hachure", "hachureAngle": 120, "hachureGap": 12	}
+  }
+  ]
+ },
+ "options": {
+    "title": { "text": "AVX2 Sorting - Cut-off Tuning - log(Time/N)", "display": true },
+    "scales": { 
+      "yAxes": [{ 
+        "type": "logarithmic",
+        "ticks": {
+          "min": 15,
+          "max": 30,
+          "callback": "ticksNumStandaard",
+          "fontFamily": "Indie Flower"          
+        },
+        "scaleLabel": {
+          "labelString": "Time/N (ns)",
+          "fontFamily": "Indie Flower",
+          "display": true
+        }
+      }]
+    }
+ },
+ "defaultOptions": {"scales":{"xAxes":[{"scaleLabel":{"display":"true,","labelString":"N (elements)","fontFamily":"Indie Flower"},"ticks":{"fontFamily":"Indie Flower"}}]},"legend":{"display":true,"position":"bottom","labels":{"fontFamily":"Indie Flower","fontSize":14}},"title":{"position":"top","fontFamily":"Indie Flower","fontSize":16}}
+}
+--> </canvas>
+</div>
+</div>
+</div>
+</div>
+</div>
+</li>
+
+	<li>
+<div>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
+<table class="table datatable" data-json="../_posts/Bench.BlogPt4_2_Int32_-report.datatable.json" data-id-field="name" data-pagination="true" data-page-list="[5, 10, 15, 20]" data-intro="Each row in this table represents a benchmark result" data-position="left" data-show-pagination-switch="false">
+  <thead data-intro="The header can be used to sort/filter by clicking" data-position="right">
+    <tr>
+        <th data-field="TargetMethodColumn.Method" data-sortable="true" data-filter-control="select">
+          <span data-intro="The name of the benchmarked method" data-position="top">
+            Method<br>Name
+          </span>
+        </th>
+        <th data-field="N" data-sortable="true" data-value-type="int" data-filter-control="select">
+            <span data-intro="The size of the sorting problem being benchmarked (# of integers)" data-position="top">
+            Problem<br>Size
+            </span>
+        </th>
+        <th data-field="TimePerNDataTable" data-sortable="true" data-value-type="float2-interval-muted">
+            <span data-intro="Time in nanoseconds spent sorting each element in the array (with confidence intervals in parenthesis)" data-position="top">
+              Time /<br>Element (ns)
+            </span>
+        </th>
+        <th data-field="RatioDataTable" data-sortable="true" data-value-type="inline-bar-horizontal-percentage">
+            <span data-intro="Each result is scaled to its baseline (Array.Sort in this case)" data-position="top">
+                  Scaling
+            </span>
+        </th>
+        <th data-field="Measurements" data-sortable="true" data-value-type="inline-bar-vertical">
+            <span data-intro="Raw benchmark results visualize how stable the result it. Longest/Shortest runs marked with &lt;span style='color: red'&gt;Red&lt;/span&gt;/&lt;span style='color: green'&gt;Green&lt;/span&gt;" data-position="top">Measurements</span>
+        </th>
+    </tr>
+  </thead>
+</table>
+</div>
+
+</li>
+
+	<li>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+</pre></td>
+<td class="rouge-code"><pre><span class="nv">BenchmarkDotNet</span><span class="o">=</span>v0.12.0, <span class="nv">OS</span><span class="o">=</span>clear-linux-os 32120
+Intel Core i7-7700HQ CPU 2.80GHz <span class="o">(</span>Kaby Lake<span class="o">)</span>, 1 CPU, 4 logical and 4 physical cores
+.NET Core <span class="nv">SDK</span><span class="o">=</span>3.1.100
+  <span class="o">[</span>Host]     : .NET Core 3.1.0 <span class="o">(</span>CoreCLR 4.700.19.56402, CoreFX 4.700.19.56404<span class="o">)</span>, X64 RyuJIT
+  Job-DEARTS : .NET Core 3.1.0 <span class="o">(</span>CoreCLR 4.700.19.56402, CoreFX 4.700.19.56404<span class="o">)</span>, X64 RyuJIT
+
+<span class="nv">InvocationCount</span><span class="o">=</span>3  <span class="nv">IterationCount</span><span class="o">=</span>15  <span class="nv">LaunchCount</span><span class="o">=</span>2
+<span class="nv">UnrollFactor</span><span class="o">=</span>1  <span class="nv">WarmupCount</span><span class="o">=</span>10
+
+<span class="nv">$ </span><span class="nb">grep</span> <span class="s1">'stepping\|model\|microcode'</span> /proc/cpuinfo | <span class="nb">head</span> <span class="nt">-4</span>
+model           : 158
+model name      : Intel<span class="o">(</span>R<span class="o">)</span> Core<span class="o">(</span>TM<span class="o">)</span> i7-7700HQ CPU @ 2.80GHz
+stepping        : 9
+microcode       : 0xb4
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+</li>
+
+</ul>
+
+</div>
+
+  <p>I’ve pulled a little trick with these charts: by default, I’ve <em>hidden</em> everything but one of the cut-off points: <code class="highlighter-rouge">40</code>, that being the best new cut-off point, at least in my opinion. If you care to follow my reasoning process, I suggest you start slowly clicking (or touching) the <code class="highlighter-rouge">24</code>, <code class="highlighter-rouge">32</code>, <code class="highlighter-rouge">48</code> series/titles in the legend. This will add them back into the chart, one by one. Stop to appreciate what you are seeing; Once you’ll do so, I think it’s easier to see that:</p>
+
+  <ul>
+    <li>The initial value we started off with: <code class="highlighter-rouge">16</code>, the baseline for this series of benchmarks, is undoubtedly the <em>worst possible</em> cut-off for vectorized partitioning…<br>
+<em>All of the other cut-off points have scaling values below 100%</em>, hence they are faster.</li>
+    <li>
+<code class="highlighter-rouge">24</code> does not do us a world of good here either: It’s clearly always next worst option.</li>
+    <li>
+<code class="highlighter-rouge">32</code> is pretty good, except that in the lower edge of the chart, where the higher cut-off points seem to provide better value.</li>
+    <li>For the most part, using any one of <code class="highlighter-rouge">40</code>/<code class="highlighter-rouge">48</code> as a cut-off point seems to be the right way to go. These two cover the least area in the chart. In other words, they all provide the best improvement, on average, for our scenario.</li>
+  </ul>
+
+  <p>I ended up voting for <code class="highlighter-rouge">40</code>. There’s no good reason I can give for this except for (perhaps wrong) instinct. Lest we forget, another small pat of the back is in order: we’ve managed to speed up our sorting code with an improvement ranging from 5-25% throughout the entire spectrum, which is cause for a small celebration in itself.</p>
+
+  <p>To be completely honest here, there is another, ulterior motive, as far as I’m concerned, for showing the effect of changing the small sorting threshold so early into this series. By doing so, we can sense where this trail will take us on our journey: It’s pretty clear that we will end up with two equally important implementations, each handling a large part of the total workload for sorting:</p>
+
+  <ul>
+    <li>The vectorized partitioning will be tasked with the initial heavy lifting, relegated to taking large arrays and breaking them down to many small, unsorted, yet completely distinct groups of elements.<br>
+To put it plainly: taking a million elements and splitting them up into 10,000-20,000 groups of ~50-100 elements each, that do not cross-over each other; that way we can use…</li>
+    <li>Small-sorting, which will end up doing a final pass taking many small ~50-100 element groups, sorting them in place, before moving on to the next group.</li>
+  </ul>
+
+  <p>Given that we will always start with partitioning before concluding with small-sorting, we end up with a complete solution. Just as importantly, we can optimize <em>each</em> of the two parts making up our solution <em>independently</em>, in the coming posts.</p>
+
+</div>
+
+<h3 id="explicit-prefetching--1">Explicit Prefetching: <img class="emoji" title=":-1:" alt=":-1:" src="https://github.githubassets.com/images/icons/emoji/unicode/1f44e.png" height="20" width="20">
+</h3>
+
+<p>I tried using prefetch intrinsics to give the CPU early hints as to where we are reading memory from.</p>
+
+<p>Generally speaking, explicit prefetching can be used to make sure the CPU always reads some data from memory into the cache <em>ahead of the actual time</em> we require it so that the CPU never needs to wait for memory, which is very slow. The bottom line is that having to wait for RAM is a death sentence (200-300 cpu cycles), but even having to wait for L2 cache (14 cycles) when your entire loop’s throughput is around 9 cycles is unpleasant. With prefetch intrinsics we can explicitly instruct the CPU to prefetch specific cache lines all the way to L1 cache, or alternatively specify the target level as L2, L3.</p>
+
+<p>Just because we can do something, doesn’t mean we should: do we actually need to prefetch? CPU designers know all of the above just as much as we do, and the CPU already attempts to prefetch data based on complex and obscure heuristics. You might be tempted to think: “oh, what’s so bad about doing it anyway?”.  Well, quite a lot, to be honest: when we explicitly tell the CPU to prefetch data, we’re wasting both instruction cache and decode+fetch bandwidth. Those might be better used for executing our computation.<br>
+So, the bottom line remain somewhat hazy, but we can probably try and set-up some ground rules that are probably true in 2020:</p>
+
+<ul>
+  <li>CPUs can prefetch data when we traverse memory sequentially.</li>
+  <li>They do so regardless of the traversal direction (increasing/decreasing addresses).</li>
+  <li>They can sucessfully figure out the <em>stride</em> we use, when it is constant.</li>
+  <li>They do so by building up history of our reads, per call-site.</li>
+</ul>
+
+<p>With all that in mind, it is quite likely that prefetching in our case would do little good: Our partitioning code pretty much hits every point in the previous list. But even so, you can never really tell without either trying out, or inspecting memory-related performance counters. The latter, turns out to be <a href="https://gist.github.com/travisdowns/90a588deaaa1b93559fe2b8510f2a739">more complicated than what you’d think</a>, and sometimes, it’s just easier to try out something rather than attempt to measure it ahead of time. In our case, prefetching the <em>writable</em> memory <strong>makes no sense</strong>, as our loop code mostly reads from the same addresses just before writing to them in the next iteration or two, so I mostly focused on trying to prefetch the next read addresses.</p>
+
+<p>Whenever I modified <code class="highlighter-rouge">readLeft</code>, <code class="highlighter-rouge">readRight</code>, I immediately added code like this:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+</pre></td>
+<td class="rouge-code"><pre><span class="kt">int</span> <span class="p">*</span> <span class="n">nextPtr</span><span class="p">;</span>
+<span class="k">if</span> <span class="p">((</span><span class="kt">byte</span> <span class="p">*)</span> <span class="n">readLeft</span>   <span class="p">-</span> <span class="p">(</span><span class="kt">byte</span> <span class="p">*)</span> <span class="n">writeLeft</span><span class="p">)</span> <span class="p">&lt;=</span>
+    <span class="p">(</span><span class="kt">byte</span> <span class="p">*)</span> <span class="n">writeRight</span> <span class="p">-</span> <span class="p">(</span><span class="kt">byte</span> <span class="p">*)</span> <span class="n">readRight</span><span class="p">))</span> <span class="p">{</span>
+    <span class="n">nextPtr</span> <span class="p">=</span> <span class="n">readLeft</span><span class="p">;</span>
+    <span class="n">readLeft</span> <span class="p">+=</span> <span class="m">8</span><span class="p">;</span>
+    <span class="c1">// Trying to be clever here,</span>
+    <span class="c1">// If we are reading from the left at this iteration,</span>
+    <span class="c1">// we are likely to read from right in the next iteration</span>
+    <span class="n">Sse</span><span class="p">.</span><span class="nf">Prefetch0</span><span class="p">((</span><span class="kt">byte</span> <span class="p">*)</span> <span class="n">readRight</span> <span class="p">-</span> <span class="m">64</span><span class="p">);</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="n">nextPtr</span> <span class="p">=</span> <span class="n">readRight</span><span class="p">;</span>
+    <span class="n">readRight</span> <span class="p">-=</span> <span class="m">8</span><span class="p">;</span>
+    <span class="c1">// Same as above, only the other way around:</span>
+    <span class="c1">// After reading from the right, it's likely</span>
+    <span class="c1">// that our next read will be on the left side</span>
+    <span class="n">Sse</span><span class="p">.</span><span class="nf">Prefetch0</span><span class="p">((</span><span class="kt">byte</span> <span class="p">*)</span> <span class="n">readLeft</span> <span class="p">+</span> <span class="m">64</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>This tells the CPU we are about to use data in <code class="highlighter-rouge">readLeft + 64</code> (the next cache-line from the left) and <code class="highlighter-rouge">readRight -  64</code> (the next cache-line from the right) in the following iterations.</p>
+
+<p>While this looks great on paper, the real world results of this were unnoticeable for me and even slightly negative. For the most part, it appears that the CPUs I used for testing did a good job without me constantly telling them to do what they had already been doing on their own… Still, it was worth a shot.</p>
+
+<h3 id="simplifying-the-branch-1">Simplifying the branch <img class="emoji" title=":+1:" alt=":+1:" src="https://github.githubassets.com/images/icons/emoji/unicode/1f44d.png" height="20" width="20">
+</h3>
+
+<p>I’m kind of ashamed at this particular optimization: I had been literally staring at this line of code and optimizing around it for months without stopping to really think about what it was that I’m <strong>really trying</strong> to do. Let’s go back to our re-written branch from a couple of paragraphs ago:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td>
+<td class="rouge-code"><pre><span class="k">if</span> <span class="p">((</span><span class="kt">byte</span> <span class="p">*)</span> <span class="n">readLeft</span>   <span class="p">-</span> <span class="p">(</span><span class="kt">byte</span> <span class="p">*)</span> <span class="n">writeLeft</span><span class="p">)</span> <span class="p">&lt;=</span> 
+    <span class="p">(</span><span class="kt">byte</span> <span class="p">*)</span> <span class="n">writeRight</span> <span class="p">-</span> <span class="p">(</span><span class="kt">byte</span> <span class="p">*)</span> <span class="n">readRight</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// ...</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="c1">// ...</span>
+<span class="p">}</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>I’ve been describing this condition both in animated and code form in the previous part, explaining how for my double-pumping to work, I have to figure out which side we <em>must</em> read from <strong>next</strong> so we never end-up overwriting data before having a chance to read and partition yet. All of this is happening in the name of performing in-place partitioning. However, I’ve been over-complicating the actual condition!<br>
+At some, admittedly late stage, “it” hit me, so let’s play this out step-by-step:</p>
+
+<ol>
+  <li>We always start with the setup I’ve previously described, where we make <code class="highlighter-rouge">8</code> elements worth of space available on <strong>both</strong> sides, by partitioning them away into the temporary memory.</li>
+  <li>When we get into the main partitioning loop, we pick one specific side to read from: so far, this has always been the left side (It doesn’t <em>really</em> matter which side it is, but it arbitrarily ended up being the <em>left</em> side due to the condition being <code class="highlighter-rouge">&lt;=</code> rather than <code class="highlighter-rouge">&lt;</code>).</li>
+  <li>Given all of the above, we always <em>start</em> reading from the left, there-by increasing the “breathing space” on that left side from <code class="highlighter-rouge">8</code> to <code class="highlighter-rouge">16</code> elements temporarily.</li>
+  <li>Once our trusty ole’ partitioning block is done, we can pause and reason on how both sides now look:
+    <ul>
+      <li>The left side either has:
+        <ul>
+          <li>
+<code class="highlighter-rouge">8</code> elements of space (in the less likely, yet possible case that all elements read from it were smaller than the selected pivot) -or-</li>
+          <li>It has more than <code class="highlighter-rouge">8</code> elements of “free” space.</li>
+        </ul>
+      </li>
+      <li>
+        <p>In the first case, where the left side is now back to 8 elements of free space, the right side also has <code class="highlighter-rouge">8</code> elements of free space, since nothing was written on that side!</p>
+      </li>
+      <li>In all other cases, the left side has <em>more</em> than <code class="highlighter-rouge">8</code> elements of free space, and the right side has less than <code class="highlighter-rouge">8</code> elements of free space, by definition.</li>
+    </ul>
+  </li>
+  <li>Since these are the true dynamics, why should we even bother comparing <strong>both</strong> heads and tails of each respective side?</li>
+</ol>
+
+<p>The answer to that last question is: <strong>We don’t have to!</strong><br>
+We could simplify the branch by comparing only the right head+tail pointer distance to see if it is smaller than the magical number <code class="highlighter-rouge">8</code> or not!
+This new condition would be just as good at serving the original <em>intent</em> (which is: “don’t end up overwriting unread data”) as the more complicated branch we used before…<br>
+When the right side has less than <code class="highlighter-rouge">8</code> elements, we <em>have to</em> read from the right side in the next round, since it is in danger of being over-written, otherwise, the only other option is that both sides are back at 8-elements each, and we should go back to reading from the left side again, essentially going back to our starting setup condition as described in (1). It’s kind of silly, and I really feel bad it took me 4 months or so to see this. The new condition ends up being much simpler to encode and execute:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td>
+<td class="rouge-code"><pre><span class="kt">int</span><span class="p">*</span> <span class="n">nextPtr</span><span class="p">;</span>
+<span class="k">if</span> <span class="p">((</span><span class="kt">byte</span> <span class="p">*)</span> <span class="n">writeRight</span> <span class="p">-</span> <span class="p">(</span><span class="kt">byte</span> <span class="p">*)</span> <span class="n">readRight</span> <span class="p">&lt;</span> <span class="n">N</span> <span class="p">*</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">))</span> <span class="p">{</span>
+        <span class="c1">// ...</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="c1">// ...</span>
+<span class="p">}</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>This branch is just as “correct” as the previous one, but it is less taxing in a few ways:</p>
+
+<ul>
+  <li>Less instructions to decode and execute.<br>
+We’ve saved an additional 5 bytes worth of opcodes from the main loop!</li>
+  <li>Less data dependencies for the CPU to potentially wait for.<br>
+(The CPU doesn’t have to wait for the <code class="highlighter-rouge">writeLeft</code>/<code class="highlighter-rouge">readLeft</code> pointer mutation and subtraction to complete)</li>
+</ul>
+
+<p>Naturally this ends up slightly faster, and can verify this with BDN once again:</p>
+
+<div>
+  <div class="stickemup">
+
+<ul class="uk-tab" data-uk-switcher="{connect:'#349295a2-78b5-4673-9e37-8ab3fcac7a37'}">
+
+	<li class="uk-active"><a href="#"><i class="glyphicon glyphicon-stats"></i> Scaling</a></li>
+
+	<li><a href="#"><i class="glyphicon glyphicon-stats"></i> Time/N</a></li>
+
+	<li><a href="#"><i class="glyphicon glyphicon-list-alt"></i> Benchmarks</a></li>
+
+	<li><a href="#"><i class="glyphicon glyphicon-info-sign"></i> Setup</a></li>
+
+</ul>
+
+<ul id="349295a2-78b5-4673-9e37-8ab3fcac7a37" class="uk-switcher uk-margin">
+
+	<li>
+<div>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
+<div data-intro="Size of the sorting problem, 10..10,000,000 in powers of 10" data-position="bottom">
+<div data-intro="Performance scale: Array.Sort (solid gray) is always 100%, and the other methods are scaled relative to it" data-position="left">
+<div data-intro="Click legend items to show/hide series" data-position="right">
+<div class="benchmark-chart-container">
+<canvas data-chart="line">
+N,100,1K,10K,100K,1M,10M
+MicroOpt_40,1,1,1,1,1,1
+SimpleBranch,1.01220256253813,0.946321321321321,0.982688056091031,0.938806414898963,1.00465999238207,0.962359905144129
+
+<!-- 
+{ 
+ "data" : {
+  "datasets" : [ { 
+    "backgroundColor": "rgba(66,66,66,0.35)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": -30, "hachureGap": 9, "fillWeight": 0.3	}
+  },
+  { 
+    "backgroundColor": "rgba(33,220,33,.9)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": 60, "hachureGap": 3	}
+  }
+  ]
+ },
+ "options": {
+    "title": { "text": "AVX2 SimpleBranch Sorting - Scaled to MicroOpt_40", "display": true },
+    "scales": { 
+      "yAxes": [{
+       "ticks": {
+         "fontFamily": "Indie Flower",
+         "min": 0.92, 
+         "callback": "ticksPercent"
+        },
+        "scaleLabel": {
+          "labelString": "Scaling (%)",
+          "display": true
+        }
+      }]
+    }
+ },
+ "defaultOptions": {"scales":{"xAxes":[{"scaleLabel":{"display":"true,","labelString":"N (elements)","fontFamily":"Indie Flower"},"ticks":{"fontFamily":"Indie Flower"}}]},"legend":{"display":true,"position":"bottom","labels":{"fontFamily":"Indie Flower","fontSize":14}},"title":{"position":"top","fontFamily":"Indie Flower","fontSize":16}}
+}
+--> </canvas>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+</li>
+
+	<li>
+<div>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
+<div data-intro="Size of the sorting problem, 10..10,000,000 in powers of 10" data-position="bottom">
+<div data-intro="Time in nanoseconds spent sorting per element. Array.Sort (solid gray) is the baseline, again" data-position="left">
+<div data-intro="Click legend items to show/hide series" data-position="right">
+<div class="benchmark-chart-container">
+<canvas data-chart="line">
+N,100,1K,10K,100K,1M,
+MicroOpt_40,16.3891,21.3124,24.0181,26.2096,23.1979,26.4655
+SimpleBranch,16.5929,20.168,23.6023,24.6058,23.306,25.4694
+
+<!-- 
+{ 
+ "data" : {
+  "datasets" : [
+  { 
+    "backgroundColor": "rgba(66,66,66,0.35)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": -30, "hachureGap": 9, "fillWeight": 0.3	}
+  },
+  { 
+    "backgroundColor": "rgba(33,220,33,.9)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": 60, "hachureGap": 3	}
+  }
+  ]
+ },
+ "options": {
+    "title": { "text": "AVX2 MicroOpt_40 + SimplerBranch - log(Time/N)", "display": true },
+    "scales": { 
+      "yAxes": [{ 
+        "type": "logarithmic",
+        "ticks": {
+          "min": 15,
+          "max": 27,
+          "callback": "ticksNumStandaard",
+          "fontFamily": "Indie Flower"          
+        },
+        "scaleLabel": {
+          "labelString": "Time/N (ns)",
+          "fontFamily": "Indie Flower",
+          "display": true
+        }
+      }]
+    }
+ },
+ "defaultOptions": {"scales":{"xAxes":[{"scaleLabel":{"display":"true,","labelString":"N (elements)","fontFamily":"Indie Flower"},"ticks":{"fontFamily":"Indie Flower"}}]},"legend":{"display":true,"position":"bottom","labels":{"fontFamily":"Indie Flower","fontSize":14}},"title":{"position":"top","fontFamily":"Indie Flower","fontSize":16}}
+}
+--> </canvas>
+</div>
+</div>
+</div>
+</div>
+</div>
+</li>
+
+	<li>
+<div>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
+<table class="table datatable" data-json="../_posts/Bench.BlogPt4_3_Int32_-report.datatable.json" data-id-field="name" data-pagination="true" data-page-list="[5, 10, 15, 20]" data-intro="Each row in this table represents a benchmark result" data-position="left" data-show-pagination-switch="false">
+  <thead data-intro="The header can be used to sort/filter by clicking" data-position="right">
+    <tr>
+        <th data-field="TargetMethodColumn.Method" data-sortable="true" data-filter-control="select">
+          <span data-intro="The name of the benchmarked method" data-position="top">
+            Method<br>Name
+          </span>
+        </th>
+        <th data-field="N" data-sortable="true" data-value-type="int" data-filter-control="select">
+            <span data-intro="The size of the sorting problem being benchmarked (# of integers)" data-position="top">
+            Problem<br>Size
+            </span>
+        </th>
+        <th data-field="TimePerNDataTable" data-sortable="true" data-value-type="float2-interval-muted">
+            <span data-intro="Time in nanoseconds spent sorting each element in the array (with confidence intervals in parenthesis)" data-position="top">
+              Time /<br>Element (ns)
+            </span>
+        </th>
+        <th data-field="RatioDataTable" data-sortable="true" data-value-type="inline-bar-horizontal-percentage">
+            <span data-intro="Each result is scaled to its baseline (Array.Sort in this case)" data-position="top">
+                  Scaling
+            </span>
+        </th>
+        <th data-field="Measurements" data-sortable="true" data-value-type="inline-bar-vertical">
+            <span data-intro="Raw benchmark results visualize how stable the result it. Longest/Shortest runs marked with &lt;span style='color: red'&gt;Red&lt;/span&gt;/&lt;span style='color: green'&gt;Green&lt;/span&gt;" data-position="top">Measurements</span>
+        </th>
+    </tr>
+  </thead>
+</table>
+</div>
+
+</li>
+
+	<li>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+</pre></td>
+<td class="rouge-code"><pre><span class="nv">BenchmarkDotNet</span><span class="o">=</span>v0.12.0, <span class="nv">OS</span><span class="o">=</span>clear-linux-os 32120
+Intel Core i7-7700HQ CPU 2.80GHz <span class="o">(</span>Kaby Lake<span class="o">)</span>, 1 CPU, 4 logical and 4 physical cores
+.NET Core <span class="nv">SDK</span><span class="o">=</span>3.1.100
+  <span class="o">[</span>Host]     : .NET Core 3.1.0 <span class="o">(</span>CoreCLR 4.700.19.56402, CoreFX 4.700.19.56404<span class="o">)</span>, X64 RyuJIT
+  Job-DEARTS : .NET Core 3.1.0 <span class="o">(</span>CoreCLR 4.700.19.56402, CoreFX 4.700.19.56404<span class="o">)</span>, X64 RyuJIT
+
+<span class="nv">InvocationCount</span><span class="o">=</span>3  <span class="nv">IterationCount</span><span class="o">=</span>15  <span class="nv">LaunchCount</span><span class="o">=</span>2
+<span class="nv">UnrollFactor</span><span class="o">=</span>1  <span class="nv">WarmupCount</span><span class="o">=</span>10
+
+<span class="nv">$ </span><span class="nb">grep</span> <span class="s1">'stepping\|model\|microcode'</span> /proc/cpuinfo | <span class="nb">head</span> <span class="nt">-4</span>
+model           : 158
+model name      : Intel<span class="o">(</span>R<span class="o">)</span> Core<span class="o">(</span>TM<span class="o">)</span> i7-7700HQ CPU @ 2.80GHz
+stepping        : 9
+microcode       : 0xb4
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+</li>
+
+</ul>
+
+</div>
+
+  <p>There’s not a lot to say about this, but I’ll point out a couple of things:</p>
+
+  <ul>
+    <li>There is a seemingly very slight slow down around 100, 1M elements. It’s authentic and repeatable in my tests. I honestly don’t know why it happens, yet. We spend a total of around 1.6μs for every 100 element sort, which might initially sound like not a lot of time, but at 2.8Ghz, that amounts to ~4500 cycles give or take. For the case of 1M elements, this phenomenon is even more peculiar; But such is life.</li>
+    <li>Otherwise, there is an improvement, even if modest, of roughly 2%-4% for most cases. it does look like this version of our code is better, in the end of the day.</li>
+  </ul>
+
+  <p>One interesting question that I personally did not know the answer to beforehand was: would this reduce branch mispredictions? There’s no reason to expect this since our input data, being random, is driving the outcome of this branch. However, if I’ve learned one thing throughout this long ordeal, is that there are always things you don’t even know that you don’t know. Any way of verifying our pet-theories is a welcome opportunity at learning some humility.</p>
+
+</div>
+
+<p>Let’s fire up <code class="highlighter-rouge">perf</code> to inspect what its counters tell us about the two versions (each result is in a separate tab below):</p>
+
+<div>
+  <div class="stickemup">
+
+<ul class="uk-tab" data-uk-switcher="{connect:'#39912ce6-715f-43b1-ab7c-a141f57bb2cf'}">
+
+	<li class="uk-active"><a href="#"><i class="glyphicon glyphicon-list-alt"></i> CutOff@40</a></li>
+
+	<li><a href="#"><i class="glyphicon glyphicon-list-alt"></i> SimpleBranch</a></li>
+
+</ul>
+
+<ul id="39912ce6-715f-43b1-ab7c-a141f57bb2cf" class="uk-switcher uk-margin">
+
+	<li>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+</pre></td>
+<td class="rouge-code"><pre><span class="nv">$ COMPlus_PerfMapEnabled</span><span class="o">=</span>1 perf record <span class="nt">-F</span> max <span class="nt">-e</span> branch-misses <span class="se">\</span>
+    ./Example <span class="nt">--type-list</span> DoublePumpMicroOptCutOff_40 <span class="nt">--size-list</span> 1000000 <span class="nt">--no-check</span>
+...
+<span class="nv">$ </span>perf report <span class="nt">--stdio</span> <span class="nt">-F</span> overhead,sym | <span class="nb">head</span> <span class="nt">-15</span>
+<span class="c"># Samples: 403K of event 'branch-misses'</span>
+<span class="c"># Event count (approx.): 252554012</span>
+    43.73%  <span class="o">[</span>.] ... DoublePumpMicroOptCutoff_40::InsertionSort<span class="o">(</span>...<span class="o">)</span>
+    25.51%  <span class="o">[</span>.] ... DoublePumpMicroOptCutoff_40+VxSortInt32::VectorizedPartitionInPlace<span class="o">(</span>...<span class="o">)</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+</li>
+
+	<li>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+</pre></td>
+<td class="rouge-code"><pre><span class="nv">$ COMPlus_PerfMapEnabled</span><span class="o">=</span>1 perf record <span class="nt">-F</span> max <span class="nt">-e</span> branch-misses <span class="se">\</span>
+    ./Example <span class="nt">--type-list</span> DoublePumpSimpleBranch <span class="nt">--size-list</span> 1000000 <span class="nt">--no-check</span>
+...
+<span class="nv">$ </span>perf report <span class="nt">--stdio</span> <span class="nt">-F</span> overhead,sym | <span class="nb">head</span> <span class="nt">-15</span>
+<span class="c"># Samples: 414K of event 'branch-misses'</span>
+<span class="c"># Event count (approx.): 241513903</span>
+    41.11%  <span class="o">[</span>.] ... DoublePumpSimpleBranch::InsertionSort<span class="o">(</span>...<span class="o">)</span>
+    26.59%  <span class="o">[</span>.] ... DoublePumpSimpleBranch+VxSortInt32::VectorizedPartitionInPlace<span class="o">(</span>...<span class="o">)</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+</li>
+
+</ul>
+
+
+</div>
+
+  <p>Here we’re comparing the same two versions we’ve just benchmarked with a specific focus on the branch-misses HW counter. We can take this oppertunity both to appreciate how these results compare to the ones we recorded at the end of the previous post,
+as well as how they compare to each other.</p>
+
+  <p>Compared to our <code class="highlighter-rouge">DoublePumpedNaive</code> implementation of yester-post, it would appear that the “burden of guilt” when it comes to branch mispredictions has shifted towards <code class="highlighter-rouge">InsertionSort</code> by 3-4%. This is to be expected: We were using a cut-off point of <code class="highlighter-rouge">16</code> previously, and we’ve just upped it to <code class="highlighter-rouge">40</code> in the previous section, so it makes sense for <code class="highlighter-rouge">InsertionSort</code> to perform more work in this new balance, taking a larger share of the branch-misses.</p>
+
+  <p>When comparing between the <a href="https://github.com/damageboy/VxSort/blob/research/VxSortResearch/Unstable/AVX2/Happy/B4_2_DoublePumpMicroOptCutoff.cs#L798"><code class="highlighter-rouge">DoublePumpMicroOptCutOff_40</code></a> and the <a href="https://github.com/damageboy/VxSort/blob/research/VxSortResearch/Unstable/AVX2/Happy/B4_3_DoublePumpSimpleBranch.cs"><code class="highlighter-rouge">DoublePumpSimpleBranch</code></a> versions, that differ only in that nasty branch in the top of our main loop, both versions look mostly similar. First, we have to acknowledge that <code class="highlighter-rouge">perf</code> is a statistical tool, that works by collecting samples of HW counters, so we’re not going to get an exact count of anything, even when running the same code time after time. In our case, both versions look roughly the same: Once we count how many branch misses of the total are attributed to the function we actually changed, it comes to <code class="highlighter-rouge">64,426,528</code> misses for the previous version vs. <code class="highlighter-rouge">64,218,546</code> for the newer simpler branch. It doesn’t amount to enough to call this a branch misprediction win. So it would seem with gained a bit with smaller code, but not by lowering the frequency of mispredictions.</p>
+
+</div>
+
+<h3 id="packing-the-permutation-table-1st-attempt-1">Packing the Permutation Table, 1<sup>st</sup> attempt: <img class="emoji" title=":+1:" alt=":+1:" src="https://github.githubassets.com/images/icons/emoji/unicode/1f44d.png" height="20" width="20">
+</h3>
+
+<p>Ever since I started with this little time-succubus of a project, I was really annoyed at the way I was encoding the permutation tables. To me, wasting 8kb worth of data, or more specifically, wasting 8kb worth of precious L1 cache in the CPU for the permutation entries was tantamount to a cardinal sin. My emotional state set aside, the situation is even more horrid when you stop to consider that out of each 32-byte permutation entry, we were only really using 3 bits x 8 elements, or 24 bits of usable data. To be completely honest, I probably made this into a bigger problem in my head, imagining how the performance was suffering from this, than what it really is in reality, but we don’t always get to choose our made-up enemies. sometimes they choose us.</p>
+
+<p>My first attempt at packing the permutation entries was to try and use a specific Intel intrinsic called <a href="https://docs.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.x86.avx2.converttovector256int32?view=netcore-3.1"><code class="highlighter-rouge">ConvertToVector256Int32</code> / <code class="highlighter-rouge">VPMOVZXBD</code></a>. This intrinsic can read a 64-bit value directly from memory while also expanding it into 8x32bit values inside a <code class="highlighter-rouge">Vactor256&lt;T&gt;</code> register. If nothing else, it buys me an excuse to do this:</p>
+
+<p><img src="/assets/images/yodawg.jpg" alt="Yo Dawg"></p>
+
+<p>More seriously though, the basic idea was that I would go back to the permutation entries and re-encode them as 64-bits (8x8bits) per single entry instead of 256-bits which is what I’ve been using thus far. This encoding would reduce the size of the entire permutation entry from 8kb to 2kb, which is a nice start.<br>
+Unfortunately, this initial attempt went south as I got hit by a <a href="https://github.com/dotnet/runtime/issues/12835">JIT bug</a>. When I tried to circumvent that bug, the results didn’t look better, they were slightly worse, so I kind of left the code in a sub-optimal state and forgot about it. Luckily, I did revisit this at a later stage, after the bug was fixed, and to my delight, once the JIT was encoding this instruction correctly and efficiently, things start working smoothly.</p>
+
+<p>I ended up encoding a second permutation table, and by using the correct <code class="highlighter-rouge">ConvertToVector256Int32</code> we are kind of better off:</p>
+
+<div>
+  <div class="stickemup">
+
+<ul class="uk-tab" data-uk-switcher="{connect:'#0a8c32b5-ab64-4fc6-981a-880974fbb634'}">
+
+	<li class="uk-active"><a href="#"><i class="glyphicon glyphicon-stats"></i> Scaling</a></li>
+
+	<li><a href="#"><i class="glyphicon glyphicon-stats"></i> Time/N (Intel)</a></li>
+
+	<li><a href="#"><i class="glyphicon glyphicon-stats"></i> Time/N (AMD)</a></li>
+
+	<li><a href="#"><i class="glyphicon glyphicon-list-alt"></i> Benchmarks (Intel)</a></li>
+
+	<li><a href="#"><i class="glyphicon glyphicon-list-alt"></i> Benchmarks (AMD)</a></li>
+
+	<li><a href="#"><i class="glyphicon glyphicon-info-sign"></i> Setup</a></li>
+
+</ul>
+
+<ul id="0a8c32b5-ab64-4fc6-981a-880974fbb634" class="uk-switcher uk-margin">
+
+	<li>
+<div>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
+<div data-intro="Size of the sorting problem, 10..10,000,000 in powers of 10" data-position="bottom">
+<div data-intro="Performance scale: Array.Sort (solid gray) is always 100%, and the other methods are scaled relative to it" data-position="left">
+<div data-intro="Click legend items to show/hide series" data-position="right">
+<div class="benchmark-chart-container">
+<canvas data-chart="line">
+N,100,1K,10K,100K,1M,10M
+SimpleBranch,1,1,1,1,1,1
+Packed Intel,1.013605442,1.016909534,1.001868534,0.984072719,0.997337839,0.997892526
+Packed AMD,0.896395352,0.813863407,0.919215529,0.916898529,0.926463363,0.981186383
+
+<!-- 
+{ 
+ "data" : {
+  "datasets" : [
+  { 
+    "backgroundColor": "rgba(66,66,66,0.35)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": -30, "hachureGap": 9, "fillWeight": 0.3	}
+  },
+  { 
+    "backgroundColor": "rgba(0,113,197,.9)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": 60, "hachureGap": 3	}
+  },
+  { 
+    "backgroundColor": "rgba(237,28,36,.9)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": 30, "hachureGap": 3	}
+  }  
+  ]
+ },
+ "options": {
+    "title": { "text": "AVX2 Packed Permutation Table Sorting - Scaled to SimpleBranch", "display": true },
+    "scales": { 
+      "yAxes": [{
+       "ticks": {
+         "fontFamily": "Indie Flower",
+         "min": 0.80, 
+         "callback": "ticksPercent"
+        },
+        "scaleLabel": {
+          "labelString": "Scaling (%)",
+          "display": true
+        }
+      }]
+    }
+ },
+ "defaultOptions": {"scales":{"xAxes":[{"scaleLabel":{"display":"true,","labelString":"N (elements)","fontFamily":"Indie Flower"},"ticks":{"fontFamily":"Indie Flower"}}]},"legend":{"display":true,"position":"bottom","labels":{"fontFamily":"Indie Flower","fontSize":14}},"title":{"position":"top","fontFamily":"Indie Flower","fontSize":16}}
+}
+--> </canvas>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+</li>
+
+	<li>
+<div>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
+<div data-intro="Size of the sorting problem, 10..10,000,000 in powers of 10" data-position="bottom">
+<div data-intro="Time in nanoseconds spent sorting per element. Array.Sort (solid gray) is the baseline, again" data-position="left">
+<div data-intro="Click legend items to show/hide series" data-position="right">
+<div class="benchmark-chart-container">
+<canvas data-chart="line">
+N,100,1K,10K,100K,1M,
+SimpleBranch,16.1715,20.1069,24.2436,25.7728,24.4249,26.6617
+Packed,16.3927,20.4471,24.2889,25.3623,24.3599,26.6055
+
+<!-- 
+{ 
+ "data" : {
+  "datasets" : [
+  { 
+    "backgroundColor": "rgba(66,66,66,0.35)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": -30, "hachureGap": 9, "fillWeight": 0.3	}
+  },
+  {     
+    "backgroundColor": "rgba(0,113,197,.9)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": 60, "hachureGap": 3	}
+  }
+  ]
+ },
+ "options": {
+    "title": { "text": "AVX2 SimplerBranch + Packed - log(Time/N) on Intel", "display": true },
+    "scales": { 
+      "yAxes": [{ 
+        "type": "logarithmic",
+        "ticks": {
+          "min": 15.0,
+          "max": 27,
+          "callback": "ticksNumStandaard",
+          "fontFamily": "Indie Flower"
+        },
+        "scaleLabel": {
+          "labelString": "Time/N (ns)",
+          "fontFamily": "Indie Flower",
+          "display": true
+        }
+      }]
+    }
+ },
+ "defaultOptions": {"scales":{"xAxes":[{"scaleLabel":{"display":"true,","labelString":"N (elements)","fontFamily":"Indie Flower"},"ticks":{"fontFamily":"Indie Flower"}}]},"legend":{"display":true,"position":"bottom","labels":{"fontFamily":"Indie Flower","fontSize":14}},"title":{"position":"top","fontFamily":"Indie Flower","fontSize":16}}
+}
+--> </canvas>
+</div>
+</div>
+</div>
+</div>
+</div>
+</li>
+
+	<li>
+<div>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
+<div data-intro="Size of the sorting problem, 10..10,000,000 in powers of 10" data-position="bottom">
+<div data-intro="Time in nanoseconds spent sorting per element. Array.Sort (solid gray) is the baseline, again" data-position="left">
+<div data-intro="Click legend items to show/hide series" data-position="right">
+<div class="benchmark-chart-container">
+<canvas data-chart="line">
+N,100,1K,10K,100K,1M,
+SimpleBranch,10.1852,13.3196,18.9534,22.6299,23.7335,24.3677
+Packed,9.13,10.7383,18.8766,20.7494,21.9882,23.9092
+
+
+<!-- 
+{ 
+ "data" : {
+  "datasets" : [
+  { 
+    "backgroundColor": "rgba(66,66,66,0.35)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": -30, "hachureGap": 9, "fillWeight": 0.3	}
+  },
+  { 
+    "backgroundColor": "rgba(237,28,36,.9)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": 60, "hachureGap": 3	}
+  }
+  ]
+ },
+ "options": {
+    "title": { "text": "AVX2 SimplerBranch + Packed - log(Time/N) on AMD", "display": true },
+    "scales": { 
+      "yAxes": [{ 
+        "type": "logarithmic",
+        "ticks": {
+          "min": 8.0,
+          "max": 26,
+          "callback": "ticksNumStandaard",
+          "fontFamily": "Indie Flower"          
+        },
+        "scaleLabel": {
+          "labelString": "Time/N (ns)",
+          "fontFamily": "Indie Flower",
+          "display": true
+        }
+      }]
+    }
+ },
+ "defaultOptions": {"scales":{"xAxes":[{"scaleLabel":{"display":"true,","labelString":"N (elements)","fontFamily":"Indie Flower"},"ticks":{"fontFamily":"Indie Flower"}}]},"legend":{"display":true,"position":"bottom","labels":{"fontFamily":"Indie Flower","fontSize":14}},"title":{"position":"top","fontFamily":"Indie Flower","fontSize":16}}
+}
+--> </canvas>
+</div>
+</div>
+</div>
+</div>
+</div>
+</li>
+
+	<li>
+<div>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
+<table class="table datatable" data-json="../_posts/Bench.BlogPt4_4_Int32_-report.datatable.intel.json" data-id-field="name" data-pagination="true" data-page-list="[5, 10, 15, 20]" data-intro="Each row in this table represents a benchmark result" data-position="left" data-show-pagination-switch="false">
+  <thead data-intro="The header can be used to sort/filter by clicking" data-position="right">
+    <tr>
+        <th data-field="TargetMethodColumn.Method" data-sortable="true" data-filter-control="select">
+          <span data-intro="The name of the benchmarked method" data-position="top">
+            Method<br>Name
+          </span>
+        </th>
+        <th data-field="N" data-sortable="true" data-value-type="int" data-filter-control="select">
+            <span data-intro="The size of the sorting problem being benchmarked (# of integers)" data-position="top">
+            Problem<br>Size
+            </span>
+        </th>
+        <th data-field="TimePerNDataTable" data-sortable="true" data-value-type="float2-interval-muted">
+            <span data-intro="Time in nanoseconds spent sorting each element in the array (with confidence intervals in parenthesis)" data-position="top">
+              Time /<br>Element (ns)
+            </span>
+        </th>
+        <th data-field="RatioDataTable" data-sortable="true" data-value-type="inline-bar-horizontal-percentage">
+            <span data-intro="Each result is scaled to its baseline (Array.Sort in this case)" data-position="top">
+                  Scaling
+            </span>
+        </th>
+        <th data-field="Measurements" data-sortable="true" data-value-type="inline-bar-vertical">
+            <span data-intro="Raw benchmark results visualize how stable the result it. Longest/Shortest runs marked with &lt;span style='color: red'&gt;Red&lt;/span&gt;/&lt;span style='color: green'&gt;Green&lt;/span&gt;" data-position="top">Measurements</span>
+        </th>
+    </tr>
+  </thead>
+</table>
+</div>
+
+</li>
+
+	<li>
+<div>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
+<table class="table datatable" data-json="../_posts/Bench.BlogPt4_4_Int32_-report.datatable.amd.json" data-id-field="name" data-pagination="true" data-page-list="[5, 10, 15, 20]" data-intro="Each row in this table represents a benchmark result" data-position="left" data-show-pagination-switch="false">
+  <thead data-intro="The header can be used to sort/filter by clicking" data-position="right">
+    <tr>
+        <th data-field="TargetMethodColumn.Method" data-sortable="true" data-filter-control="select">
+          <span data-intro="The name of the benchmarked method" data-position="top">
+            Method<br>Name
+          </span>
+        </th>
+        <th data-field="N" data-sortable="true" data-value-type="int" data-filter-control="select">
+            <span data-intro="The size of the sorting problem being benchmarked (# of integers)" data-position="top">
+            Problem<br>Size
+            </span>
+        </th>
+        <th data-field="TimePerNDataTable" data-sortable="true" data-value-type="float2-interval-muted">
+            <span data-intro="Time in nanoseconds spent sorting each element in the array (with confidence intervals in parenthesis)" data-position="top">
+              Time /<br>Element (ns)
+            </span>
+        </th>
+        <th data-field="RatioDataTable" data-sortable="true" data-value-type="inline-bar-horizontal-percentage">
+            <span data-intro="Each result is scaled to its baseline (Array.Sort in this case)" data-position="top">
+                  Scaling
+            </span>
+        </th>
+        <th data-field="Measurements" data-sortable="true" data-value-type="inline-bar-vertical">
+            <span data-intro="Raw benchmark results visualize how stable the result it. Longest/Shortest runs marked with &lt;span style='color: red'&gt;Red&lt;/span&gt;/&lt;span style='color: green'&gt;Green&lt;/span&gt;" data-position="top">Measurements</span>
+        </th>
+    </tr>
+  </thead>
+</table>
+</div>
+
+</li>
+
+	<li>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+</pre></td>
+<td class="rouge-code"><pre><span class="nv">BenchmarkDotNet</span><span class="o">=</span>v0.12.0, <span class="nv">OS</span><span class="o">=</span>clear-linux-os 32120
+Intel Core i7-7700HQ CPU 2.80GHz <span class="o">(</span>Kaby Lake<span class="o">)</span>, 1 CPU, 4 logical and 4 physical cores
+.NET Core <span class="nv">SDK</span><span class="o">=</span>3.1.100
+  <span class="o">[</span>Host]     : .NET Core 3.1.0 <span class="o">(</span>CoreCLR 4.700.19.56402, CoreFX 4.700.19.56404<span class="o">)</span>, X64 RyuJIT
+  Job-DEARTS : .NET Core 3.1.0 <span class="o">(</span>CoreCLR 4.700.19.56402, CoreFX 4.700.19.56404<span class="o">)</span>, X64 RyuJIT
+
+<span class="nv">InvocationCount</span><span class="o">=</span>3  <span class="nv">IterationCount</span><span class="o">=</span>15  <span class="nv">LaunchCount</span><span class="o">=</span>2
+<span class="nv">UnrollFactor</span><span class="o">=</span>1  <span class="nv">WarmupCount</span><span class="o">=</span>10
+
+<span class="nv">$ </span><span class="nb">grep</span> <span class="s1">'stepping\|model\|microcode'</span> /proc/cpuinfo | <span class="nb">head</span> <span class="nt">-4</span>
+model           : 158
+model name      : Intel<span class="o">(</span>R<span class="o">)</span> Core<span class="o">(</span>TM<span class="o">)</span> i7-7700HQ CPU @ 2.80GHz
+stepping        : 9
+microcode       : 0xb4
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+</li>
+
+</ul>
+
+</div>
+
+  <p>These results bring a new, unwarranted dimension into our lives: CPU vendors and model-specific quirks. Up until now, I’ve been testing my various optimizations on three different processors models I had at hand: Intel Kaby Lake, Intel Broadwell, and AMD Ryzen. Every attempt I’ve presented here netted positive results on all three test beds, even if differently, so I opted for focusing on the Intel Kaby-Lake results to reduce the information overload.<br>
+Now is the first time we see uneven results: the two results I included represent two extremes of the performance spectrum; The newer Intel Kaby-Lake processors are not affected by this optimization. When I set out to implement it, I came into this with eyes wide-open: I knew that all in all, the CPU would roughly be doing the same work for the permutation entry loading per-se. I was gunning for a 2<sup>nd</sup> order effect: Freeing up 6KB of L1 data-cache is no small saving, given its total size is 32KB in all of my tested CPUs.</p>
+
+  <p>What we see from the Intel Kaby-Lake results can basically be summarised as: Newer Intel CPUs <em>probably</em> have a very efficient prefetch unit. One that performs well enough that we can’t feel or see the benefit of having more L1 room afforded by packing the permutation table more tightly. With AMD CPUs, and older Intel CPUs (Like Intel Broadwell, not shown here), freeing up the L1 cache does make a substantial dent in the total runtime.</p>
+
+  <p>All in all, while this is a slightly more complex scenario to reason about, we’re left with one, rather new CPU that is not affected by this optimization for better and for worse, and other, older/different CPUs where this is a very substantial win. As such, I decided to keep it in the code-base going forward.</p>
+</div>
+
+<h3 id="packing-the-permutation-table-2nd-attempt--1">Packing the Permutation Table, 2<sup>nd</sup> attempt: <img class="emoji" title=":-1:" alt=":-1:" src="https://github.githubassets.com/images/icons/emoji/unicode/1f44e.png" height="20" width="20">
+</h3>
+
+<p>Next, I tried to pack the permutation table even further, going from 2kb to 1kb of memory, by packing the 3-bit entries even further into a single 32-bit value.
+The packing is the easy part, but how would we unpack these 32-bit compressed entries all the way back to a full 256-bit vector? Why, with yet more intrinsics of course. 
+With this, my ultra packed permutation table now looked like this:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre></td>
+<td class="rouge-code"><pre><span class="n">ReadOnlySpan</span><span class="p">&lt;</span><span class="kt">byte</span><span class="p">&gt;</span> <span class="n">BitPermTable</span> <span class="p">=&gt;</span> <span class="k">new</span> <span class="kt">byte</span><span class="p">[]</span>
+<span class="p">{</span>
+    <span class="m">0</span><span class="n">b10001000</span><span class="p">,</span> <span class="m">0</span><span class="n">b11000110</span><span class="p">,</span> <span class="m">0</span><span class="n">b11111010</span><span class="p">,</span> <span class="m">0</span><span class="n">b00000000</span><span class="p">,</span> <span class="c1">// 0</span>
+    <span class="c1">// ...</span>
+    <span class="m">0</span><span class="n">b01100011</span><span class="p">,</span> <span class="m">0</span><span class="n">b01111101</span><span class="p">,</span> <span class="m">0</span><span class="n">b01000100</span><span class="p">,</span> <span class="m">0</span><span class="n">b00000000</span><span class="p">,</span> <span class="c1">// 7</span>
+    <span class="c1">// ...</span>
+    <span class="m">0</span><span class="n">b00010000</span><span class="p">,</span> <span class="m">0</span><span class="n">b10011101</span><span class="p">,</span> <span class="m">0</span><span class="n">b11110101</span><span class="p">,</span> <span class="m">0</span><span class="n">b00000000</span><span class="p">,</span> <span class="c1">// 170</span>
+    <span class="c1">// ...</span>
+    <span class="m">0</span><span class="n">b10001000</span><span class="p">,</span> <span class="m">0</span><span class="n">b11000110</span><span class="p">,</span> <span class="m">0</span><span class="n">b11111010</span><span class="p">,</span> <span class="m">0</span><span class="n">b00000000</span><span class="p">,</span> <span class="c1">// 255</span>
+<span class="p">}</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>And my unpacking code now uses the <a href="https://docs.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.x86.bmi2.x64.parallelbitdeposit?view=netcore-3.1#System_Runtime_Intrinsics_X86_Bmi2_X64_ParallelBitDeposit_System_UInt64_System_UInt64_"><code class="highlighter-rouge">ParallelBitDposit / PDEP</code></a>, which I’ve accidentaly covered in more detail in a <a href="/2018-08-19/netcoreapp3.0-intrinsics-in-real-life-pt2#pdep---parallel-bit-deposit">previous post</a>:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre></td>
+<td class="rouge-code"><pre><span class="n">Vector256</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="nf">GetBitPermutation</span><span class="p">(</span><span class="kt">uint</span> <span class="p">*</span><span class="n">pBase</span><span class="p">,</span> <span class="k">in</span> <span class="kt">uint</span> <span class="n">mask</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">const</span> <span class="kt">ulong</span> <span class="n">magicMask</span> <span class="p">=</span>
+        <span class="m">0</span><span class="n">b00000111_00000111_00000111_00000111_00000111_00000111_00000111_00000111</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">Avx2</span><span class="p">.</span><span class="nf">ConvertToVector256Int32</span><span class="p">(</span>
+        <span class="n">Vector128</span><span class="p">.</span><span class="nf">CreateScalarUnsafe</span><span class="p">(</span>
+            <span class="n">Bmi2</span><span class="p">.</span><span class="n">X64</span><span class="p">.</span><span class="nf">ParallelBitDeposit</span><span class="p">(</span><span class="n">pBase</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span> <span class="n">magicMask</span><span class="p">)).</span><span class="nf">AsByte</span><span class="p">());</span>
+<span class="p">}</span>
+
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>What does this little monstrosity do exactly? We <strong>pack</strong> the permutation bits (remember, we just need 3 bits per element, we have 8 elements, so 24 bits per permutation vector in total) into a single 32 bit value, then whenever we need to expand this into a full blown vector, we:</p>
+
+<ul>
+  <li>Unpack the 32-bit values into a 64-bit value using <a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=pdep&amp;expand=1532,4152"><code class="highlighter-rouge">ParallelBitDeposit</code></a> from the <code class="highlighter-rouge">BMI2</code> intrinsics extensions.</li>
+  <li>Convert (move) the 64-bit value into the lower 64-bits of a 128-bit SIMD register using <code class="highlighter-rouge">Vector128.CreateScalarUnsafe</code>.</li>
+  <li>Go back to using a different variant of <a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm256_cvtepi8_epi32&amp;expand=1532"><code class="highlighter-rouge">ConvertToVector256Int32</code></a> (<code class="highlighter-rouge">VPMOVZXBD</code>) that takes 8-bit elements from a 128-bit wide register and expands them into integers in a 256 bit registers.</li>
+</ul>
+
+<p>In short, we chain 2 extra instructions compared to our 2KB permutation table, but save an additional 1KB of cache. Was it worth it?<br>
+I wish I could say with a complete and assured voice that it was, but the truth is that it had only very little positive effect, if any:</p>
+
+<p>While we end up saving 1kb of precious L1 cache, the extra instructions end up delaying and costing us more than whatever perf we’re gaining from the extra cache space.<br>
+To make things even worse, I <a href="https://github.com/dotnet/runtime/issues/786">later discovered</a> that with AMD processors, the very same intrinsic I’m relying upon here, <code class="highlighter-rouge">PDEP</code>, is some sort of a bastardized instruction. It’s not really an instruction implemented with proper circuitry at the CPU level, but rather implemented as a plain loop inside the processor. As the discussion I linked to shows, it can take hundreds of cycles(!) depending on the provided mask value. For now we can simply chalk this attempt as a failure.</p>
+
+<h3 id="skipping-some-permutations--1">Skipping some permutations: <img class="emoji" title=":-1:" alt=":-1:" src="https://github.githubassets.com/images/icons/emoji/unicode/1f44e.png" height="20" width="20">
+</h3>
+
+<p>There are common cases where performing the permutation is completely un-needed. This means that almost the entire permutation block can be skipped:</p>
+
+<ul>
+  <li>No need to load the perutation entry</li>
+  <li>Or perform the permutation</li>
+</ul>
+
+<p>To be percise, there are exactly 9 such cases in the permutation table, whenever all the <code class="highlighter-rouge">1</code> bits are already grouped in the upper (MSB) part of the <code class="highlighter-rouge">mask</code> value in our permutation block, the values are:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">0b11111111</code></li>
+  <li><code class="highlighter-rouge">0b11111110</code></li>
+  <li><code class="highlighter-rouge">0b11111100</code></li>
+  <li><code class="highlighter-rouge">0b11111000</code></li>
+  <li><code class="highlighter-rouge">0b11110000</code></li>
+  <li><code class="highlighter-rouge">0b11100000</code></li>
+  <li><code class="highlighter-rouge">0b11000000</code></li>
+  <li><code class="highlighter-rouge">0b10000000</code></li>
+  <li><code class="highlighter-rouge">0b00000000</code></li>
+</ul>
+
+<p>I thought it might be a good idea to detect those cases. I ended up trying a switch case, and when that failed to speed things up,  comparing the amount of trailing zeros to (<code class="highlighter-rouge">8</code> - population count). While both methods did technically work, the additional branch and associated branch misprediction didn’t make this worth while or yield any positive result. The simpler code which always permutes did just as good if not slightly better.<br>
+Of course, these results have to be taken with a grain of salt, since they depend on us sorting random data. There might be some other situation when such branches are predicted correctly where this could save a lot of cycles. But for now, let’s just drop it and move on…</p>
+
+<h3 id="getting-intimate-with-x86-for-fun-and-profit-1">Getting intimate with x86 for fun and profit: <img class="emoji" title=":+1:" alt=":+1:" src="https://github.githubassets.com/images/icons/emoji/unicode/1f44d.png" height="20" width="20">
+</h3>
+
+<p>I know the title sounds cryptic, but x86 is just weird, and I wanted to make sure you’re mentally geared for some weirdness in our journey to squeeze a bit of extra performance. We need to remember that this is a 40+ year-old CISC processor made in an entirely different era:</p>
+
+<p><img src="/assets/images/your-fathers-lea.svg" alt="Your Father's LEA"></p>
+
+<p>This last optimization trick I will go over repeats the same speil I’ve been doing throughtout this post: trimming the fat around our code. We’ll try generating slightly denser code in our vectorized block. The idea here is to trigger the JIT to encode the pointer update code at the end of our vectorized partitioning block with the space-efficient <code class="highlighter-rouge">LEA</code> instruction.</p>
+
+<p>To better explain this, we’ll start by going back to the last 3 lines of code I presented at the top of <em>this</em> post, as part of the so-called micro-optimized version. Here is the C#:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td>
+<td class="rouge-code"><pre>    <span class="c1">// end of partitioning block...</span>
+    <span class="kt">var</span> <span class="n">popCount</span> <span class="p">=</span> <span class="n">PopCnt</span><span class="p">.</span><span class="nf">PopCount</span><span class="p">(</span><span class="n">mask</span><span class="p">);</span>
+    <span class="n">writeRight</span> <span class="p">=</span> <span class="p">(</span><span class="kt">int</span><span class="p">*)</span> <span class="p">((</span><span class="kt">byte</span><span class="p">*)</span> <span class="n">writeRight</span> <span class="p">-</span> <span class="n">popCount</span><span class="p">);</span>
+    <span class="n">writeLeft</span>  <span class="p">=</span> <span class="p">(</span><span class="kt">int</span><span class="p">*)</span> <span class="p">((</span><span class="kt">byte</span><span class="p">*)</span> <span class="n">writeLeft</span> <span class="p">+</span> <span class="p">(</span><span class="m">8U</span> <span class="p">&lt;&lt;</span> <span class="m">2</span><span class="p">)</span> <span class="p">-</span> <span class="n">popCount</span><span class="p">);</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>If we look at the corresponding disassembly for this code, it looks quite verbose. Here it is with some comments, and with the machine-code bytes on the right-hand side:</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+</pre></td>
+<td class="rouge-code"><pre><span class="c1">;var popCount = PopCnt.PopCount(mask);</span>
+<span class="nf">popcnt</span>  <span class="nb">r8d</span><span class="p">,</span><span class="nb">r8d</span> <span class="c1">; F3450FB8C0</span>
+<span class="nf">shl</span>     <span class="nb">r8d</span><span class="p">,</span><span class="mi">2</span>   <span class="c1">; 41C1E002</span>
+
+<span class="c1">;writeRight = (int*) ((byte*) writeRight - popCount);</span>
+<span class="nf">mov</span>     <span class="nb">r9d</span><span class="p">,</span><span class="nb">r8d</span> <span class="c1">; 458BC8</span>
+<span class="nf">sub</span>     <span class="nb">rcx</span><span class="p">,</span><span class="nv">r9</span>  <span class="c1">; 492BC9</span>
+
+<span class="c1">;writeLeft  = (int*) ((byte*) writeLeft + (8U &lt;&lt; 2) - popCount);</span>
+<span class="nf">add</span>     <span class="nv">r12</span><span class="p">,</span><span class="mh">20h</span> <span class="c1">; 4983C420</span>
+<span class="nf">mov</span>     <span class="nb">r8d</span><span class="p">,</span><span class="nb">r8d</span> <span class="c1">; 458BC0</span>
+<span class="nf">sub</span>     <span class="nv">r12</span><span class="p">,</span><span class="nv">r8</span>  <span class="c1">; 4D2BE0</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>If we count the bytes, everything after the <code class="highlighter-rouge">PopCount</code> instruction is taking <code class="highlighter-rouge">20</code> bytes in total: <code class="highlighter-rouge">4 + 3 + 3 + 4 + 3 + 3</code> to complete both pointer updates.</p>
+
+<p>The motivation behind what I’m about to show is that we can replace all of this code with a <strong>much</strong> shorter sequence, taking advantage of x86’s wacky memory addressing, by tweaking the C# code <em>ever</em> so slightly. This, in turn, will enable the C# JIT, which is already aware of these x86 shenanigans, and is capable of generating the more compact x86 code, to do so when it encounters the right constructs at the MSIL/bytecode level.<br>
+We succeed here <em>if and when</em> we end up using one <code class="highlighter-rouge">LEA</code> instruction for each pointer modification.</p>
+
+<p>What is <code class="highlighter-rouge">LEA</code> you ask? <strong>L</strong>oad <strong>E</strong>ffective <strong>A</strong>ddress is an instruction that exposes the full extent of x86’s memory addressing capabilities in a single instruction. It allows us to encode rather complicated mathematical/address calculations with a minimal set of bytes, abusing the CPUs address generation units (AGU), while storing the result of that calculation back to a register.</p>
+
+<p>But what can the AGUs do for us? We need to learn just enough about them before we attempt to milk some performance out of them through <code class="highlighter-rouge">LEA</code>. Out of curiosity, I went back in time to find out <em>when</em> the memory addressing scheme was defined/last changed. To my surprise, I found out it was <em>much later</em> than what I had originally thought: Intel last <em>expanded</em> the memory addressing semantics as late as <strong>1986</strong>! Of course this was later expanded again by AMD when they introduced <code class="highlighter-rouge">amd64</code> to propel x86 from the 32-bit dark-ages into the brave world of 64-bit processing, but that was merely a machine-word expansion, not a functional change. I’m happy I researched this bit of history for this post because I found <a href="/assets/images/230985-001_80386_Programmers_Reference_Manual_1986.pdf">this scanned 80386 manual</a>:</p>
+
+<center>
+<div>
+    <p><a href="../assets/images/230985-001_80386_Programmers_Reference_Manual_1986.pdf"><img src="/assets/images/80386-manual.png" alt="80386"></a></p>
+  </div>
+</center>
+
+<p>In this reference manual, the “new” memory addressing semantics are described in section <code class="highlighter-rouge">2.5.3.2</code> on page <code class="highlighter-rouge">2-18</code>, reprinted here for some of its 1980s era je ne sais quoi:</p>
+
+<p><img src="/assets/images/x86-effective-address-calculation-transparent.png" alt="x86-effective-address-calculation"></p>
+
+<p>Figure <code class="highlighter-rouge">2-10</code> in the original manual does a good job explaining the components and machinery that go into a memory address calculation in x86. Here it is together with my plans to abuse it:</p>
+
+<ul>
+  <li>Segment register: This is an odd over-engineered 32-bit era remnant. It’s mostly never used, so let’s skip it in this context.</li>
+  <li>
+<strong>Base register</strong>: This will be our pointer that we want to modify: <code class="highlighter-rouge">writeLeft</code> and <code class="highlighter-rouge">writeRight</code>.</li>
+  <li>
+<strong>Index</strong>: Basically some offset to the base: In our case the <code class="highlighter-rouge">PopCount</code> result, in some form.<br>
+The index has to be <em>added</em> (<code class="highlighter-rouge">+</code>) to the base register. The operation will always be an addition; of course nothing prevents us from adding a negative number…</li>
+  <li>
+<strong>Scale</strong>: The <code class="highlighter-rouge">PopCount</code> result needs to be multiplied by 4, we’ll do it with the scale.
+The scale is <em>limited</em> to be one of <code class="highlighter-rouge">1/2/4/8</code>, but <em>for us</em> this is not a limitation, since multiplication by <code class="highlighter-rouge">4</code> is exactly what we need.</li>
+  <li>
+<strong>Displacement</strong>: Some other constant we can tack on to the address calculation. The displacement can be 8/32 bits and is also always used with an <em>addition</em> (<code class="highlighter-rouge">+</code>) operation.</li>
+</ul>
+
+<p>There’s a key point I need to stress here: while the mathematical operations performed by <code class="highlighter-rouge">LEA</code> are always addition, we can take advantage of how twos-complement addition/subtraction works to effectively turn this so-called addition into a subtraction.</p>
+
+<p>The actual code change is, for lack of better words, underwhelming. But without all this pre-amble it wouldn’t make a lot of sense, here it is, in all its glory:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td>
+<td class="rouge-code"><pre>    <span class="c1">// ...</span>
+    <span class="kt">var</span> <span class="n">popCount</span> <span class="p">=</span> <span class="p">-</span> <span class="p">(</span><span class="kt">long</span><span class="p">)</span> <span class="n">PopCnt</span><span class="p">.</span><span class="nf">PopCount</span><span class="p">(</span><span class="n">mask</span><span class="p">);</span>
+    <span class="n">writeRight</span> <span class="p">+=</span> <span class="n">popCount</span><span class="p">;</span>
+    <span class="n">writeLeft</span>  <span class="p">+=</span> <span class="n">popCount</span> <span class="p">+</span> <span class="m">8</span><span class="p">;</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>Surely, you must be joking, Mr. @damageboy!, I can almost hear you think, but really, this is it. By casting to long and <em>pre-negating</em> the <code class="highlighter-rouge">PopCount</code> result (see that little minus sign?) and reverting back to simpler pointer advancement code, without all the pre-left-shifting pizzaz from the beginning of this post, we get this beautiful, packed, assembly code automatically generated for us:</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td>
+<td class="rouge-code"><pre><span class="nf">popcnt</span>  <span class="nb">rdi</span><span class="p">,</span><span class="nb">rdi</span>             <span class="c1">; F3480FB8FF</span>
+<span class="nf">neg</span>     <span class="nb">rdi</span>                 <span class="c1">; 48F7DF</span>
+<span class="nf">lea</span>     <span class="nb">rax</span><span class="p">,[</span><span class="nb">rax</span><span class="o">+</span><span class="nb">rdi</span><span class="o">*</span><span class="mi">4</span><span class="p">]</span>     <span class="c1">; 488D04B8</span>
+<span class="nf">lea</span>     <span class="nv">r15</span><span class="p">,[</span><span class="nv">r15</span><span class="o">+</span><span class="nb">rdi</span><span class="o">*</span><span class="mi">4</span><span class="o">+</span><span class="mh">20h</span><span class="p">]</span> <span class="c1">; 4D8D7CBF20</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>The new version is taking <code class="highlighter-rouge">3 + 4 + 5</code> or <code class="highlighter-rouge">12</code> bytes in total, to complete both pointer updates. So it’s clearly denser. It is important to point out that this reduces the time taken by the CPU to fetch and decode these instructions. Internally, the CPU still has to perform the same calculations as before. I’ll refrain from digressing into the mechanics of x86’s frontend, backend, and all that jazz, as it is out of scope for this blog post, so let’s just be happy with what we have.</p>
+
+<p>Before we forget, though, does it improve performance?</p>
+
+<div>
+  <div class="stickemup">
+
+<ul class="uk-tab" data-uk-switcher="{connect:'#c4f0e2dd-e91e-42f4-ae47-2f7f681fcadb'}">
+
+	<li class="uk-active"><a href="#"><i class="glyphicon glyphicon-stats"></i> Scaling</a></li>
+
+	<li><a href="#"><i class="glyphicon glyphicon-stats"></i> Time/N</a></li>
+
+	<li><a href="#"><i class="glyphicon glyphicon-list-alt"></i> Benchmarks</a></li>
+
+	<li><a href="#"><i class="glyphicon glyphicon-info-sign"></i> Setup</a></li>
+
+</ul>
+
+<ul id="c4f0e2dd-e91e-42f4-ae47-2f7f681fcadb" class="uk-switcher uk-margin">
+
+	<li>
+<div>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
+<div data-intro="Size of the sorting problem, 10..10,000,000 in powers of 10" data-position="bottom">
+<div data-intro="Performance scale: Array.Sort (solid gray) is always 100%, and the other methods are scaled relative to it" data-position="left">
+<div data-intro="Click legend items to show/hide series" data-position="right">
+<div class="benchmark-chart-container">
+<canvas data-chart="line">
+N,100,1K,10K,100K,1M,10M
+Packed,1,1,1,1,1,1
+Jedi,1.013855422,0.938475624,1.00941461,0.992908734,0.955117129,0.96278825
+
+<!-- 
+{ 
+ "data" : {
+  "datasets" : [
+  { 
+    "backgroundColor": "rgba(66,66,66,0.35)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": -30, "hachureGap": 9, "fillWeight": 0.3	}
+  },
+  { 
+    "backgroundColor": "rgba(33,220,33,.9)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": 60, "hachureGap": 3	}
+  }  
+  ]
+ },
+ "options": {
+    "title": { "text": "AVX2 Jedi Sorting - Scaled to Packed", "display": true },
+    "scales": { 
+      "yAxes": [{
+       "ticks": {
+         "fontFamily": "Indie Flower",
+         "min": 0.92, 
+         "callback": "ticksPercent"
+        },
+        "scaleLabel": {
+          "labelString": "Scaling (%)",
+          "display": true
+        }
+      }]
+    }
+ },
+ "defaultOptions": {"scales":{"xAxes":[{"scaleLabel":{"display":"true,","labelString":"N (elements)","fontFamily":"Indie Flower"},"ticks":{"fontFamily":"Indie Flower"}}]},"legend":{"display":true,"position":"bottom","labels":{"fontFamily":"Indie Flower","fontSize":14}},"title":{"position":"top","fontFamily":"Indie Flower","fontSize":16}}
+}
+--> </canvas>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+</li>
+
+	<li>
+<div>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
+<div data-intro="Size of the sorting problem, 10..10,000,000 in powers of 10" data-position="bottom">
+<div data-intro="Time in nanoseconds spent sorting per element. Array.Sort (solid gray) is the baseline, again" data-position="left">
+<div data-intro="Click legend items to show/hide series" data-position="right">
+<div class="benchmark-chart-container">
+<canvas data-chart="line">
+N,100,1K,10K,100K,1M,
+Packed,16.6008,21.8446,24.2283,25.616,25.3775,27.6628
+Jedi,16.8279,20.501,24.4564,25.4344,24.2384,26.6334
+
+<!-- 
+{ 
+ "data" : {
+  "datasets" : [
+  { 
+    "backgroundColor": "rgba(66,66,66,0.35)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": -30, "hachureGap": 9, "fillWeight": 0.3	}
+  },
+  { 
+    "backgroundColor": "rgba(33,220,33,.9)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": 60, "hachureGap": 3	}
+  }
+  ]
+ },
+ "options": {
+    "title": { "text": "AVX2 Jedi Sorting + Packed - log(Time/N)", "display": true },
+    "scales": { 
+      "yAxes": [{ 
+        "type": "logarithmic",
+        "ticks": {
+          "min": 15,
+          "max": 28,
+          "callback": "ticksNumStandaard",
+          "fontFamily": "Indie Flower"          
+        },
+        "scaleLabel": {
+          "labelString": "Time/N (ns)",
+          "fontFamily": "Indie Flower",
+          "display": true
+        }
+      }]
+    }
+ },
+ "defaultOptions": {"scales":{"xAxes":[{"scaleLabel":{"display":"true,","labelString":"N (elements)","fontFamily":"Indie Flower"},"ticks":{"fontFamily":"Indie Flower"}}]},"legend":{"display":true,"position":"bottom","labels":{"fontFamily":"Indie Flower","fontSize":14}},"title":{"position":"top","fontFamily":"Indie Flower","fontSize":16}}
+}
+--> </canvas>
+</div>
+</div>
+</div>
+</div>
+</div>
+</li>
+
+	<li>
+<div>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
+<table class="table datatable" data-json="../_posts/Bench.BlogPt4_5_Int32_-report.datatable.json" data-id-field="name" data-pagination="true" data-page-list="[5, 10, 15, 20]" data-intro="Each row in this table represents a benchmark result" data-position="left" data-show-pagination-switch="false">
+  <thead data-intro="The header can be used to sort/filter by clicking" data-position="right">
+    <tr>
+        <th data-field="TargetMethodColumn.Method" data-sortable="true" data-filter-control="select">
+          <span data-intro="The name of the benchmarked method" data-position="top">
+            Method<br>Name
+          </span>
+        </th>
+        <th data-field="N" data-sortable="true" data-value-type="int" data-filter-control="select">
+            <span data-intro="The size of the sorting problem being benchmarked (# of integers)" data-position="top">
+            Problem<br>Size
+            </span>
+        </th>
+        <th data-field="TimePerNDataTable" data-sortable="true" data-value-type="float2-interval-muted">
+            <span data-intro="Time in nanoseconds spent sorting each element in the array (with confidence intervals in parenthesis)" data-position="top">
+              Time /<br>Element (ns)
+            </span>
+        </th>
+        <th data-field="RatioDataTable" data-sortable="true" data-value-type="inline-bar-horizontal-percentage">
+            <span data-intro="Each result is scaled to its baseline (Array.Sort in this case)" data-position="top">
+                  Scaling
+            </span>
+        </th>
+        <th data-field="Measurements" data-sortable="true" data-value-type="inline-bar-vertical">
+            <span data-intro="Raw benchmark results visualize how stable the result it. Longest/Shortest runs marked with &lt;span style='color: red'&gt;Red&lt;/span&gt;/&lt;span style='color: green'&gt;Green&lt;/span&gt;" data-position="top">Measurements</span>
+        </th>
+    </tr>
+  </thead>
+</table>
+</div>
+
+</li>
+
+	<li>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+</pre></td>
+<td class="rouge-code"><pre><span class="nv">BenchmarkDotNet</span><span class="o">=</span>v0.12.0, <span class="nv">OS</span><span class="o">=</span>clear-linux-os 32120
+Intel Core i7-7700HQ CPU 2.80GHz <span class="o">(</span>Kaby Lake<span class="o">)</span>, 1 CPU, 4 logical and 4 physical cores
+.NET Core <span class="nv">SDK</span><span class="o">=</span>3.1.100
+  <span class="o">[</span>Host]     : .NET Core 3.1.0 <span class="o">(</span>CoreCLR 4.700.19.56402, CoreFX 4.700.19.56404<span class="o">)</span>, X64 RyuJIT
+  Job-DEARTS : .NET Core 3.1.0 <span class="o">(</span>CoreCLR 4.700.19.56402, CoreFX 4.700.19.56404<span class="o">)</span>, X64 RyuJIT
+
+<span class="nv">InvocationCount</span><span class="o">=</span>3  <span class="nv">IterationCount</span><span class="o">=</span>15  <span class="nv">LaunchCount</span><span class="o">=</span>2
+<span class="nv">UnrollFactor</span><span class="o">=</span>1  <span class="nv">WarmupCount</span><span class="o">=</span>10
+
+<span class="nv">$ </span><span class="nb">grep</span> <span class="s1">'stepping\|model\|microcode'</span> /proc/cpuinfo | <span class="nb">head</span> <span class="nt">-4</span>
+model           : 158
+model name      : Intel<span class="o">(</span>R<span class="o">)</span> Core<span class="o">(</span>TM<span class="o">)</span> i7-7700HQ CPU @ 2.80GHz
+stepping        : 9
+microcode       : 0xb4
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+</li>
+
+</ul>
+
+</div>
+
+  <p>All in all, this might not look like much, but it is real: another small 3-4% uneven improvement across the sorting spectrum if you disregard the weirdness around 10K elements. I do realize it may not look super impressive to boot, but here’s a spoiler: a few blog posts down the road, we’ll get to unroll our loops, you know, that place where all optimization efforts end up going. When we do get there, every byte we remove off this main loop body will pay in spades. In other words, while some of the optimizations may appear minor, I have a different metric, at least in my mind, when it comes to improving the loop body even by a single per-cent while we’re still not unrolling it. That’s one of those places where a little experience affords better foresight.</p>
+</div>
+
+<p>I have to come clean here: I’ve left some pennies here on the floor. We could still go one step further and get rid of one more 3-byte instruction in the loop. Alas, I’ve made an executive decision to no do so in this blog post: For one, this post has already become quite long, and I doubt a substantial number of people who have started reading it are still here with us, with a beating pulse. Moreover, this specific optimization that I have in mind would not really shine in this moment. As such, I’ll go back to it once we get to unroll this loop.</p>
+
+<h2 id="weve-come-a-long-way-baby">We’ve Come a Long Way, Baby!</h2>
+
+<p>We’ve done quite a lot to optimize the vectorized partitioning so far. All these incremental improvements pile up, when you multiply them on top of another.</p>
+
+<p>Don’t believe me? Here’s one last group of charts and data tables to show what distance we’ve travalled in one blog post:</p>
+
+<div>
+  <div class="stickemup">
+
+<ul class="uk-tab" data-uk-switcher="{connect:'#9b286913-7d22-47f4-a872-55e55472df4b'}">
+
+	<li class="uk-active"><a href="#"><i class="glyphicon glyphicon-stats"></i> Scaling</a></li>
+
+	<li><a href="#"><i class="glyphicon glyphicon-stats"></i> Time/N</a></li>
+
+	<li><a href="#"><i class="glyphicon glyphicon-list-alt"></i> Benchmarks</a></li>
+
+	<li><a href="#"><i class="glyphicon glyphicon-info-sign"></i> Setup</a></li>
+
+</ul>
+
+<ul id="9b286913-7d22-47f4-a872-55e55472df4b" class="uk-switcher uk-margin">
+
+	<li>
+<div>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
+<div data-intro="Size of the sorting problem, 10..10,000,000 in powers of 10" data-position="bottom">
+<div data-intro="Performance scale: Array.Sort (solid gray) is always 100%, and the other methods are scaled relative to it" data-position="left">
+<div data-intro="Click legend items to show/hide series" data-position="right">
+<div class="benchmark-chart-container">
+<canvas data-chart="line">
+N,100,1K,10K,100K,1M,10M
+Naive,1,1,1,1,1,1
+Jedi,0.70862069,0.717993202,0.795472874,0.783355194,0.824350492,0.82130157
+
+<!-- 
+{ 
+ "data" : {
+  "datasets" : [
+  { 
+    "backgroundColor": "rgba(66,66,66,0.35)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": -30, "hachureGap": 9, "fillWeight": 0.3	}
+  },
+  { 
+    "backgroundColor": "rgba(218,165,32,.9)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": 60, "hachureGap": 3	}
+  }  
+  ]
+ },
+ "options": {
+    "title": { "text": "AVX2 end of Blog Pt. 4 - Scaled to end of Pt. 3", "display": true },
+    "scales": { 
+      "yAxes": [{
+       "ticks": {
+         "fontFamily": "Indie Flower",
+         "min": 0.65, 
+         "callback": "ticksPercent"
+        },
+        "scaleLabel": {
+          "labelString": "Scaling (%)",
+          "display": true
+        }
+      }]
+    }
+ },
+ "defaultOptions": {"scales":{"xAxes":[{"scaleLabel":{"display":"true,","labelString":"N (elements)","fontFamily":"Indie Flower"},"ticks":{"fontFamily":"Indie Flower"}}]},"legend":{"display":true,"position":"bottom","labels":{"fontFamily":"Indie Flower","fontSize":14}},"title":{"position":"top","fontFamily":"Indie Flower","fontSize":16}}
+}
+--> </canvas>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+</li>
+
+	<li>
+<div>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
+<div data-intro="Size of the sorting problem, 10..10,000,000 in powers of 10" data-position="bottom">
+<div data-intro="Time in nanoseconds spent sorting per element. Array.Sort (solid gray) is the baseline, again" data-position="left">
+<div data-intro="Click legend items to show/hide series" data-position="right">
+<div class="benchmark-chart-container">
+<canvas data-chart="line">
+N,100,1K,10K,100K,1M,
+Naive,23.2032,28.2439,30.9998,32.4093,29.5396,32.2364
+Jedi,16.4365,20.2787,24.6595,25.388,24.351,26.4758
+
+<!-- 
+{ 
+ "data" : {
+  "datasets" : [
+  { 
+    "backgroundColor": "rgba(66,66,66,0.35)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": -30, "hachureGap": 9, "fillWeight": 0.3	}
+  },
+  { 
+    "backgroundColor": "rgba(218,165,32,.9)",
+    "rough": { "fillStyle": "hachure", "hachureAngle": 60, "hachureGap": 3	}
+  }
+  ]
+ },
+ "options": {
+    "title": { "text": "AVX2 end of Pt. 4 + end of Pt. 3 - log(Time/N)", "display": true },
+    "scales": { 
+      "yAxes": [{ 
+        "type": "logarithmic",
+        "ticks": {
+          "min": 15,
+          "max": 33,
+          "callback": "ticksNumStandaard",
+          "fontFamily": "Indie Flower"          
+        },
+        "scaleLabel": {
+          "labelString": "Time/N (ns)",
+          "fontFamily": "Indie Flower",
+          "display": true
+        }
+      }]
+    }
+ },
+ "defaultOptions": {"scales":{"xAxes":[{"scaleLabel":{"display":"true,","labelString":"N (elements)","fontFamily":"Indie Flower"},"ticks":{"fontFamily":"Indie Flower"}}]},"legend":{"display":true,"position":"bottom","labels":{"fontFamily":"Indie Flower","fontSize":14}},"title":{"position":"top","fontFamily":"Indie Flower","fontSize":16}}
+}
+--> </canvas>
+</div>
+</div>
+</div>
+</div>
+</div>
+</li>
+
+	<li>
+<div>
+<button class="helpbutton" data-toggle="chardinjs" onclick="$('body').chardinJs('start')"><object style="pointer-events: none;" type="image/svg+xml" data="/assets/images/help.svg"></object></button>
+<table class="table datatable" data-json="../_posts/Bench.BlogPt4_6_Int32_-report.datatable.json" data-id-field="name" data-pagination="true" data-page-list="[5, 10, 15, 20]" data-intro="Each row in this table represents a benchmark result" data-position="left" data-show-pagination-switch="false">
+  <thead data-intro="The header can be used to sort/filter by clicking" data-position="right">
+    <tr>
+        <th data-field="TargetMethodColumn.Method" data-sortable="true" data-filter-control="select">
+          <span data-intro="The name of the benchmarked method" data-position="top">
+            Method<br>Name
+          </span>
+        </th>
+        <th data-field="N" data-sortable="true" data-value-type="int" data-filter-control="select">
+            <span data-intro="The size of the sorting problem being benchmarked (# of integers)" data-position="top">
+            Problem<br>Size
+            </span>
+        </th>
+        <th data-field="TimePerNDataTable" data-sortable="true" data-value-type="float2-interval-muted">
+            <span data-intro="Time in nanoseconds spent sorting each element in the array (with confidence intervals in parenthesis)" data-position="top">
+              Time /<br>Element (ns)
+            </span>
+        </th>
+        <th data-field="RatioDataTable" data-sortable="true" data-value-type="inline-bar-horizontal-percentage">
+            <span data-intro="Each result is scaled to its baseline (Array.Sort in this case)" data-position="top">
+                  Scaling
+            </span>
+        </th>
+        <th data-field="Measurements" data-sortable="true" data-value-type="inline-bar-vertical">
+            <span data-intro="Raw benchmark results visualize how stable the result it. Longest/Shortest runs marked with &lt;span style='color: red'&gt;Red&lt;/span&gt;/&lt;span style='color: green'&gt;Green&lt;/span&gt;" data-position="top">Measurements</span>
+        </th>
+    </tr>
+  </thead>
+</table>
+</div>
+
+</li>
+
+	<li>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+</pre></td>
+<td class="rouge-code"><pre><span class="nv">BenchmarkDotNet</span><span class="o">=</span>v0.12.0, <span class="nv">OS</span><span class="o">=</span>clear-linux-os 32120
+Intel Core i7-7700HQ CPU 2.80GHz <span class="o">(</span>Kaby Lake<span class="o">)</span>, 1 CPU, 4 logical and 4 physical cores
+.NET Core <span class="nv">SDK</span><span class="o">=</span>3.1.100
+  <span class="o">[</span>Host]     : .NET Core 3.1.0 <span class="o">(</span>CoreCLR 4.700.19.56402, CoreFX 4.700.19.56404<span class="o">)</span>, X64 RyuJIT
+  Job-DEARTS : .NET Core 3.1.0 <span class="o">(</span>CoreCLR 4.700.19.56402, CoreFX 4.700.19.56404<span class="o">)</span>, X64 RyuJIT
+
+<span class="nv">InvocationCount</span><span class="o">=</span>3  <span class="nv">IterationCount</span><span class="o">=</span>15  <span class="nv">LaunchCount</span><span class="o">=</span>2
+<span class="nv">UnrollFactor</span><span class="o">=</span>1  <span class="nv">WarmupCount</span><span class="o">=</span>10
+
+<span class="nv">$ </span><span class="nb">grep</span> <span class="s1">'stepping\|model\|microcode'</span> /proc/cpuinfo | <span class="nb">head</span> <span class="nt">-4</span>
+model           : 158
+model name      : Intel<span class="o">(</span>R<span class="o">)</span> Core<span class="o">(</span>TM<span class="o">)</span> i7-7700HQ CPU @ 2.80GHz
+stepping        : 9
+microcode       : 0xb4
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+</li>
+
+</ul>
+
+</div>
+
+  <p>We can see that we’ve managed to trim a lot of excess fat off this little monster of ours. It’s shaping up to be one mean sorting machine, for sure. When comparing to where we were in the end of the previous blog post:</p>
+
+  <ul>
+    <li>We have a more pronounced effect for these optimizations in the lower end of the spectrum, cutting down an additional 30% of the runtime for anything below <code class="highlighter-rouge">1000</code> elements.</li>
+    <li>Above <code class="highlighter-rouge">1000</code> elements, we’ve “only” succeeded in reducing the runtime by 20%. Then again, it’s 20% off of tens and hundreds of milliseconds of total runtime, which is nothing to snicker at.</li>
+  </ul>
+
+  <p>Next up, we’ll have to take on what is a non-trivial problem of dealing with memory alignment, in the scope of a complicated partitioning algorithm like QuickSort.</p>
+</div>

@@ -1,0 +1,1371 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.17.2 by Michael Rose
+  Copyright 2013-2019 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>.NET Core 3.0 Intrinsics in Real Life - (Part 1/3) - damageboy</title>
+<meta name="description" content="I’ve recently overhauled an internal data structure we use at Work® to start using platform dependent intrinsics- the anticipated feature (for speed junkies like me, that is) which was released in preview form as part of CoreCLR 2.1: What follows is sort of a travel log of what I did and how the new CoreCLR functionality fares compared to writing C++ code, when processor intrinsics are involved.">
+
+
+  <meta name="author" content="damageboy">
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="damageboy">
+<meta property="og:title" content=".NET Core 3.0 Intrinsics in Real Life - (Part 1/3)">
+<meta property="og:url" content="https://bits.houmus.org/2018-08-18/netcoreapp3.0-intrinsics-in-real-life-pt1">
+
+
+  <meta property="og:description" content="I’ve recently overhauled an internal data structure we use at Work® to start using platform dependent intrinsics- the anticipated feature (for speed junkies like me, that is) which was released in preview form as part of CoreCLR 2.1: What follows is sort of a travel log of what I did and how the new CoreCLR functionality fares compared to writing C++ code, when processor intrinsics are involved.">
+
+
+
+  <meta property="og:image" content="https://bits.houmus.org/assets/images/intrinsics-header.jpg">
+
+
+
+
+
+  <meta property="article:published_time" content="2018-08-18T15:26:28+00:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://bits.houmus.org/2018-08-18/netcoreapp3.0-intrinsics-in-real-life-pt1">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": null,
+      "url": "https://bits.houmus.org/"
+    
+  }
+</script>
+
+
+  <meta name="google-site-verification" content="wcrvaF3e88-Vb6y-9eUTqYaXDMOukzl4c-IdKByS0Xc" />
+
+
+  <meta name="msvalidate.01" content="6D5AE23298671D95A20FAD7FA3430ABB">
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+<link href="/feed.xml" type="application/atom+xml" rel="alternate" title="damageboy Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+
+<!--[if IE]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+
+
+    <!-- start custom head snippets -->
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/favicons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicons/favicon-16x16.png">
+<link rel="manifest" href="/assets/favicons/site.webmanifest">
+<link rel="mask-icon" href="/assets/favicons/safari-pinned-tab.svg" color="#ba0000">
+<link rel="shortcut icon" href="/assets/favicons/favicon.ico">
+<meta name="apple-mobile-web-app-title" content="damageboy">
+<meta name="application-name" content="damageboy">
+<meta name="msapplication-TileColor" content="#ba0000">
+<meta name="msapplication-config" content="/assets/favicons/browserconfig.xml">
+<meta name="theme-color" content="#ba0000ff">
+
+<!-- <link rel="stylesheet" type="text/css" href="/assets/css/inlineDisqussions.css" /> -->
+<script src="/assets/scripts/webfont.js"></script>
+<script>
+WebFont.load({
+  google: {
+    families: ['Lato', 'Indie Flower']
+  },
+  custom: {
+    families: ['Cascadia Code'],
+    urls: ['/assets/css/cascadia.css']
+  }
+});
+</script>
+
+
+<script defer src="/assets/scripts/jquery.min.js"></script>
+<script defer src="/assets/scripts/polyfill.min.js"></script>
+<script defer src="/assets/scripts/config-mathjax.js"></script>
+<script defer src="/assets/scripts/tex-chtml-full.js"></script>
+<!-- <script defer src="/assets/scripts/inlineDisqussions.js"></script> -->
+<script defer src="/assets/scripts/uikit.min.js"></script>
+<script defer src="/assets/scripts/uikit-icons.min.js"></script>
+<script defer src="/assets/scripts/roughjs@3.1.0"></script>
+<script defer src="/assets/scripts/Chart.bundle.min.js"></script>
+<script defer src="/assets/scripts/chartjs-plugin-rough@0.2.0"></script>
+<script defer src="/assets/scripts/chartjs-plugin-annotation.js"></script>
+<!-- <script defer src="/assets/scripts/applyInlineDisqussions.js"></script> -->
+<script defer src="/assets/scripts/inline-chartjs.js"></script>
+
+<link href="/assets/css/chardinjs.css" rel="stylesheet">
+<script defer src="/assets/scripts/chardinjs.min.js"></script>
+
+<!-- This is entirely for the  datatable.js -->
+<link rel="stylesheet" href="/assets/css/bootstrap.css">
+<link rel="stylesheet" href="/assets/css/bootstrap-table.min.css"> 
+<link rel="stylesheet" href="/assets/css/bootstrap-table-filter-control.min.css">
+<link rel="stylesheet" href="/assets/css/datatable.css">
+
+<script defer src="/assets/scripts/bootstrap.min.js"></script>
+<script defer src="/assets/scripts/bootstrap-table.min.js"></script>
+<script defer src="/assets/scripts/bootstrap-table-filter-control.min.js"></script>
+<script defer src="/assets/scripts/moment.min.js"></script>
+<script defer type="text/javascript" src="/assets/scripts/datatable.js"></script>
+
+  </head>
+
+  <body class="layout--single wide">
+    <nav class="skip-links">
+  <h2 class="screen-reader-text">Skip links</h2>
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          damageboy
+          
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/" >Posts</a>
+            </li><li class="masthead__menu-item">
+              <a href="/talks/" >Talks</a>
+            </li><li class="masthead__menu-item">
+              <a href="/about/" >About</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <svg class="icon" width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15.99 16">
+            <path d="M15.5,13.12L13.19,10.8a1.69,1.69,0,0,0-1.28-.55l-0.06-.06A6.5,6.5,0,0,0,5.77,0,6.5,6.5,0,0,0,2.46,11.59a6.47,6.47,0,0,0,7.74.26l0.05,0.05a1.65,1.65,0,0,0,.5,1.24l2.38,2.38A1.68,1.68,0,0,0,15.5,13.12ZM6.4,2A4.41,4.41,0,1,1,2,6.4,4.43,4.43,0,0,1,6.4,2Z" transform="translate(-.01)"></path>
+          </svg>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+  
+
+
+
+
+
+
+
+
+
+
+
+<div class="page__hero"
+  style=" "
+>
+  
+    <img src="/assets/images/intrinsics-header.jpg" alt=".NET Core 3.0 Intrinsics in Real Life - (Part 1/3)" class="page__hero-image">
+  
+  
+</div>
+
+
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+    <div class="author__avatar">
+      
+
+      
+        <img src="/assets/images/atari.svg" alt="damageboy" itemprop="image">
+      
+    </div>
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name">damageboy</h3>
+    
+    
+      <div class="author__bio" itemprop="description">
+        <p>What did I do this time?</p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+        <li>
+          <a href="https://bits.houmus.org" itemprop="url">
+            <i class="fas fa-fw fa-link" aria-hidden="true"></i> Website
+          </a>
+        </li>
+      
+
+      
+        <li>
+          <a href="mailto:dans@houmus.org">
+            <meta itemprop="email" content="dans@houmus.org" />
+            <i class="fas fa-fw fa-envelope-square" aria-hidden="true"></i> Email
+          </a>
+        </li>
+      
+
+      
+
+      
+        <li>
+          <a href="https://twitter.com/damageboy" itemprop="sameAs" rel="nofollow noopener noreferrer">
+            <i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter
+          </a>
+        </li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+        <li>
+          <a href="https://stackoverflow.com/users/9172/damageboy" itemprop="sameAs" rel="nofollow noopener noreferrer">
+            <i class="fab fa-fw fa-stack-overflow" aria-hidden="true"></i> Stack Overflow
+          </a>
+        </li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content=".NET Core 3.0 Intrinsics in Real Life - (Part 1/3)">
+    <meta itemprop="description" content="I’ve recently overhauled an internal data structure we use at Work® to start using platform dependent intrinsics- the anticipated feature (for speed junkies like me, that is) which was released in preview form as part of CoreCLR 2.1: What follows is sort of a travel log of what I did and how the new CoreCLR functionality fares compared to writing C++ code, when processor intrinsics are involved.">
+    <meta itemprop="datePublished" content="August 18, 2018">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">.NET Core 3.0 Intrinsics in Real Life - (Part 1/3)
+</h1>
+          
+            <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  34 minute read
+
+</p>
+          
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <p>I’ve recently overhauled an internal data structure we use at Work<sup>®</sup> to start using <a href="https://github.com/dotnet/designs/blob/master/accepted/platform-intrinsics.md">platform dependent intrinsics</a>- the anticipated feature (for speed junkies like me, that is) which was released in preview form as part of CoreCLR 2.1: 
+What follows is sort of a travel log of what I did and how the new CoreCLR functionality fares compared to writing C++ code, when processor intrinsics are involved.</p>
+
+<p>This series  will contain 3 parts:</p>
+
+<ul>
+  <li>The data-structure/operation that we’ll optimize and basic usage of intrinsics (this post).</li>
+  <li><a href="/2018-08-19/netcoreapp3.0-intrinsics-in-real-life-pt2">Using intrinsics more effectively</a>.</li>
+  <li><a href="/2018-08-20/netcoreapp3.0-intrinsics-in-real-life-pt3">The C++ version(s) of the corresponding C# code, and what I learned from them</a>.</li>
+</ul>
+
+<p>All of the code (C# &amp; C++) is published under the <a href="https://github.com/damageboy/bitgoo">bitgoo github repo</a>, with build/run scripts in case someone wants to play with it and/or use it as a starting point for humiliating me with better versions.</p>
+
+<p>In order to keep people motivated:</p>
+
+<ul>
+  <li>By the end of this post, we’ll already start using intrinsics, and see considerable speedup in our execution time</li>
+  <li>By the end of the 2<sup>nd</sup> post, we will already see a <strong>300%</strong> speed-up compared to my current .NET Core 2.1 production code, and:</li>
+  <li>By the end of the 3<sup>rd</sup> post I hope to show how with some fixing in the JIT, we can probably get another 100%-ish improvement on top of <strong>that</strong>, bringing us practically to C++ territory<sup id="fnref:1" role="doc-noteref"><a href="#fn:1" class="footnote">1</a></sup></li>
+</ul>
+
+<h2 id="the-whatwhy-of-intrinsics">The What/Why of Intrinsics</h2>
+
+<p>Processor intrinsics are a way to directly embed specific CPU instructions via special, fake method calls that the JIT replaces at code-generation time. Many of these instructions are considered exotic, and normal language syntax cannot map them cleanly.<br />
+The general rule is that a single intrinsic “function” becomes a single CPU instruction.</p>
+
+<p>Intrinsics are not really new to the CLR, and staples of .NET rely on having them around. For example, practically all of the methods in the <a href="https://docs.microsoft.com/en-us/dotnet/api/system.threading.interlocked?view=netframework-4.7.2"><code class="highlighter-rouge">Interlocked</code></a> class in <code class="highlighter-rouge">System.Threading</code> are essentially intrinsics, even if not referred to as such in the documentation. The same holds true for a vast set of vectorized mathematical operations exposed through the types in <a href="https://docs.microsoft.com/en-us/dotnet/api/system.numerics?view=netframework-4.7.2"><code class="highlighter-rouge">System.Numerics</code></a>.</p>
+
+<p>The recent, new effort to introduce more intrinsics in CoreCLR tries to provide additional processor specific intrinsics that deal with a wide range of interesting operations from sped-up cryptographic functions, random number generation to fused mathematical operations and various CPU/cache synchronization primitives.</p>
+
+<p>Unlike the previous cases mentioned, the new intrinsic wrappers in .NET Core don’t shy away from providing <em>model and architecture specific</em> intrinsics, even in cases were only a small portion of actual CPUs might support them. In addition, a <code class="highlighter-rouge">.IsHardwareAccelerated</code> property was sprinkled all over the BCL classes providing intrinsics to allow runtime discovery of what the CPU supports.</p>
+
+<p>On the performance/latency side, which is the focus of this series, we often find that intrinsics can replace tens of CPU instructions with one or two while possibly also eliminating branches (sometimes, more important than using less instructions…). This is compounded by the fact that the simplified instruction stream makes it possible for a modern CPU to “see” the dependencies between instructions (or lack thereof!) more clearly, and safely attempt to run multiple instructions in parallel even inside a <strong>single CPU core</strong>.</p>
+
+<p>While there are some downsides as well to using intrinsics, I’ll discuss some of those at the end of the second post; by then, I hope my warnings will fall on more welcoming ears.<br />
+Personally, I’m more than ready to take that plunge, so with that long preamble out of the way, let’s describe our starting point:</p>
+
+<h2 id="the-bitmap-getnthbitoffset">The Bitmap, GetNthBitOffset()</h2>
+
+<p>To keep it short, I’m purposely going to completely ignore the context the code we are about to discuss is a key part of (If there is interest, I may write a separate post about it).
+For now, let’s accept that we have a god-given assignment in the form of a function that we really want to optimize the hell out of, without stopping to ask “Why?”.</p>
+
+<h3 id="the-bitmap">The Bitmap</h3>
+
+<p>This is dead simple: we have a bitmap which is potentially thousands or tens of thousands of bits long, which we will store somewhere as an <code class="highlighter-rouge">ulong[]</code>:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td><td class="rouge-code"><pre><span class="k">const</span> <span class="kt">int</span> <span class="n">THIS_MANY_BITS</span> <span class="p">=</span> <span class="m">66666</span><span class="p">;</span>
+<span class="kt">ulong</span><span class="p">[]</span> <span class="n">bits</span> <span class="p">=</span> <span class="k">new</span> <span class="kt">ulong</span><span class="p">[(</span><span class="n">THIS_MANY_BITS</span> <span class="p">/</span> <span class="m">64</span><span class="p">)</span> <span class="p">+</span> <span class="m">1</span><span class="p">];</span> <span class="c1">// enough room for everyone</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>The <code class="highlighter-rouge">bits</code> array in the sample above is continuously being mutated, and as bits go, this is going to be in the form of bits being turned on and off in no particular order, so imagine:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td><td class="rouge-code"><pre><span class="kt">var</span> <span class="n">r</span> <span class="p">=</span> <span class="k">new</span> <span class="nf">Random</span><span class="p">(</span><span class="n">DateTime</span><span class="p">.</span><span class="n">Ticks</span> <span class="p">%</span> <span class="kt">int</span><span class="p">.</span><span class="n">MaxValue</span><span class="p">);</span>
+<span class="k">for</span> <span class="p">(</span><span class="kt">var</span> <span class="n">i</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span> <span class="n">i</span> <span class="p">&lt;</span> <span class="n">bits</span><span class="p">.</span><span class="n">Length</span><span class="p">;</span> <span class="n">i</span><span class="p">++)</span>
+    <span class="n">bits</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="p">=</span> <span class="k">unchecked</span><span class="p">(((</span><span class="kt">ulong</span><span class="p">)</span><span class="n">r</span><span class="p">.</span><span class="nf">Next</span><span class="p">())</span> <span class="p">&lt;&lt;</span> <span class="m">32</span> <span class="p">|</span> <span class="p">((</span><span class="kt">ulong</span><span class="p">)</span> <span class="n">r</span><span class="p">.</span><span class="nf">Next</span><span class="p">()));</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<h3 id="the-search-method">The Search Method</h3>
+
+<p>We’re about to describe one of the two methods that I optimized.
+I chose this particular method since it was the more challenging one to optimize. But before describing it, a short disclaimer is in order:</p>
+
+<p>The method is implemented with <code class="highlighter-rouge">unsafe</code> and <code class="highlighter-rouge">ulong *</code> rather than the managed/safe variants (<code class="highlighter-rouge">ulong[]</code> or <code class="highlighter-rouge">Span&lt;ulong&gt;</code>). The reasons I’m using <code class="highlighter-rouge">unsafe</code> are that for this type of code, which makes up double digit % of our CPU time, adding bounds-checking can be very destructive for performance; Specifically, in the context of this series where I’m about to compare C# with C++, we get an apples-to-apples comparison, as C++ is compiled without bounds-checking normally.</p>
+
+<p>With that out of the way, lets inspect the method signature:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre><span class="k">unsafe</span> <span class="kt">int</span> <span class="nf">GetNthBitOffset</span><span class="p">(</span><span class="kt">ulong</span> <span class="p">*</span><span class="n">bits</span><span class="p">,</span> <span class="kt">int</span> <span class="n">numBits</span><span class="p">,</span> <span class="kt">int</span> <span class="n">n</span><span class="p">);</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>This method runs over the entire bitmap until it finds the n<sup>th</sup> bit with the value <code class="highlighter-rouge">1</code>, or as I will refer to it here-on, our <em>target-bit</em>, and returns its bit offset within the bitmap as its return value.
+For brevity we <em>assume</em> that incoming values of <code class="highlighter-rouge">n</code> are never below <code class="highlighter-rouge">1</code> or above the number of <code class="highlighter-rouge">1</code> bits in the bitmap.</p>
+
+<p>Here’s a super naive implementation that achieves this:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+</pre></td><td class="rouge-code"><pre><span class="k">public</span> <span class="k">static</span> <span class="k">unsafe</span> <span class="kt">int</span> <span class="nf">Naive</span><span class="p">(</span><span class="kt">ulong</span><span class="p">*</span> <span class="n">bits</span><span class="p">,</span> <span class="kt">int</span> <span class="n">numBits</span><span class="p">,</span> <span class="kt">int</span> <span class="n">n</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">var</span> <span class="n">b</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span>
+    <span class="kt">var</span> <span class="k">value</span> <span class="p">=</span> <span class="p">*</span><span class="n">bits</span><span class="p">;</span>
+    <span class="kt">var</span> <span class="n">leftInULong</span> <span class="p">=</span> <span class="m">64</span><span class="p">;</span>
+
+    <span class="kt">var</span> <span class="n">i</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">i</span> <span class="p">&lt;</span> <span class="n">numBits</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">((</span><span class="k">value</span> <span class="p">&amp;</span> <span class="m">0x1U</span><span class="n">L</span><span class="p">)</span> <span class="p">==</span> <span class="m">0x1U</span><span class="n">L</span><span class="p">)</span>
+            <span class="n">i</span><span class="p">++;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="p">==</span> <span class="n">n</span><span class="p">)</span>
+            <span class="k">break</span><span class="p">;</span>
+        <span class="k">value</span> <span class="p">&gt;&gt;=</span> <span class="m">1</span><span class="p">;</span>
+        <span class="n">leftInULong</span><span class="p">--;</span>
+        <span class="n">b</span><span class="p">++;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">leftInULong</span> <span class="p">!=</span> <span class="m">0</span><span class="p">)</span> <span class="c1">// Still more bits left in this ulong?</span>
+            <span class="k">continue</span><span class="p">;</span>
+        <span class="k">value</span> <span class="p">=</span> <span class="p">*(++</span><span class="n">bits</span><span class="p">);</span> <span class="c1">// Load a new 64 bit value        </span>
+        <span class="n">leftInULong</span> <span class="p">=</span> <span class="m">64</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">b</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<h3 id="initial-performance">Initial Performance</h3>
+
+<p>This implementation is obviously pretty bad, performance wise. <em>But wait</em>: There are lots of ways you could improve upon this: bit-twiddling hacks, LUTs and what we’re here for, processor intrinsics.</p>
+
+<p>Our next step is to start measuring this, and we’ll move on to better and better versions of this method, until we exhaust <em>my</em> abilities to make this go any faster.<br />
+Using everyone’s favorite CLR microbenchmarking tool, <a href="https://benchmarkdotnet.org/">BDN</a>, I wrote a small harness that preallocates a huge array of  bits, fills it up with random values (roughly 50% <code class="highlighter-rouge">0</code>/<code class="highlighter-rouge">1</code>), then executes the benchmark(s) over this array looking for all the offsets of <strong>lit</strong> bits <strong>up to</strong> <code class="highlighter-rouge">N</code>  where <code class="highlighter-rouge">N</code> is parametrized to be: 1, 8, 64, 512, 2048, 4096, 16384, 65536.
+The benchmark code looks roughly like this:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+</pre></td><td class="rouge-code"><pre><span class="k">const</span> <span class="kt">int</span> <span class="n">KB</span> <span class="p">=</span> <span class="m">1024</span><span class="p">;</span>
+<span class="p">[</span><span class="nf">Params</span><span class="p">(</span><span class="m">1</span><span class="p">,</span> <span class="m">4</span><span class="p">,</span> <span class="m">16</span><span class="p">,</span> <span class="m">64</span><span class="p">,</span> <span class="m">256</span><span class="p">,</span> <span class="m">1</span><span class="p">*</span><span class="n">KB</span><span class="p">,</span> <span class="m">4</span><span class="p">*</span><span class="n">KB</span><span class="p">,</span> <span class="m">16</span><span class="p">*</span><span class="n">KB</span><span class="p">,</span> <span class="m">64</span><span class="p">*</span><span class="n">KB</span><span class="p">)]</span>
+<span class="k">public</span> <span class="kt">int</span> <span class="n">N</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+
+<span class="k">protected</span> <span class="k">unsafe</span> <span class="kt">ulong</span> <span class="p">*</span><span class="n">_bits</span><span class="p">;</span>
+<span class="p">...</span>
+<span class="p">[</span><span class="n">Benchmark</span><span class="p">]</span>
+<span class="k">public</span> <span class="k">unsafe</span> <span class="kt">int</span> <span class="nf">Naive</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="kt">int</span> <span class="n">sum</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">var</span> <span class="n">i</span> <span class="p">=</span> <span class="m">1</span><span class="p">;</span> <span class="n">i</span> <span class="p">&lt;=</span> <span class="n">N</span><span class="p">;</span> <span class="n">i</span><span class="p">++)</span>
+        <span class="n">sum</span> <span class="p">+=</span> <span class="n">GetNthBitOffset</span><span class="p">.</span><span class="nf">Naive</span><span class="p">(</span><span class="n">_bits</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">sum</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>For those in the know, I’m NOT using BDN’s <code class="highlighter-rouge">OperationsPerInvoke()</code> to normalize for <code class="highlighter-rouge">N</code> since the benchmark is looping over the entire bitmap, and the performance varies wildly throughout the loop.</p>
+
+<p>Running this gives us the following results:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>N</th>
+      <th style="text-align: right">Mean (ns)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Naive</td>
+      <td>1</td>
+      <td style="text-align: right">1.185</td>
+    </tr>
+    <tr>
+      <td>Naive</td>
+      <td>4</td>
+      <td style="text-align: right">35.308</td>
+    </tr>
+    <tr>
+      <td>Naive</td>
+      <td>16</td>
+      <td style="text-align: right">605.021</td>
+    </tr>
+    <tr>
+      <td>Naive</td>
+      <td>64</td>
+      <td style="text-align: right">6,368.355</td>
+    </tr>
+    <tr>
+      <td>Naive</td>
+      <td>256</td>
+      <td style="text-align: right">99,448.636</td>
+    </tr>
+    <tr>
+      <td>Naive</td>
+      <td>1024</td>
+      <td style="text-align: right">2,057,984.353</td>
+    </tr>
+    <tr>
+      <td>Naive</td>
+      <td>4096</td>
+      <td style="text-align: right">68,728,413.667</td>
+    </tr>
+    <tr>
+      <td>Naive</td>
+      <td>16384</td>
+      <td style="text-align: right">1,365,698,984.333</td>
+    </tr>
+    <tr>
+      <td>Naive</td>
+      <td>65536</td>
+      <td style="text-align: right">22,669,217,647.333</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>A couple of comments about these results:</p>
+
+<ol>
+  <li>Small numbers of bits actually work out OK-ish given how bad the code is.</li>
+  <li>Yes, finding all the offsets of the first 64k lit bits (so 64K calls times average length of 64K bits processed per call<sup id="fnref:2" role="doc-noteref"><a href="#fn:2" class="footnote">2</a></sup>) takes a whopping 22+ seconds…</li>
+</ol>
+
+<h3 id="prepping-the-machine--clr--environmental-information">Prepping the Machine / CLR + Environmental information</h3>
+
+<p>Here is the BDN environmental data about my machine:</p>
+
+<div class="language-ini highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre></td><td class="rouge-code"><pre><span class="py">BenchmarkDotNet</span><span class="p">=</span><span class="s">v0.11.0, OS=ubuntu 18.04</span>
+<span class="err">Intel</span> <span class="err">Core</span> <span class="err">i7-7700HQ</span> <span class="err">CPU</span> <span class="err">2.80GHz</span> <span class="err">(Sky</span> <span class="err">Lake),</span> <span class="err">1</span> <span class="err">CPU,</span> <span class="err">4</span> <span class="err">logical</span> <span class="err">and</span> <span class="err">4</span> <span class="err">physical</span> <span class="err">cores</span>
+<span class="err">.NET</span> <span class="err">Core</span> <span class="py">SDK</span><span class="p">=</span><span class="s">3.0.100-alpha1-20180720-2</span>
+  <span class="nn">[Host]</span>   <span class="err">:</span> <span class="err">.NET</span> <span class="err">Core</span> <span class="err">3.0.0-preview1-26814-05</span> <span class="err">(CoreCLR</span> <span class="err">4.6.26814.06,</span> <span class="err">CoreFX</span> <span class="err">4.6.26814.01),</span> <span class="err">64bit</span> <span class="err">RyuJIT</span>
+  <span class="err">ShortRun</span> <span class="err">:</span> <span class="err">.NET</span> <span class="err">Core</span> <span class="err">?</span> <span class="err">(CoreCLR</span> <span class="err">4.6.26814.06,</span> <span class="err">CoreFX</span> <span class="err">4.6.26814.01),</span> <span class="err">64bit</span> <span class="err">RyuJIT</span>
+
+<span class="py">Job</span><span class="p">=</span><span class="s">ShortRun  Toolchain=3.0.100-alpha1-20180720-2  IterationCount=3  </span>
+<span class="py">LaunchCount</span><span class="p">=</span><span class="s">1  WarmupCount=3  </span>
+
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>Keen eyes will notice I’m running this with .NET Core 3.0 pre-alpha / preview.
+While this is completely uncalled for the code we’ve seen so far, the next variations will actually depend on having .NET Core 3.0 around, so I ran the whole benchmark set with 3.0.</p>
+
+<p>I’m using an excellent <a href="https://github.com/damageboy/bitcrap/blob/master/prep.sh">prep.sh</a> originally prepared by <a href="https://www.alexgallego.org/">Alexander Gallego</a> that basically kills the Turbo effect on modern CPUs, by setting up the min/max frequencies to the base clock of the machine (e.g. what you would get when running 100% CPU on all cores).</p>
+
+<p>My laptop has an <a href="https://ark.intel.com/products/97185/Intel-Core-i7-7700HQ-Processor-6M-Cache-up-to-3_80-GHz">Intel i7 Skylake processor model 7700HQ</a> with a base frequency of 2.8Ghz, so I ran the following commands on my laptop as <code class="highlighter-rouge">root</code>:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre></td><td class="rouge-code"><pre><span class="nb">source </span>prep.sh <span class="c"># to get the bash functions used below</span>
+cpu_enable_performance_cpupower_state
+cpu_set_min_frequencies 2800000
+cpu_set_max_frequencies 2800000
+cpu_available_frequencies <span class="c"># should print 2800000 for all 4 cores, in my case</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>This is done so that the numbers presented here are applicable for multi-core machines running this code on all cores, and so that very short benchmarks don’t get skewed results compared to longer benchmarks due to CPU frequency scaling.</p>
+
+<h2 id="popcount-without-popcnt">PopCount() without POPCNT</h2>
+
+<p>Now that we have the initial code out of the way, we’re not going to look at it anymore. The next version will use bit-twiddling hacks in order to count larger groups of bits much faster.</p>
+
+<p>We’ll introduce two pure C# functions that implement <a href="https://en.wikipedia.org/wiki/Hamming_weight">population counts</a>:</p>
+
+<blockquote>
+  <p>The <strong>Hamming weight</strong> of a <a href="https://en.wikipedia.org/wiki/String_(computer_science)">string</a> is the number of symbols that are different from the zero-symbol of the <a href="https://en.wikipedia.org/wiki/Alphabet">alphabet</a> used. It is thus equivalent to the <a href="https://en.wikipedia.org/wiki/Hamming_distance">Hamming distance</a> from the all-zero string of the same length. For the most typical case, a string of <a href="https://en.wikipedia.org/wiki/Bit">bits</a>, this is the number of 1’s in the string, or the <a href="https://en.wikipedia.org/wiki/Digit_sum">digit sum</a> of the <a href="https://en.wikipedia.org/wiki/Binary_numeral_system">binary representation</a> of a given number and the <a href="https://en.wikipedia.org/wiki/Taxicab_geometry"><em>ℓ</em>₁ norm</a> of a bit vector. In this binary case, it is also called the <strong>population count</strong>,[<a href="https://en.wikipedia.org/wiki/Hamming_weight#cite_note-Warren_2013-1">1]</a> <strong>popcount</strong>, <strong>sideways sum</strong>,[<a href="https://en.wikipedia.org/wiki/Hamming_weight#cite_note-Knuth_2009-2">2]</a> or <strong>bit summation</strong>.[<a href="https://en.wikipedia.org/wiki/Hamming_weight#cite_note-HP-16C_1982-3">3]</a></p>
+</blockquote>
+
+<p>Ultimately, one of the key processor intrinsics we will use is… <code class="highlighter-rouge">POPCNT</code> which does exactly this, as a single instruction at the processor level, but for now, we will implement a <code class="highlighter-rouge">PopCount()</code> method without those intrinsics, for 64/32 bit inputs.<br />
+Apart from <code class="highlighter-rouge">PopCount()</code> we will also define a <code class="highlighter-rouge">TrailingZeroCount()</code><sup id="fnref:3" role="doc-noteref"><a href="#fn:3" class="footnote">3</a></sup> method, that counts trailing zero bits. I chose an implementation that uses <code class="highlighter-rouge">PopCount()</code> internally.<br />
+Here are the two <code class="highlighter-rouge">PopCount()</code> and <code class="highlighter-rouge">TrailingZeroCount()</code>methods shamelessly stolen throughout the interwebs from <a href="https://github.com/hcs0/Hackers-Delight/blob/master/pop.c.txt">Hacker’s delight</a>:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+</pre></td><td class="rouge-code"><pre><span class="k">public</span> <span class="k">class</span> <span class="nc">HackersDelight</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="k">static</span> <span class="kt">int</span> <span class="nf">PopCount</span><span class="p">(</span><span class="kt">ulong</span> <span class="n">b</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">b</span> <span class="p">-=</span> <span class="p">(</span><span class="n">b</span> <span class="p">&gt;&gt;</span> <span class="m">1</span><span class="p">)</span> <span class="p">&amp;</span> <span class="m">0x5555555555555555</span><span class="p">;</span>
+        <span class="n">b</span> <span class="p">=</span>  <span class="p">(</span><span class="n">b</span> <span class="p">&amp;</span> <span class="m">0x3333333333333333</span><span class="p">)</span> <span class="p">+</span> <span class="p">((</span><span class="n">b</span> <span class="p">&gt;&gt;</span> <span class="m">2</span><span class="p">)</span> <span class="p">&amp;</span> <span class="m">0x3333333333333333</span><span class="p">);</span>
+        <span class="n">b</span> <span class="p">=</span>  <span class="p">(</span><span class="n">b</span> <span class="p">+</span> <span class="p">(</span><span class="n">b</span> <span class="p">&gt;&gt;</span> <span class="m">4</span><span class="p">))</span> <span class="p">&amp;</span> <span class="m">0x0f0f0f0f0f0f0f0f</span><span class="p">;</span>
+        <span class="k">return</span> <span class="k">unchecked</span><span class="p">((</span><span class="kt">int</span><span class="p">)</span> <span class="p">((</span><span class="n">b</span> <span class="p">*</span> <span class="m">0x0101010101010101</span><span class="p">)</span> <span class="p">&gt;&gt;</span> <span class="m">56</span><span class="p">));</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">static</span> <span class="kt">int</span> <span class="nf">PopCount</span><span class="p">(</span><span class="kt">uint</span> <span class="n">b</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">b</span> <span class="p">-=</span> <span class="p">(</span><span class="n">b</span> <span class="p">&gt;&gt;</span> <span class="m">1</span><span class="p">)</span> <span class="p">&amp;</span> <span class="m">0x55555555</span><span class="p">;</span>
+        <span class="n">b</span> <span class="p">=</span>  <span class="p">(</span><span class="n">b</span> <span class="p">&amp;</span> <span class="m">0x33333333</span><span class="p">)</span> <span class="p">+</span> <span class="p">((</span><span class="n">b</span> <span class="p">&gt;&gt;</span> <span class="m">2</span><span class="p">)</span> <span class="p">&amp;</span> <span class="m">0x33333333</span><span class="p">);</span>
+        <span class="n">b</span> <span class="p">=</span>  <span class="p">(</span><span class="n">b</span> <span class="p">+</span> <span class="p">(</span><span class="n">b</span> <span class="p">&gt;&gt;</span> <span class="m">4</span><span class="p">))</span> <span class="p">&amp;</span> <span class="m">0x0f0f0f0f</span><span class="p">;</span>
+        <span class="k">return</span> <span class="k">unchecked</span><span class="p">((</span><span class="kt">int</span><span class="p">)</span> <span class="p">((</span><span class="n">b</span> <span class="p">*</span> <span class="m">0x01010101</span><span class="p">)</span> <span class="p">&gt;&gt;</span> <span class="m">24</span><span class="p">));</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">static</span> <span class="kt">int</span> <span class="nf">TrailingZeroCount</span><span class="p">(</span><span class="kt">uint</span> <span class="n">x</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="nf">PopCount</span><span class="p">(~</span><span class="n">x</span> <span class="p">&amp;</span> <span class="p">(</span><span class="n">x</span> <span class="p">-</span> <span class="m">1</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>These methods can quickly and <strong>without</strong> a single branch instruction, count the lit bits in 64/32 bit words, with just 12 arithmetic operations, most of them simple bit operations and only one (!) multiplication.</p>
+
+<p>With our bit-twiddling optimized functions implemented and out of the way, let’s put them to good use in a new implementation, and make a few changes in the flow of the code:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+</pre></td><td class="rouge-code"><pre><span class="k">using</span> <span class="nn">static</span> <span class="n">BitGoo</span><span class="p">.</span><span class="n">HackersDelight</span><span class="p">;</span>
+
+<span class="k">public</span> <span class="k">static</span> <span class="k">unsafe</span> <span class="kt">int</span> <span class="nf">NoIntrisics</span><span class="p">(</span><span class="kt">ulong</span><span class="p">*</span> <span class="n">bits</span><span class="p">,</span> <span class="kt">int</span> <span class="n">numBits</span><span class="p">,</span> <span class="kt">int</span> <span class="n">n</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// (1)</span>
+    <span class="kt">var</span> <span class="n">p64</span> <span class="p">=</span> <span class="n">bits</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">prevN</span><span class="p">;</span>
+    <span class="k">do</span> <span class="p">{</span>
+        <span class="n">prevN</span> <span class="p">=</span> <span class="n">n</span><span class="p">;</span>
+        <span class="n">n</span> <span class="p">-=</span> <span class="nf">PopCount</span><span class="p">(*</span><span class="n">p64</span><span class="p">);</span>
+        <span class="n">p64</span><span class="p">++;</span>
+    <span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="n">n</span> <span class="p">&gt;</span> <span class="m">0</span><span class="p">);</span>
+
+    <span class="c1">// (2)</span>
+    <span class="kt">var</span> <span class="n">p32</span> <span class="p">=</span> <span class="p">(</span><span class="kt">uint</span> <span class="p">*)</span> <span class="p">(</span><span class="n">p64</span> <span class="p">-</span> <span class="m">1</span><span class="p">);</span>
+    <span class="n">n</span> <span class="p">=</span> <span class="n">prevN</span> <span class="p">-</span> <span class="nf">PopCount</span><span class="p">(*</span><span class="n">p32</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">n</span> <span class="p">&gt;</span> <span class="m">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">prevN</span> <span class="p">=</span> <span class="n">n</span><span class="p">;</span>
+        <span class="n">p32</span><span class="p">++;</span>
+    <span class="p">}</span>
+
+    <span class="c1">// (3)</span>
+    <span class="kt">var</span> <span class="n">prevValue</span> <span class="p">=</span> <span class="p">*</span><span class="n">p32</span><span class="p">;</span>
+    <span class="kt">var</span> <span class="n">pos</span> <span class="p">=</span> <span class="p">(</span><span class="n">p32</span> <span class="p">-</span> <span class="p">(</span><span class="kt">uint</span><span class="p">*)</span> <span class="n">bits</span><span class="p">)</span> <span class="p">*</span> <span class="m">32</span><span class="p">;</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">prevN</span> <span class="p">&gt;</span> <span class="m">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kt">var</span> <span class="n">bp</span> <span class="p">=</span> <span class="nf">TrailingZeroCount</span><span class="p">(</span><span class="n">prevValue</span><span class="p">)</span> <span class="p">+</span> <span class="m">1</span><span class="p">;</span>
+        <span class="n">pos</span> <span class="p">+=</span> <span class="n">bp</span><span class="p">;</span>
+        <span class="n">prevN</span><span class="p">--;</span>
+        <span class="n">prevValue</span> <span class="p">&gt;&gt;=</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="n">bp</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="p">(</span><span class="n">pos</span> <span class="p">-</span> <span class="m">1</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>Our new approach to solving this goes like this (comments correspond to blocks of the code above):</p>
+
+<ol>
+  <li>As long as we <strong>still</strong> need to look for <em>any</em>  <code class="highlighter-rouge">1</code> bits, we loop, calling <code class="highlighter-rouge">PopCount()</code> until we finally consume more bits than what we were tasked with… At that stage our <code class="highlighter-rouge">p64</code> pointer is pointing 1 <code class="highlighter-rouge">ulong</code> beyond the <code class="highlighter-rouge">ulong</code> containing our target-bit, and <code class="highlighter-rouge">prevN</code> contains the number of consumed <code class="highlighter-rouge">1</code> bits that was still correct one <code class="highlighter-rouge">ulong</code> before.</li>
+  <li>Once we’re out of the loop, we know that out target-bit is hiding somewhere <em>within</em> that last 64-bit <code class="highlighter-rouge">ulong</code>. So we will use a single 32-bit <code class="highlighter-rouge">PopCount()</code> to figure out if its within the first/second 32-bit words making up <em>that</em> 64-bit word and update the bit-counts / <code class="highlighter-rouge">p32</code> pointer accordingly.</li>
+  <li>Now, we know that <code class="highlighter-rouge">p32</code> is pointing to the 32-bit word containing our target-bit <code class="highlighter-rouge">p32</code>, so we find the target-bit, by using <code class="highlighter-rouge">TrailingZeroCount()</code> and right shifting in a loop until we find the target bit’s position within the word, finally returning the offset when we’re done.</li>
+</ol>
+
+<p>Let’s take a look at how this version fairs:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>N</th>
+      <th style="text-align: right">Mean (ns)</th>
+      <th style="text-align: right">Scaled to “Naive”</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>NoIntrisics</td>
+      <td>1</td>
+      <td style="text-align: right">5.247</td>
+      <td style="text-align: right">4.19</td>
+    </tr>
+    <tr>
+      <td>NoIntrisics</td>
+      <td>4</td>
+      <td style="text-align: right">43.919</td>
+      <td style="text-align: right">0.79</td>
+    </tr>
+    <tr>
+      <td>NoIntrisics</td>
+      <td>16</td>
+      <td style="text-align: right">429.974</td>
+      <td style="text-align: right">0.58</td>
+    </tr>
+    <tr>
+      <td>NoIntrisics</td>
+      <td>64</td>
+      <td style="text-align: right">2,986.498</td>
+      <td style="text-align: right">0.44</td>
+    </tr>
+    <tr>
+      <td>NoIntrisics</td>
+      <td>256</td>
+      <td style="text-align: right">16,492.408</td>
+      <td style="text-align: right">0.16</td>
+    </tr>
+    <tr>
+      <td>NoIntrisics</td>
+      <td>1024</td>
+      <td style="text-align: right">112,049.075</td>
+      <td style="text-align: right">0.06</td>
+    </tr>
+    <tr>
+      <td>NoIntrisics</td>
+      <td>4096</td>
+      <td style="text-align: right">1,058,565.813</td>
+      <td style="text-align: right">0.02</td>
+    </tr>
+    <tr>
+      <td>NoIntrisics</td>
+      <td>16384</td>
+      <td style="text-align: right">13,714,191.734</td>
+      <td style="text-align: right">0.010</td>
+    </tr>
+    <tr>
+      <td>NoIntrisics</td>
+      <td>65536</td>
+      <td style="text-align: right">206,236,218.000</td>
+      <td style="text-align: right">0.009</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Quite an improvement already! To be fair, our starting point being so low helped a lot, but still an improvement.
+As a side note, this is, essentially, the code I’m running on our own bitmaps in production right now, since I don’t have intrinsics right now.</p>
+
+<p>If there’s really one column where our focus should gravitate towards it’s the “Scaled” column on the right of the table. Each result here is scaled to its corresponding <code class="highlighter-rouge">Naive</code> version:</p>
+
+<ul>
+  <li>For any bit length &lt; 16, the old version runs faster, but marginally so, in absolute terms.</li>
+  <li>Once we hit <code class="highlighter-rouge">N == 16</code> and upwards, the landscape changes dramatically and our bit-twiddling <code class="highlighter-rouge">PopCount()</code> starts paying off big-time: the speedup for 64 is already &gt; 100% all the way up to 11100% speedup @ 64K.</li>
+</ul>
+
+<h2 id="coreclr--architecture-dependent-intrinsics">CoreCLR &amp; Architecture Dependent Intrinsics</h2>
+
+<p>Let us remind ourselves where things stand at the time of writing this post, when it comes to using intrinsics in CoreCLR:</p>
+
+<ul>
+  <li>.NET Core 2.1 was released on May 30<sup>th</sup> 2018, with Intrinsics released as a “preview” feature:
+    <ul>
+      <li>The 2.1 JIT kind of knows how to handle <em>some</em> intrinsics.</li>
+      <li>To actually use them, we need to use the dotnet-core myget feed and install an experimental nuget package that provides the API surface for the intrinsics.</li>
+      <li>No commitments were made that things would be stable/working.</li>
+    </ul>
+  </li>
+  <li>.NET Core 3.0 is the official (so far?) target release for intrinsics support in .NET Core:
+    <ul>
+      <li>Considerably more intrinsics are supported than what was available with 2.1.</li>
+      <li>No extra nuget package is required (intrinsics are part of the SDK).</li>
+      <li>Work is still being very actively done to add more intrinsics and improve the quality of what is already there.</li>
+    </ul>
+  </li>
+</ul>
+
+<p>As we require intrinsics that were not available with 2.1, The code in <a href="https://github.com/damageboy/bitgoo">repo</a> is targeting a pre-alpha1 version of .NET Core 3.0 (i.e. <code class="highlighter-rouge">netcoreapp3.0</code>).</p>
+
+<p>For people wanting to run this code, it’s relatively easy to do so, and non-destructive to your current setup:</p>
+
+<ol>
+  <li>
+    <p>Go to the <a href="https://github.com/dotnet/core-sdk#installers-and-binaries">Installers and Binaries</a> section of the core-sdk project.</p>
+  </li>
+  <li>
+    <p>The left most column contains .NET Core Master branch builds (3.0.x Runtime).</p>
+  </li>
+  <li>
+    <p>Download the appropriate installer in <code class="highlighter-rouge">.zip</code> / <code class="highlighter-rouge">.tar.gz</code> form: I used the <a href="https://dotnetcli.blob.core.windows.net/dotnet/Sdk/master/dotnet-sdk-latest-linux-x64.tar.gz">linux</a> one, but the <a href="https://dotnetcli.blob.core.windows.net/dotnet/Sdk/master/dotnet-sdk-latest-win-x64.zip">windows</a> / <a href="https://dotnetcli.blob.core.windows.net/dotnet/Sdk/master/dotnet-sdk-latest-osx-x64.tar.gz">osx</a> ones should be just as good.</p>
+  </li>
+  <li>
+    <p>unzip/untar the installer somewhere (*Nix users beware: Microsoft does this entirely inhumane thing of packaging the contents of their distribution as the top level of <code class="highlighter-rouge">.tar.gz</code>, so be sure to <code class="highlighter-rouge">mkdir dotnet; tar -C dotnet xf /path/to/where/you/downloaded/the/tar.gz</code> to avoid heart-ache).</p>
+  </li>
+  <li>
+    <p>Adjust your <code class="highlighter-rouge">PATH</code> env. to find the <code class="highlighter-rouge">dotnet</code> executable in the new folder you just unzipped to, before anywhere else. (I did this locally in my terminal session).</p>
+  </li>
+  <li>
+    <p>You should now be able to <code class="highlighter-rouge">dotnet restore|build|run|test</code> the BitGoo project(s).</p>
+  </li>
+  <li>
+    <p>Just to be on the safe side, here is what <code class="highlighter-rouge">dotnet --info</code> prints for me:</p>
+
+    <div class="language-ini highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre></td><td class="rouge-code"><pre><span class="err">.NET</span> <span class="err">Core</span> <span class="err">SDK</span> <span class="err">(reflecting</span> <span class="err">any</span> <span class="err">global.json):</span>
+ <span class="err">Version:</span>   <span class="err">3.0.100-alpha1-20180720-2</span>
+ <span class="err">Commit:</span>    <span class="err">82bd85d0a9</span>
+   
+<span class="err">Runtime</span> <span class="err">Environment:</span>
+ <span class="err">OS</span> <span class="err">Name:</span>     <span class="err">ubuntu</span>
+ <span class="err">OS</span> <span class="err">Version:</span>  <span class="err">18.04</span>
+ <span class="err">OS</span> <span class="err">Platform:</span> <span class="err">Linux</span>
+ <span class="err">RID:</span>         <span class="err">ubuntu.18.04-x64</span>
+ <span class="err">...</span> <span class="c"># No one really cares that much
+</span></pre></td></tr></tbody></table></code></pre></div>    </div>
+  </li>
+</ol>
+
+<h2 id="using-popcnt--tzcnt">Using POPCNT &amp; TZCNT</h2>
+
+<p>The next step will be to replace our bit-twiddling <code class="highlighter-rouge">PopCount()</code> code with the <code class="highlighter-rouge">PopCount()</code> intrinsic provided by <code class="highlighter-rouge">System.Runtime.Intrinsics.X86.Popcnt</code> class in the 3.0 BCL, which should be replaced by a single CPU <code class="highlighter-rouge">POPCNT</code> instruction by the JIT at runtime.
+In addition, we will also use the <code class="highlighter-rouge">BMI1</code> (<strong>B</strong>it <strong>M</strong>anipulation <strong>I</strong>ntrinsics <strong>1</strong>) <code class="highlighter-rouge">TrailingZeroCount()</code> intrinsic which maps to the <code class="highlighter-rouge">TZCNT</code> instruction.</p>
+
+<p>These instructions do exactly what our previous hand written implementation did, except it’s done with dedicated circuitry in our CPUs, takes up less instructions in the instruction stream, runs faster and can be parallelized  internally inside the processor.
+I was very careful in the last post / code-sample, to use the exact same function name(s) as the intrinsics provided by the 3.0 BCL, so really, the code change comes down to mostly adjusting the two top <code class="highlighter-rouge">using static</code> statements:</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td><td class="rouge-code"><pre><span class="k">using</span> <span class="nn">static</span> <span class="n">System</span><span class="p">.</span><span class="n">Runtime</span><span class="p">.</span><span class="n">Intrinsics</span><span class="p">.</span><span class="n">X86</span><span class="p">.</span><span class="n">Popcnt</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">static</span> <span class="n">System</span><span class="p">.</span><span class="n">Runtime</span><span class="p">.</span><span class="n">Intrinsics</span><span class="p">.</span><span class="n">X86</span><span class="p">.</span><span class="n">Bmi1</span><span class="p">;</span>
+
+<span class="c1">// Rest of the code is the same...</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>That’s it!  We’re using intrinsics, all done!<br />
+If you are having a hard time trusting me, here’s a <a href="https://github.com/damageboy/bitgoo/blob/master/csharp/BitGoo/GetNthBitOffset.POPCNTAndBMI1.cs">link to the complete code</a>.
+Here are the results, this time scaled to the <code class="highlighter-rouge">NoIntrinsics()</code> version:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>N</th>
+      <th style="text-align: right">Mean (ns)</th>
+      <th style="text-align: right">Scaled to “NoIntrinsics”`</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>POPCNTAndBMI1</td>
+      <td>1</td>
+      <td style="text-align: right">2.358</td>
+      <td style="text-align: right">0.44</td>
+    </tr>
+    <tr>
+      <td>POPCNTAndBMI1</td>
+      <td>4</td>
+      <td style="text-align: right">15.318</td>
+      <td style="text-align: right">0.35</td>
+    </tr>
+    <tr>
+      <td>POPCNTAndBMI1</td>
+      <td>16</td>
+      <td style="text-align: right">128.712</td>
+      <td style="text-align: right">0.31</td>
+    </tr>
+    <tr>
+      <td>POPCNTAndBMI1</td>
+      <td>64</td>
+      <td style="text-align: right">916.033</td>
+      <td style="text-align: right">0.27</td>
+    </tr>
+    <tr>
+      <td>POPCNTAndBMI1</td>
+      <td>256</td>
+      <td style="text-align: right">5,005.190</td>
+      <td style="text-align: right">0.30</td>
+    </tr>
+    <tr>
+      <td>POPCNTAndBMI1</td>
+      <td>1024</td>
+      <td style="text-align: right">44,606.327</td>
+      <td style="text-align: right">0.39</td>
+    </tr>
+    <tr>
+      <td>POPCNTAndBMI1</td>
+      <td>4096</td>
+      <td style="text-align: right">408,871.712</td>
+      <td style="text-align: right">0.39</td>
+    </tr>
+    <tr>
+      <td>POPCNTAndBMI1</td>
+      <td>16384</td>
+      <td style="text-align: right">5,205,533.285</td>
+      <td style="text-align: right">0.39</td>
+    </tr>
+    <tr>
+      <td>POPCNTAndBMI1</td>
+      <td>65536</td>
+      <td style="text-align: right">76,186,499.286</td>
+      <td style="text-align: right">0.37</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>OK, now we’re talking…<br />
+There can be no doubt that we have SOMETHING working: we can see a very substantial improvement across the board for every value of <code class="highlighter-rouge">N</code>!. <br />
+There are some weird things still happening here that I cannot fully explain yet at this stage, namely: how the scaling becomes relatively worse as <code class="highlighter-rouge">N</code> increases, but there is little to generally complain about.</p>
+
+<p>For those with a need to see assembly code to feel convinced, I’ve uploaded JITDumps to a <a href="https://gist.github.com/b4500d6b7157051551346107786ae4fa">gist</a>, where you can clearly see the various <code class="highlighter-rouge">POPCNT</code> / <code class="highlighter-rouge">LZCNT</code> instructions throughout the ASM code (scroll to the end of the dump…).</p>
+
+<h3 id="whats-next">What’s Next?</h3>
+
+<p>We’ve reached pretty far, and I hope it was interesting even if a bit introductory.<br />
+In the next post, we’ll continue iterating on this task, introducing new intrinsics in the process, and encounter some “interesting” quirks.</p>
+
+<p>If you feel like you’re up for it, the next post is <a href="/2018-08-19/netcoreapp3.0-intrinsics-in-real-life-pt2">here</a>…</p>
+
+<hr />
+<div class="footnotes" role="doc-endnotes">
+  <ol>
+    <li id="fn:1" role="doc-endnote">
+      <p>Worry not, I reported and <a href="https://github.com/dotnet/coreclr/issues/19555">opened an issue on CoreCLR^1</a> before even starting to write this post and plan to do a deep-dive into this on the 3rd post <a href="#fnref:1" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+    <li id="fn:2" role="doc-endnote">
+      <p>Since our bitmap is filled with roughly 50% <code class="highlighter-rouge">0</code>/<code class="highlighter-rouge">1</code> values, searching for 64K lit bits means going over roughly 128K bits, as an example. <a href="#fnref:2" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+    <li id="fn:3" role="doc-endnote">
+      <p>The TrailingZeroCount() method I’ve used here is the fastest, from independent testing, for C#. There are others but they either depend on having a compiler that can use CMOV instructions (which CoreCLR doesn’t yet), or on using LUTs (Look Up Tables) which I dislike since they tend to win benchmarks while losing in bigger scope of where the code is used, so I have a semi-religious bias against them. <a href="#fnref:3" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+  </ol>
+</div>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+
+
+        
+          <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2018-08-18T15:26:28+00:00">August 18, 2018</time></p>
+        
+      </footer>
+
+      <section class="page__share">
+  
+
+  <a href="https://twitter.com/intent/tweet?text=.NET+Core+3.0+Intrinsics+in+Real+Life+-+%28Part+1%2F3%29%20https%3A%2F%2Fbits.houmus.org%2F2018-08-18%2Fnetcoreapp3.0-intrinsics-in-real-life-pt1" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fbits.houmus.org%2F2018-08-18%2Fnetcoreapp3.0-intrinsics-in-real-life-pt1" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Fbits.houmus.org%2F2018-08-18%2Fnetcoreapp3.0-intrinsics-in-real-life-pt1" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="#" class="pagination--pager disabled">Previous</a>
+    
+    
+      <a href="/2018-08-19/netcoreapp3.0-intrinsics-in-real-life-pt2" class="pagination--pager" title=".NET Core 3.0 Intrinsics in Real Life - (Part 2/3)
+">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h4 class="page__related-title">You May Also Enjoy</h4>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/2020-02-02/this-goes-to-eleven-pt5" rel="permalink">This Goes to Eleven (Pt. 5/∞)
+</a>
+      
+    </h2>
+    
+      <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  71 minute read
+
+</p>
+    
+    <p class="archive__item-excerpt" itemprop="description">Decimating Array.Sort with AVX2. I ended up going down the rabbit hole re-implementing array sorting with AVX2 intrinsics. There’s no reason I should go down...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/2020-02-01/this-goes-to-eleven-pt4" rel="permalink">This Goes to Eleven (Pt. 4/∞)
+</a>
+      
+    </h2>
+    
+      <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  56 minute read
+
+</p>
+    
+    <p class="archive__item-excerpt" itemprop="description">Decimating Array.Sort with AVX2. I ended up going down the rabbit hole re-implementing array sorting with AVX2 intrinsics. There’s no reason I should go down...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/2020-01-30/this-goes-to-eleven-pt3" rel="permalink">This Goes to Eleven (Part. 3/∞)
+</a>
+      
+    </h2>
+    
+      <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  79 minute read
+
+</p>
+    
+    <p class="archive__item-excerpt" itemprop="description">Decimating Array.Sort with AVX2. I ended up going down the rabbit hole re-implementing array sorting with AVX2 intrinsics. There’s no reason I should go down...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/2020-01-29/this-goes-to-eleven-pt2" rel="permalink">This Goes to Eleven (Part. 2/∞)
+</a>
+      
+    </h2>
+    
+      <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  32 minute read
+
+</p>
+    
+    <p class="archive__item-excerpt" itemprop="description">Decimating Array.Sort with AVX2. I ended up going down the rabbit hole re-implementing array sorting with AVX2 intrinsics. There’s no reason I should go down...</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><div class="search-searchbar"></div>
+  <div class="search-hits"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+
+    
+
+    <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2020 damageboy. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+<!-- Including InstantSearch.js library and styling -->
+<script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.3.3/dist/instantsearch.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.3.3/dist/instantsearch.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.3.3/dist/instantsearch-theme-algolia.min.css">
+
+<script>
+// Instanciating InstantSearch.js with Algolia credentials
+const search = instantsearch({
+  appId: 'CMJJV3VL7A',
+  apiKey: 'f1673463105fd4295fbbeffc415b5934',
+  indexName: 'bits.houmus.org',
+  searchParameters: {
+    restrictSearchableAttributes: [
+      'title',
+      'content'
+    ]
+  }
+});
+
+const hitTemplate = function(hit) {
+  const url = hit.url;
+  const title = hit._highlightResult.title.value;
+  const content = hit._highlightResult.html.value;
+
+  return `
+    <div class="list__item">
+      <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+        <h2 class="archive__item-title" itemprop="headline"><a href="${url}">${title}</a></h2>
+        <div class="archive__item-excerpt" itemprop="description">${content}</div>
+      </article>
+    </div>
+  `;
+}
+
+// Adding searchbar and results widgets
+search.addWidget(
+  instantsearch.widgets.searchBox({
+    container: '.search-searchbar',
+    poweredBy: true,
+    placeholder: 'Enter your search term...'
+  })
+);
+search.addWidget(
+  instantsearch.widgets.hits({
+    container: '.search-hits',
+    templates: {
+      item: hitTemplate
+    }
+  })
+);
+
+// Starting the search
+search.start();
+</script>
+
+
+
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-124434205-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-124434205-1', { 'anonymize_ip': false});
+</script>
+
+
+
+
+
+
+
+
+<div class="top-scroll-progress-bar"></div>
+
+
+<script>
+jQuery( document ).ready(function() {
+    jQuery('table.datatable').each(function(){
+        jQuery(this).datatable();
+    });
+});
+</script>
+
+<script>
+  var element = document.documentElement,
+    body = document.body,
+    scrollTop = 'scrollTop',
+    scrollHeight = 'scrollHeight',
+    progress = document.querySelector('.top-scroll-progress-bar'),
+    scroll;
+  
+  document.addEventListener('scroll', function() {
+    scroll = (element[scrollTop]||body[scrollTop]) / ((element[scrollHeight]||body[scrollHeight]) - element.clientHeight) * 100;
+    progress.style.setProperty('--scroll', scroll + '%');
+  });
+  </script>
+
+
+  </body>
+</html>

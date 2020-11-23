@@ -1,0 +1,2170 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:xhtml="http://www.w3.org/1999/xhtml"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   width="734px"
+   height="361px"
+   version="1.1"
+   id="svg976"
+   sodipodi:docname="pdep-bitsearch-example-animated.svg"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)">
+  <metadata
+     id="metadata980">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="3735"
+     inkscape:window-height="2126"
+     id="namedview978"
+     showgrid="false"
+     inkscape:zoom="2.1649824"
+     inkscape:cx="324.25"
+     inkscape:cy="180.5"
+     inkscape:window-x="94"
+     inkscape:window-y="-11"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g974" />
+  <defs
+     id="defs496" />
+  <g
+     transform="translate(0.5,0.5)"
+     id="g974">
+    <rect
+       x="365"
+       y="80"
+       width="40"
+       height="40"
+       pointer-events="none"
+       id="rect498"
+       stroke="#000000"
+       fill="#ffffff" />
+    <g
+       transform="translate(381.5,93.5)"
+       id="g504">
+      <switch
+         id="switch502">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="7"
+           height="12"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="4"
+           y="12"
+           font-size="12px"
+           id="text500"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">0</text>
+      </switch>
+    </g>
+    <rect
+       x="325"
+       y="80"
+       width="40"
+       height="40"
+       pointer-events="none"
+       id="rect506"
+       stroke="#000000"
+       fill="#ffffff" />
+    <g
+       transform="translate(341.5,93.5)"
+       id="g512">
+      <switch
+         id="switch510">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="7"
+           height="12"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="4"
+           y="12"
+           font-size="12px"
+           id="text508"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">0</text>
+      </switch>
+    </g>
+    <rect
+       x="285"
+       y="80"
+       width="40"
+       height="40"
+       pointer-events="none"
+       id="rect514"
+       stroke="#000000"
+       fill="#ffffff" />
+    <g
+       transform="translate(301.5,93.5)"
+       id="g520">
+      <switch
+         id="switch518">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="7"
+           height="12"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="4"
+           y="12"
+           font-size="12px"
+           id="text516"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">0</text>
+      </switch>
+    </g>
+    <rect
+       x="245"
+       y="80"
+       width="40"
+       height="40"
+       pointer-events="none"
+       id="rect522"
+       stroke="#000000"
+       fill="#ffffff" />
+    <g
+       transform="translate(261.5,93.5)"
+       id="g528">
+      <switch
+         id="switch526">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="7"
+           height="12"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="4"
+           y="12"
+           font-size="12px"
+           id="text524"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">0</text>
+      </switch>
+    </g>
+    <rect
+       x="205"
+       y="80"
+       width="40"
+       height="40"
+       pointer-events="none"
+       id="rect530"
+       stroke="#000000"
+       fill="#ffffff" />
+    <g
+       transform="translate(221.5,93.5)"
+       id="g536">
+      <switch
+         id="switch534">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="7"
+           height="12"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="4"
+           y="12"
+           font-size="12px"
+           id="text532"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">0</text>
+      </switch>
+    </g>
+    <rect
+       x="165"
+       y="80"
+       width="40"
+       height="40"
+       pointer-events="none"
+       id="rect538"
+       stroke="#000000"
+       fill="#ffffff" />
+    <g
+       transform="translate(181.5,93.5)"
+       id="g544">
+      <switch
+         id="switch542">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="7"
+           height="12"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="4"
+           y="12"
+           font-size="12px"
+           id="text540"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">0</text>
+      </switch>
+    </g>
+    <rect
+       x="125"
+       y="80"
+       width="40"
+       height="40"
+       pointer-events="none"
+       id="rect546"
+       stroke="#000000"
+       fill="#ffffff" />
+    <g
+       transform="translate(141.5,93.5)"
+       id="g552">
+      <switch
+         id="switch550">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="7"
+           height="12"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="4"
+           y="12"
+           font-size="12px"
+           id="text548"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">0</text>
+      </switch>
+    </g>
+    <rect
+       x="85"
+       y="80"
+       width="40"
+       height="40"
+       pointer-events="none"
+       id="rect554"
+       stroke="#000000"
+       fill="#ffffff" />
+    <g
+       transform="translate(101.5,93.5)"
+       id="g560">
+      <switch
+         id="switch558">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="7"
+           height="12"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="4"
+           y="12"
+           font-size="12px"
+           id="text556"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">0</text>
+      </switch>
+    </g>
+    <g
+       transform="translate(1.5,91.5)"
+       id="g566">
+      <switch
+         id="switch564">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="58"
+           height="26"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; white-space: nowrap;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">SRC1<xhtml:br />
+(Suorce)<xhtml:br />
+</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="29"
+           y="19"
+           font-size="12px"
+           id="text562"
+           style="font-size:12px;font-family:'Lucida Console';text-anchor:middle;fill:#000000">SRC1&lt;br&gt;(Suorce)&lt;br&gt;</text>
+      </switch>
+    </g>
+    <rect
+       x="685"
+       y="200"
+       width="40"
+       height="40"
+       pointer-events="none"
+       id="rect568"
+       stroke="#000000"
+       fill="#ffffff" />
+    <g
+       transform="translate(701.5,213.5)"
+       id="g574">
+      <switch
+         id="switch572">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="7"
+           height="12"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="4"
+           y="12"
+           font-size="12px"
+           id="text570"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">0</text>
+      </switch>
+    </g>
+    <path
+       d="M 665 240 L 665 320"
+       stroke-miterlimit="10"
+       pointer-events="none"
+       id="path576"
+       stroke-dasharray="3 3"
+       stroke="#000000"
+       fill="none" />
+    <path
+       d="M 625 240 L 625 320"
+       stroke-miterlimit="10"
+       pointer-events="none"
+       id="path586"
+       stroke-dasharray="3 3"
+       stroke="#000000"
+       fill="none" />
+    <rect
+       x="565"
+       y="200"
+       width="40"
+       height="40"
+       pointer-events="none"
+       id="rect596"
+       stroke="#000000"
+       fill="#ffffff" />
+    <g
+       transform="translate(581.5,213.5)"
+       id="g602">
+      <switch
+         id="switch600">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="7"
+           height="12"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="4"
+           y="12"
+           font-size="12px"
+           id="text598"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">0</text>
+      </switch>
+    </g>
+    <path
+       d="M 545 240 L 545 320"
+       stroke-miterlimit="10"
+       pointer-events="none"
+       id="path604"
+       stroke-dasharray="3 3"
+       stroke="#000000"
+       fill="none" />
+    <path
+       d="M 505 240 L 505 320"
+       stroke-miterlimit="10"
+       pointer-events="none"
+       id="path614"
+       stroke-dasharray="3 3"
+       stroke="#000000"
+       fill="none" />
+    <rect
+       x="445"
+       y="200"
+       width="40"
+       height="40"
+       pointer-events="none"
+       id="rect624"
+       stroke="#000000"
+       fill="#ffffff" />
+    <g
+       transform="translate(461.5,213.5)"
+       id="g630">
+      <switch
+         id="switch628">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="7"
+           height="12"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="4"
+           y="12"
+           font-size="12px"
+           id="text626"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">0</text>
+      </switch>
+    </g>
+    <rect
+       x="405"
+       y="200"
+       width="40"
+       height="40"
+       pointer-events="none"
+       id="rect632"
+       stroke="#000000"
+       fill="#ffffff" />
+    <g
+       transform="translate(421.5,213.5)"
+       id="g638">
+      <switch
+         id="switch636">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="7"
+           height="12"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="4"
+           y="12"
+           font-size="12px"
+           id="text634"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">0</text>
+      </switch>
+    </g>
+    <path
+       d="M 385 240 L 385 320"
+       stroke-miterlimit="10"
+       pointer-events="none"
+       id="path640"
+       stroke-dasharray="3 3"
+       stroke="#000000"
+       fill="none" />
+    <rect
+       x="245"
+       y="200"
+       width="40"
+       height="40"
+       pointer-events="none"
+       id="rect650"
+       stroke="#000000"
+       fill="#ffffff" />
+    <g
+       transform="translate(261.5,213.5)"
+       id="g656">
+      <switch
+         id="switch654">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="7"
+           height="12"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">1</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="4"
+           y="12"
+           font-size="12px"
+           id="text652"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">1</text>
+      </switch>
+    </g>
+    <path
+       d="M 345 240 L 345 320"
+       stroke-miterlimit="10"
+       pointer-events="none"
+       id="path658"
+       stroke-dasharray="3 3"
+       stroke="#000000"
+       fill="none" />
+    <path
+       d="M 305 240 L 305 320"
+       stroke-miterlimit="10"
+       pointer-events="none"
+       id="path668"
+       stroke-dasharray="3 3"
+       stroke="#000000"
+       fill="none" />
+    <rect
+       x="245"
+       y="200"
+       width="40"
+       height="40"
+       pointer-events="none"
+       id="rect678"
+       stroke="#000000"
+       fill="#ffffff" />
+    <g
+       transform="translate(261.5,213.5)"
+       id="g684">
+      <switch
+         id="switch682">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="7"
+           height="12"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="4"
+           y="12"
+           font-size="12px"
+           id="text680"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">0</text>
+      </switch>
+    </g>
+    <path
+       d="M 225 240 L 225 320"
+       stroke-miterlimit="10"
+       pointer-events="none"
+       id="path686"
+       stroke-dasharray="3 3"
+       stroke="#000000"
+       fill="none" />
+    <g
+       id="groupSRC2">
+      <rect
+         id="rect578"
+         pointer-events="none"
+         height="40"
+         width="40"
+         y="200"
+         x="645"
+         stroke="#d6b656"
+         fill="#fff2cc" />
+      <g
+         id="g584"
+         transform="translate(661.5,213.5)">
+        <switch
+           id="switch582">
+          <foreignObject
+             requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+             height="12"
+             width="7"
+             pointer-events="all"
+             style="overflow:visible;">
+            <xhtml:div
+               style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+              <xhtml:div
+                 style="display:inline-block;text-align:inherit;text-decoration:inherit;">1</xhtml:div>
+            </xhtml:div>
+          </foreignObject>
+          <text
+             id="text580"
+             font-size="12px"
+             y="12"
+             x="4"
+             text-anchor="middle"
+             font-family="Lucida Console"
+             fill="#000000">1</text>
+        </switch>
+      </g>
+      <rect
+         id="rect588"
+         pointer-events="none"
+         height="40"
+         width="40"
+         y="200"
+         x="605"
+         stroke="#d6b656"
+         fill="#fff2cc" />
+      <g
+         id="g594"
+         transform="translate(621.5,213.5)">
+        <switch
+           id="switch592">
+          <foreignObject
+             requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+             height="12"
+             width="7"
+             pointer-events="all"
+             style="overflow:visible;">
+            <xhtml:div
+               style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+              <xhtml:div
+                 style="display:inline-block;text-align:inherit;text-decoration:inherit;">1</xhtml:div>
+            </xhtml:div>
+          </foreignObject>
+          <text
+             id="text590"
+             font-size="12px"
+             y="12"
+             x="4"
+             text-anchor="middle"
+             font-family="Lucida Console"
+             fill="#000000">1</text>
+        </switch>
+      </g>
+      <rect
+         id="rect606"
+         pointer-events="none"
+         height="40"
+         width="40"
+         y="200"
+         x="525"
+         stroke="#d6b656"
+         fill="#fff2cc" />
+      <g
+         id="g612"
+         transform="translate(541.5,213.5)">
+        <switch
+           id="switch610">
+          <foreignObject
+             requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+             height="12"
+             width="7"
+             pointer-events="all"
+             style="overflow:visible;">
+            <xhtml:div
+               style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+              <xhtml:div
+                 style="display:inline-block;text-align:inherit;text-decoration:inherit;">1</xhtml:div>
+            </xhtml:div>
+          </foreignObject>
+          <text
+             id="text608"
+             font-size="12px"
+             y="12"
+             x="4"
+             text-anchor="middle"
+             font-family="Lucida Console"
+             fill="#000000">1</text>
+        </switch>
+      </g>
+      <rect
+         id="rect616"
+         pointer-events="none"
+         height="40"
+         width="40"
+         y="200"
+         x="485"
+         stroke="#d6b656"
+         fill="#fff2cc" />
+      <g
+         id="g622"
+         transform="translate(501.5,213.5)">
+        <switch
+           id="switch620">
+          <foreignObject
+             requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+             height="12"
+             width="7"
+             pointer-events="all"
+             style="overflow:visible;">
+            <xhtml:div
+               style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+              <xhtml:div
+                 style="display:inline-block;text-align:inherit;text-decoration:inherit;">1</xhtml:div>
+            </xhtml:div>
+          </foreignObject>
+          <text
+             id="text618"
+             font-size="12px"
+             y="12"
+             x="4"
+             text-anchor="middle"
+             font-family="Lucida Console"
+             fill="#000000">1</text>
+        </switch>
+      </g>
+      <rect
+         id="rect642"
+         pointer-events="none"
+         height="40"
+         width="40"
+         y="200"
+         x="365"
+         stroke="#d6b656"
+         fill="#fff2cc" />
+      <g
+         id="g648"
+         transform="translate(381.5,213.5)">
+        <switch
+           id="switch646">
+          <foreignObject
+             requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+             height="12"
+             width="7"
+             pointer-events="all"
+             style="overflow:visible;">
+            <xhtml:div
+               style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+              <xhtml:div
+                 style="display:inline-block;text-align:inherit;text-decoration:inherit;">1</xhtml:div>
+            </xhtml:div>
+          </foreignObject>
+          <text
+             id="text644"
+             font-size="12px"
+             y="12"
+             x="4"
+             text-anchor="middle"
+             font-family="Lucida Console"
+             fill="#000000">1</text>
+        </switch>
+      </g>
+      <rect
+         id="rect660"
+         pointer-events="none"
+         height="40"
+         width="40"
+         y="200"
+         x="325"
+         stroke="#d6b656"
+         fill="#fff2cc" />
+      <g
+         id="g666"
+         transform="translate(341.5,213.5)">
+        <switch
+           id="switch664">
+          <foreignObject
+             requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+             height="12"
+             width="7"
+             pointer-events="all"
+             style="overflow:visible;">
+            <xhtml:div
+               style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+              <xhtml:div
+                 style="display:inline-block;text-align:inherit;text-decoration:inherit;">1</xhtml:div>
+            </xhtml:div>
+          </foreignObject>
+          <text
+             id="text662"
+             font-size="12px"
+             y="12"
+             x="4"
+             text-anchor="middle"
+             font-family="Lucida Console"
+             fill="#000000">1</text>
+        </switch>
+      </g>
+      <rect
+         id="rect670"
+         pointer-events="none"
+         height="40"
+         width="40"
+         y="200"
+         x="285"
+         stroke="#d6b656"
+         fill="#fff2cc" />
+      <g
+         id="g676"
+         transform="translate(301.5,213.5)">
+        <switch
+           id="switch674">
+          <foreignObject
+             requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+             height="12"
+             width="7"
+             pointer-events="all"
+             style="overflow:visible;">
+            <xhtml:div
+               style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+              <xhtml:div
+                 style="display:inline-block;text-align:inherit;text-decoration:inherit;">1</xhtml:div>
+            </xhtml:div>
+          </foreignObject>
+          <text
+             id="text672"
+             font-size="12px"
+             y="12"
+             x="4"
+             text-anchor="middle"
+             font-family="Lucida Console"
+             fill="#000000">1</text>
+        </switch>
+      </g>
+      <rect
+         id="rect688"
+         pointer-events="none"
+         height="40"
+         width="40"
+         y="200"
+         x="205"
+         stroke="#d6b656"
+         fill="#fff2cc" />
+      <g
+         id="g694"
+         transform="translate(221.5,213.5)">
+        <switch
+           id="switch692">
+          <foreignObject
+             requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+             height="12"
+             width="7"
+             pointer-events="all"
+             style="overflow:visible;">
+            <xhtml:div
+               style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+              <xhtml:div
+                 style="display:inline-block;text-align:inherit;text-decoration:inherit;">1</xhtml:div>
+            </xhtml:div>
+          </foreignObject>
+          <text
+             id="text690"
+             font-size="12px"
+             y="12"
+             x="4"
+             text-anchor="middle"
+             font-family="Lucida Console"
+             fill="#000000">1</text>
+        </switch>
+      </g>
+    </g>
+    <rect
+       x="165"
+       y="200"
+       width="40"
+       height="40"
+       pointer-events="none"
+       id="rect696"
+       stroke="#000000"
+       fill="#ffffff" />
+    <g
+       transform="translate(181.5,213.5)"
+       id="g702">
+      <switch
+         id="switch700">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="7"
+           height="12"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="4"
+           y="12"
+           font-size="12px"
+           id="text698"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">0</text>
+      </switch>
+    </g>
+    <rect
+       x="125"
+       y="200"
+       width="40"
+       height="40"
+       pointer-events="none"
+       id="rect704"
+       stroke="#000000"
+       fill="#ffffff" />
+    <g
+       transform="translate(141.5,213.5)"
+       id="g710">
+      <switch
+         id="switch708">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="7"
+           height="12"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="4"
+           y="12"
+           font-size="12px"
+           id="text706"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">0</text>
+      </switch>
+    </g>
+    <rect
+       x="85"
+       y="200"
+       width="40"
+       height="40"
+       pointer-events="none"
+       id="rect712"
+       stroke="#000000"
+       fill="#ffffff" />
+    <g
+       transform="translate(101.5,213.5)"
+       id="g718">
+      <switch
+         id="switch716">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="7"
+           height="12"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="4"
+           y="12"
+           font-size="12px"
+           id="text714"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">0</text>
+      </switch>
+    </g>
+    <g
+       transform="translate(1.5,211.5)"
+       id="g724">
+      <switch
+         id="switch722">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="43"
+           height="26"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; white-space: nowrap;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">SRC2<xhtml:br />
+(Mask)<xhtml:br />
+</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="22"
+           y="19"
+           font-size="12px"
+           id="text720"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">[Not supported by viewer]</text>
+      </switch>
+    </g>
+    <rect
+       x="685"
+       y="320"
+       width="40"
+       height="40"
+       pointer-events="none"
+       id="rect726"
+       stroke="#000000"
+       fill="#ffffff" />
+    <g
+       transform="translate(701.5,333.5)"
+       id="g732">
+      <switch
+         id="switch730">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="7"
+           height="12"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="4"
+           y="12"
+           font-size="12px"
+           id="text728"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">0</text>
+      </switch>
+    </g>
+    <rect
+       x="565"
+       y="320"
+       width="40"
+       height="40"
+       pointer-events="none"
+       id="rect750"
+       stroke="#000000"
+       fill="#ffffff" />
+    <g
+       transform="translate(581.5,333.5)"
+       id="g756">
+      <switch
+         id="switch754">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="7"
+           height="12"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="4"
+           y="12"
+           font-size="12px"
+           id="text752"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">0</text>
+      </switch>
+    </g>
+    <rect
+       x="445"
+       y="320"
+       width="40"
+       height="40"
+       pointer-events="none"
+       id="rect774"
+       stroke="#000000"
+       fill="#ffffff" />
+    <g
+       transform="translate(461.5,333.5)"
+       id="g780">
+      <switch
+         id="switch778">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="7"
+           height="12"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="4"
+           y="12"
+           font-size="12px"
+           id="text776"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">0</text>
+      </switch>
+    </g>
+    <rect
+       x="405"
+       y="320"
+       width="40"
+       height="40"
+       pointer-events="none"
+       id="rect782"
+       stroke="#000000"
+       fill="#ffffff" />
+    <g
+       transform="translate(421.5,333.5)"
+       id="g788">
+      <switch
+         id="switch786">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="7"
+           height="12"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="4"
+           y="12"
+           font-size="12px"
+           id="text784"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">0</text>
+      </switch>
+    </g>
+    <rect
+       x="245"
+       y="320"
+       width="40"
+       height="40"
+       pointer-events="none"
+       id="rect814"
+       stroke="#000000"
+       fill="#ffffff" />
+    <g
+       transform="translate(261.5,333.5)"
+       id="g820">
+      <switch
+         id="switch818">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="7"
+           height="12"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="4"
+           y="12"
+           font-size="12px"
+           id="text816"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">0</text>
+      </switch>
+    </g>
+    <rect
+       x="165"
+       y="320"
+       width="40"
+       height="40"
+       pointer-events="none"
+       id="rect830"
+       stroke="#000000"
+       fill="#ffffff" />
+    <g
+       transform="translate(181.5,333.5)"
+       id="g836">
+      <switch
+         id="switch834">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="7"
+           height="12"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="4"
+           y="12"
+           font-size="12px"
+           id="text832"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">0</text>
+      </switch>
+    </g>
+    <rect
+       x="125"
+       y="320"
+       width="40"
+       height="40"
+       pointer-events="none"
+       id="rect838"
+       stroke="#000000"
+       fill="#ffffff" />
+    <g
+       transform="translate(141.5,333.5)"
+       id="g844">
+      <switch
+         id="switch842">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="7"
+           height="12"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="4"
+           y="12"
+           font-size="12px"
+           id="text840"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">0</text>
+      </switch>
+    </g>
+    <rect
+       x="85"
+       y="320"
+       width="40"
+       height="40"
+       pointer-events="none"
+       id="rect846"
+       stroke="#000000"
+       fill="#ffffff" />
+    <g
+       transform="translate(101.5,333.5)"
+       id="g852">
+      <switch
+         id="switch850">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="7"
+           height="12"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="4"
+           y="12"
+           font-size="12px"
+           id="text848"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">0</text>
+      </switch>
+    </g>
+    <g
+       transform="translate(1.5,333.5)"
+       id="g858">
+      <switch
+         id="switch856">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="43"
+           height="12"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; white-space: nowrap;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">Result</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="22"
+           y="12"
+           font-size="12px"
+           id="text854"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">Result</text>
+      </switch>
+    </g>
+    <path
+       d="M 705 120 L 675.94 313.7"
+       stroke-miterlimit="10"
+       pointer-events="none"
+       id="path860"
+       stroke="#000000"
+       fill="none" />
+    <path
+       d="M 675.17 318.89 L 672.74 311.45 L 675.94 313.7 L 679.67 312.49 Z"
+       stroke-miterlimit="10"
+       pointer-events="none"
+       id="path862"
+       stroke="#000000"
+       fill="#000000" />
+    <path
+       d="M 665 120 L 635.94 313.7"
+       stroke-miterlimit="10"
+       pointer-events="none"
+       id="path864"
+       stroke="#000000"
+       fill="none" />
+    <path
+       d="M 635.17 318.89 L 632.74 311.45 L 635.94 313.7 L 639.67 312.49 Z"
+       stroke-miterlimit="10"
+       pointer-events="none"
+       id="path866"
+       stroke="#000000"
+       fill="#000000" />
+    <path
+       d="M 625 120 L 557.1 313.99"
+       stroke-miterlimit="10"
+       pointer-events="none"
+       id="path868"
+       stroke="#000000"
+       fill="none" />
+    <path
+       d="M 555.37 318.94 L 554.38 311.18 L 557.1 313.99 L 560.99 313.49 Z"
+       stroke-miterlimit="10"
+       pointer-events="none"
+       id="path870"
+       stroke="#000000"
+       fill="#000000" />
+    <path
+       d="M 585 120 L 517.1 313.99"
+       stroke-miterlimit="10"
+       pointer-events="none"
+       id="path872"
+       stroke="#000000"
+       fill="none" />
+    <path
+       d="M 515.37 318.94 L 514.38 311.18 L 517.1 313.99 L 520.99 313.49 Z"
+       stroke-miterlimit="10"
+       pointer-events="none"
+       id="path874"
+       stroke="#000000"
+       fill="#000000" />
+    <path
+       d="M 545 120 L 398.82 314.91"
+       stroke-miterlimit="10"
+       pointer-events="none"
+       id="path876"
+       stroke="#000000"
+       fill="none" />
+    <path
+       d="M 505 120 L 358.82 314.91"
+       stroke-miterlimit="10"
+       pointer-events="none"
+       id="path880"
+       stroke="#000000"
+       fill="none" />
+    <path
+       d="M 465 120 L 318.82 314.91"
+       stroke-miterlimit="10"
+       pointer-events="none"
+       id="path884"
+       stroke="#000000"
+       fill="none" />
+    <path
+       d="M 425 120 L 239.39 315.38"
+       stroke-miterlimit="10"
+       pointer-events="none"
+       id="path888"
+       stroke="#000000"
+       fill="none" />
+    <g
+       id="groupDEST">
+      <rect
+         fill="#e1d5e7"
+         stroke="#9673a6"
+         id="rect734"
+         pointer-events="none"
+         height="40"
+         width="40"
+         y="320"
+         x="645" />
+      <g
+         id="g740"
+         transform="translate(661.5,333.5)">
+        <switch
+           id="switch738">
+          <foreignObject
+             requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+             height="12"
+             width="7"
+             pointer-events="all"
+             style="overflow:visible;">
+            <xhtml:div
+               style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+              <xhtml:div
+                 style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+            </xhtml:div>
+          </foreignObject>
+          <text
+             fill="#000000"
+             font-family="Lucida Console"
+             text-anchor="middle"
+             id="text736"
+             font-size="12px"
+             y="12"
+             x="4">0</text>
+        </switch>
+      </g>
+      <rect
+         fill="#e1d5e7"
+         stroke="#9673a6"
+         id="rect742"
+         pointer-events="none"
+         height="40"
+         width="40"
+         y="320"
+         x="605" />
+      <g
+         id="g748"
+         transform="translate(621.5,333.5)">
+        <switch
+           id="switch746">
+          <foreignObject
+             requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+             height="12"
+             width="7"
+             pointer-events="all"
+             style="overflow:visible;">
+            <xhtml:div
+               style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+              <xhtml:div
+                 style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+            </xhtml:div>
+          </foreignObject>
+          <text
+             fill="#000000"
+             font-family="Lucida Console"
+             text-anchor="middle"
+             id="text744"
+             font-size="12px"
+             y="12"
+             x="4">0</text>
+        </switch>
+      </g>
+      <rect
+         fill="#e1d5e7"
+         stroke="#9673a6"
+         id="rect758"
+         pointer-events="none"
+         height="40"
+         width="40"
+         y="320"
+         x="525" />
+      <g
+         id="g764"
+         transform="translate(541.5,333.5)">
+        <switch
+           id="switch762">
+          <foreignObject
+             requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+             height="12"
+             width="7"
+             pointer-events="all"
+             style="overflow:visible;">
+            <xhtml:div
+               style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+              <xhtml:div
+                 style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+            </xhtml:div>
+          </foreignObject>
+          <text
+             fill="#000000"
+             font-family="Lucida Console"
+             text-anchor="middle"
+             id="text760"
+             font-size="12px"
+             y="12"
+             x="4">0</text>
+        </switch>
+      </g>
+      <rect
+         fill="#e1d5e7"
+         stroke="#9673a6"
+         id="rect766"
+         pointer-events="none"
+         height="40"
+         width="40"
+         y="320"
+         x="485" />
+      <g
+         id="g772"
+         transform="translate(501.5,333.5)">
+        <switch
+           id="switch770">
+          <foreignObject
+             requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+             height="12"
+             width="7"
+             pointer-events="all"
+             style="overflow:visible;">
+            <xhtml:div
+               style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+              <xhtml:div
+                 style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+            </xhtml:div>
+          </foreignObject>
+          <text
+             fill="#000000"
+             font-family="Lucida Console"
+             text-anchor="middle"
+             id="text768"
+             font-size="12px"
+             y="12"
+             x="4">0</text>
+        </switch>
+      </g>
+      <rect
+         fill="#e1d5e7"
+         stroke="#9673a6"
+         id="rect790"
+         pointer-events="none"
+         height="40"
+         width="40"
+         y="320"
+         x="365" />
+      <g
+         id="g796"
+         transform="translate(381.5,333.5)">
+        <switch
+           id="switch794">
+          <foreignObject
+             requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+             height="12"
+             width="7"
+             pointer-events="all"
+             style="overflow:visible;">
+            <xhtml:div
+               style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+              <xhtml:div
+                 style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+            </xhtml:div>
+          </foreignObject>
+          <text
+             fill="#000000"
+             font-family="Lucida Console"
+             text-anchor="middle"
+             id="text792"
+             font-size="12px"
+             y="12"
+             x="4">0</text>
+        </switch>
+      </g>
+      <rect
+         fill="#e1d5e7"
+         stroke="#9673a6"
+         id="rect798"
+         pointer-events="none"
+         height="40"
+         width="40"
+         y="320"
+         x="325" />
+      <g
+         id="g804"
+         transform="translate(341.5,333.5)">
+        <switch
+           id="switch802">
+          <foreignObject
+             requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+             height="12"
+             width="7"
+             pointer-events="all"
+             style="overflow:visible;">
+            <xhtml:div
+               style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+              <xhtml:div
+                 style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+            </xhtml:div>
+          </foreignObject>
+          <text
+             fill="#000000"
+             font-family="Lucida Console"
+             text-anchor="middle"
+             id="text800"
+             font-size="12px"
+             y="12"
+             x="4">0</text>
+        </switch>
+      </g>
+      <rect
+         fill="#e1d5e7"
+         stroke="#9673a6"
+         id="rect806"
+         pointer-events="none"
+         height="40"
+         width="40"
+         y="320"
+         x="285" />
+      <g
+         id="g812"
+         transform="translate(301.5,333.5)">
+        <switch
+           id="switch810">
+          <foreignObject
+             requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+             height="12"
+             width="7"
+             pointer-events="all"
+             style="overflow:visible;">
+            <xhtml:div
+               style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+              <xhtml:div
+                 style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+            </xhtml:div>
+          </foreignObject>
+          <text
+             fill="#000000"
+             font-family="Lucida Console"
+             text-anchor="middle"
+             id="text808"
+             font-size="12px"
+             y="12"
+             x="4">0</text>
+        </switch>
+      </g>
+      <rect
+         fill="#e1d5e7"
+         stroke="#9673a6"
+         id="rect822"
+         pointer-events="none"
+         height="40"
+         width="40"
+         y="320"
+         x="205" />
+      <g
+         id="g828"
+         transform="translate(221.5,333.5)">
+        <switch
+           id="switch826">
+          <foreignObject
+             requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+             height="12"
+             width="7"
+             pointer-events="all"
+             style="overflow:visible;">
+            <xhtml:div
+               style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+              <xhtml:div
+                 style="display:inline-block;text-align:inherit;text-decoration:inherit;">1</xhtml:div>
+            </xhtml:div>
+          </foreignObject>
+          <text
+             fill="#000000"
+             font-family="Lucida Console"
+             text-anchor="middle"
+             id="text824"
+             font-size="12px"
+             y="12"
+             x="4">1</text>
+        </switch>
+      </g>
+      <path
+         fill="#000000"
+         stroke="#000000"
+         id="path878"
+         pointer-events="none"
+         stroke-miterlimit="10"
+         d="M 395.67 319.11 L 397.07 311.41 L 398.82 314.91 L 402.67 315.61 Z" />
+      <path
+         fill="#000000"
+         stroke="#000000"
+         id="path882"
+         pointer-events="none"
+         stroke-miterlimit="10"
+         d="M 355.67 319.11 L 357.07 311.41 L 358.82 314.91 L 362.67 315.61 Z" />
+      <path
+         fill="#000000"
+         stroke="#000000"
+         id="path886"
+         pointer-events="none"
+         stroke-miterlimit="10"
+         d="M 315.67 319.11 L 317.07 311.41 L 318.82 314.91 L 322.67 315.61 Z" />
+      <path
+         fill="#000000"
+         stroke="#000000"
+         id="path890"
+         pointer-events="none"
+         stroke-miterlimit="10"
+         d="M 235.77 319.19 L 238.05 311.7 L 239.39 315.38 L 243.13 316.53 Z" />
+    </g>
+    <path
+       d="M 725 40 L 91.37 40"
+       stroke-miterlimit="10"
+       pointer-events="none"
+       id="path892"
+       stroke-dasharray="3 3"
+       stroke="#000000"
+       fill="none" />
+    <path
+       d="M 86.12 40 L 93.12 36.5 L 91.37 40 L 93.12 43.5 Z"
+       stroke-miterlimit="10"
+       pointer-events="none"
+       id="path894"
+       stroke="#000000"
+       fill="#000000" />
+    <g
+       transform="translate(686.5,3.5)"
+       id="g900">
+      <switch
+         id="switch898">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="36"
+           height="12"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; white-space: nowrap; text-align: center;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">Bit 0</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="18"
+           y="12"
+           font-size="12px"
+           id="text896"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">Bit 0</text>
+      </switch>
+    </g>
+    <g
+       transform="translate(93.5,3.5)"
+       id="g906">
+      <switch
+         id="switch904">
+        <foreignObject
+           style="overflow:visible;"
+           pointer-events="all"
+           width="43"
+           height="12"
+           requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+          <xhtml:div
+             style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; white-space: nowrap; text-align: center;">
+            <xhtml:div
+               style="display:inline-block;text-align:inherit;text-decoration:inherit;">Bit 16<xhtml:br />
+</xhtml:div>
+          </xhtml:div>
+        </foreignObject>
+        <text
+           x="22"
+           y="12"
+           font-size="12px"
+           id="text902"
+           text-anchor="middle"
+           font-family="Lucida Console"
+           fill="#000000">Bit 16&lt;br&gt;</text>
+      </switch>
+    </g>
+    <g
+       id="groupSRC1"
+       inkscape:label="#groupSRC1">
+      <rect
+         id="rect908"
+         pointer-events="none"
+         height="40"
+         width="320"
+         y="80"
+         x="405"
+         stroke="#000000"
+         fill="#ffffff" />
+      <rect
+         id="rect910"
+         pointer-events="none"
+         height="40"
+         width="40"
+         y="80"
+         x="685"
+         stroke="#6c8ebf"
+         fill="#dae8fc" />
+      <g
+         id="g916"
+         transform="translate(701.5,93.5)">
+        <switch
+           id="switch914">
+          <foreignObject
+             requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+             height="12"
+             width="7"
+             pointer-events="all"
+             style="overflow:visible;">
+            <xhtml:div
+               style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+              <xhtml:div
+                 style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+            </xhtml:div>
+          </foreignObject>
+          <text
+             id="text912"
+             font-size="12px"
+             y="12"
+             x="4"
+             text-anchor="middle"
+             font-family="Lucida Console"
+             fill="#000000">0</text>
+        </switch>
+      </g>
+      <rect
+         id="rect918"
+         pointer-events="none"
+         height="40"
+         width="40"
+         y="80"
+         x="645"
+         stroke="#6c8ebf"
+         fill="#dae8fc" />
+      <g
+         id="g924"
+         transform="translate(661.5,93.5)">
+        <switch
+           id="switch922">
+          <foreignObject
+             requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+             height="12"
+             width="7"
+             pointer-events="all"
+             style="overflow:visible;">
+            <xhtml:div
+               style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+              <xhtml:div
+                 style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+            </xhtml:div>
+          </foreignObject>
+          <text
+             id="text920"
+             font-size="12px"
+             y="12"
+             x="4"
+             text-anchor="middle"
+             font-family="Lucida Console"
+             fill="#000000">0</text>
+        </switch>
+      </g>
+      <rect
+         id="rect926"
+         pointer-events="none"
+         height="40"
+         width="40"
+         y="80"
+         x="605"
+         stroke="#6c8ebf"
+         fill="#dae8fc" />
+      <g
+         id="g932"
+         transform="translate(621.5,93.5)">
+        <switch
+           id="switch930">
+          <foreignObject
+             requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+             height="12"
+             width="7"
+             pointer-events="all"
+             style="overflow:visible;">
+            <xhtml:div
+               style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+              <xhtml:div
+                 style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+            </xhtml:div>
+          </foreignObject>
+          <text
+             id="text928"
+             font-size="12px"
+             y="12"
+             x="4"
+             text-anchor="middle"
+             font-family="Lucida Console"
+             fill="#000000">0</text>
+        </switch>
+      </g>
+      <rect
+         id="rect934"
+         pointer-events="none"
+         height="40"
+         width="40"
+         y="80"
+         x="565"
+         stroke="#6c8ebf"
+         fill="#dae8fc" />
+      <g
+         id="g940"
+         transform="translate(581.5,93.5)">
+        <switch
+           id="switch938">
+          <foreignObject
+             requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+             height="12"
+             width="7"
+             pointer-events="all"
+             style="overflow:visible;">
+            <xhtml:div
+               style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+              <xhtml:div
+                 style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+            </xhtml:div>
+          </foreignObject>
+          <text
+             id="text936"
+             font-size="12px"
+             y="12"
+             x="4"
+             text-anchor="middle"
+             font-family="Lucida Console"
+             fill="#000000">0</text>
+        </switch>
+      </g>
+      <rect
+         id="rect942"
+         pointer-events="none"
+         height="40"
+         width="40"
+         y="80"
+         x="525"
+         stroke="#6c8ebf"
+         fill="#dae8fc" />
+      <g
+         id="g948"
+         transform="translate(541.5,93.5)">
+        <switch
+           id="switch946">
+          <foreignObject
+             requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+             height="12"
+             width="7"
+             pointer-events="all"
+             style="overflow:visible;">
+            <xhtml:div
+               style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+              <xhtml:div
+                 style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+            </xhtml:div>
+          </foreignObject>
+          <text
+             id="text944"
+             font-size="12px"
+             y="12"
+             x="4"
+             text-anchor="middle"
+             font-family="Lucida Console"
+             fill="#000000">0</text>
+        </switch>
+      </g>
+      <rect
+         id="rect950"
+         pointer-events="none"
+         height="40"
+         width="40"
+         y="80"
+         x="485"
+         stroke="#6c8ebf"
+         fill="#dae8fc" />
+      <g
+         id="g956"
+         transform="translate(501.5,93.5)">
+        <switch
+           id="switch954">
+          <foreignObject
+             requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+             height="12"
+             width="7"
+             pointer-events="all"
+             style="overflow:visible;">
+            <xhtml:div
+               style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+              <xhtml:div
+                 style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+            </xhtml:div>
+          </foreignObject>
+          <text
+             id="text952"
+             font-size="12px"
+             y="12"
+             x="4"
+             text-anchor="middle"
+             font-family="Lucida Console"
+             fill="#000000">0</text>
+        </switch>
+      </g>
+      <rect
+         id="rect958"
+         pointer-events="none"
+         height="40"
+         width="40"
+         y="80"
+         x="445"
+         stroke="#6c8ebf"
+         fill="#dae8fc" />
+      <g
+         id="g964"
+         transform="translate(461.5,93.5)">
+        <switch
+           id="switch962">
+          <foreignObject
+             requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+             height="12"
+             width="7"
+             pointer-events="all"
+             style="overflow:visible;">
+            <xhtml:div
+               style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+              <xhtml:div
+                 style="display:inline-block;text-align:inherit;text-decoration:inherit;">0</xhtml:div>
+            </xhtml:div>
+          </foreignObject>
+          <text
+             id="text960"
+             font-size="12px"
+             y="12"
+             x="4"
+             text-anchor="middle"
+             font-family="Lucida Console"
+             fill="#000000">0</text>
+        </switch>
+      </g>
+      <rect
+         id="rect966"
+         pointer-events="none"
+         height="40"
+         width="40"
+         y="80"
+         x="405"
+         stroke="#6c8ebf"
+         fill="#dae8fc" />
+      <g
+         id="g972"
+         transform="translate(421.5,93.5)">
+        <switch
+           id="switch970">
+          <foreignObject
+             requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+             height="12"
+             width="7"
+             pointer-events="all"
+             style="overflow:visible;">
+            <xhtml:div
+               style="display: inline-block; font-size: 12px; font-family: &quot;Lucida Console&quot;; color: rgb(0, 0, 0); line-height: 1.2; vertical-align: top; width: 8px; white-space: nowrap; word-wrap: normal; text-align: center;">
+              <xhtml:div
+                 style="display:inline-block;text-align:inherit;text-decoration:inherit;">1</xhtml:div>
+            </xhtml:div>
+          </foreignObject>
+          <text
+             id="text968"
+             font-size="12px"
+             y="12"
+             x="4"
+             text-anchor="middle"
+             font-family="Lucida Console"
+             fill="#000000">1</text>
+        </switch>
+      </g>
+    </g>
+  <animate xlink:href="#groupDEST" attributeName="fill"  dur="9s" repeatCount="indefinite" values="white; #e1d5e7" keyTimes="0; 0.666"/>
+  <animate xlink:href="#groupSRC1" attributeName="fill" dur="9s" repeatCount="indefinite" values="white; #dae8fc; #dae8fc" keyTimes="0; 0.333; 1"/>
+  <animate xlink:href="#groupSRC2" attributeName="fill" dur="9s" repeatCount="indefinite" values="white; white; #fff2cc" keyTimes="0; 0.666; 1"/>
+  </g>
+</svg>

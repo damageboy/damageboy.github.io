@@ -1,0 +1,867 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.17.2 by Michael Rose
+  Copyright 2013-2019 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Hacking CoreCLR on Linux with CLion - damageboy</title>
+<meta name="description" content="What/Why?">
+
+
+  <meta name="author" content="damageboy">
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="damageboy">
+<meta property="og:title" content="Hacking CoreCLR on Linux with CLion">
+<meta property="og:url" content="https://bits.houmus.org/2019-05-01/hacking-coreclr-on-linux-with-clion">
+
+
+  <meta property="og:description" content="What/Why?">
+
+
+
+  <meta property="og:image" content="https://bits.houmus.org/assets/images/coreclr-clion-header.jpg">
+
+
+
+
+
+  <meta property="article:published_time" content="2019-05-01T05:26:28+00:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://bits.houmus.org/2019-05-01/hacking-coreclr-on-linux-with-clion">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": null,
+      "url": "https://bits.houmus.org/"
+    
+  }
+</script>
+
+
+  <meta name="google-site-verification" content="wcrvaF3e88-Vb6y-9eUTqYaXDMOukzl4c-IdKByS0Xc" />
+
+
+  <meta name="msvalidate.01" content="6D5AE23298671D95A20FAD7FA3430ABB">
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+<link href="/feed.xml" type="application/atom+xml" rel="alternate" title="damageboy Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+
+<!--[if IE]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+
+
+    <!-- start custom head snippets -->
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/favicons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicons/favicon-16x16.png">
+<link rel="manifest" href="/assets/favicons/site.webmanifest">
+<link rel="mask-icon" href="/assets/favicons/safari-pinned-tab.svg" color="#ba0000">
+<link rel="shortcut icon" href="/assets/favicons/favicon.ico">
+<meta name="apple-mobile-web-app-title" content="damageboy">
+<meta name="application-name" content="damageboy">
+<meta name="msapplication-TileColor" content="#ba0000">
+<meta name="msapplication-config" content="/assets/favicons/browserconfig.xml">
+<meta name="theme-color" content="#ba0000ff">
+
+<!-- <link rel="stylesheet" type="text/css" href="/assets/css/inlineDisqussions.css" /> -->
+<script src="/assets/scripts/webfont.js"></script>
+<script>
+WebFont.load({
+  google: {
+    families: ['Lato', 'Indie Flower']
+  },
+  custom: {
+    families: ['Cascadia Code'],
+    urls: ['/assets/css/cascadia.css']
+  }
+});
+</script>
+
+
+<script defer src="/assets/scripts/jquery.min.js"></script>
+<script defer src="/assets/scripts/polyfill.min.js"></script>
+<script defer src="/assets/scripts/config-mathjax.js"></script>
+<script defer src="/assets/scripts/tex-chtml-full.js"></script>
+<!-- <script defer src="/assets/scripts/inlineDisqussions.js"></script> -->
+<script defer src="/assets/scripts/uikit.min.js"></script>
+<script defer src="/assets/scripts/uikit-icons.min.js"></script>
+<script defer src="/assets/scripts/roughjs@3.1.0"></script>
+<script defer src="/assets/scripts/Chart.bundle.min.js"></script>
+<script defer src="/assets/scripts/chartjs-plugin-rough@0.2.0"></script>
+<script defer src="/assets/scripts/chartjs-plugin-annotation.js"></script>
+<!-- <script defer src="/assets/scripts/applyInlineDisqussions.js"></script> -->
+<script defer src="/assets/scripts/inline-chartjs.js"></script>
+
+<link href="/assets/css/chardinjs.css" rel="stylesheet">
+<script defer src="/assets/scripts/chardinjs.min.js"></script>
+
+<!-- This is entirely for the  datatable.js -->
+<link rel="stylesheet" href="/assets/css/bootstrap.css">
+<link rel="stylesheet" href="/assets/css/bootstrap-table.min.css"> 
+<link rel="stylesheet" href="/assets/css/bootstrap-table-filter-control.min.css">
+<link rel="stylesheet" href="/assets/css/datatable.css">
+
+<script defer src="/assets/scripts/bootstrap.min.js"></script>
+<script defer src="/assets/scripts/bootstrap-table.min.js"></script>
+<script defer src="/assets/scripts/bootstrap-table-filter-control.min.js"></script>
+<script defer src="/assets/scripts/moment.min.js"></script>
+<script defer type="text/javascript" src="/assets/scripts/datatable.js"></script>
+
+  </head>
+
+  <body class="layout--single wide">
+    <nav class="skip-links">
+  <h2 class="screen-reader-text">Skip links</h2>
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          damageboy
+          
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/" >Posts</a>
+            </li><li class="masthead__menu-item">
+              <a href="/talks/" >Talks</a>
+            </li><li class="masthead__menu-item">
+              <a href="/about/" >About</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <svg class="icon" width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15.99 16">
+            <path d="M15.5,13.12L13.19,10.8a1.69,1.69,0,0,0-1.28-.55l-0.06-.06A6.5,6.5,0,0,0,5.77,0,6.5,6.5,0,0,0,2.46,11.59a6.47,6.47,0,0,0,7.74.26l0.05,0.05a1.65,1.65,0,0,0,.5,1.24l2.38,2.38A1.68,1.68,0,0,0,15.5,13.12ZM6.4,2A4.41,4.41,0,1,1,2,6.4,4.43,4.43,0,0,1,6.4,2Z" transform="translate(-.01)"></path>
+          </svg>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+  
+
+
+
+
+
+
+
+
+
+
+
+<div class="page__hero"
+  style=" "
+>
+  
+    <img src="/assets/images/coreclr-clion-header.jpg" alt="Hacking CoreCLR on Linux with CLion" class="page__hero-image">
+  
+  
+</div>
+
+
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+    <div class="author__avatar">
+      
+
+      
+        <img src="/assets/images/atari.svg" alt="damageboy" itemprop="image">
+      
+    </div>
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name">damageboy</h3>
+    
+    
+      <div class="author__bio" itemprop="description">
+        <p>What did I do this time?</p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+        <li>
+          <a href="https://bits.houmus.org" itemprop="url">
+            <i class="fas fa-fw fa-link" aria-hidden="true"></i> Website
+          </a>
+        </li>
+      
+
+      
+        <li>
+          <a href="mailto:dans@houmus.org">
+            <meta itemprop="email" content="dans@houmus.org" />
+            <i class="fas fa-fw fa-envelope-square" aria-hidden="true"></i> Email
+          </a>
+        </li>
+      
+
+      
+
+      
+        <li>
+          <a href="https://twitter.com/damageboy" itemprop="sameAs" rel="nofollow noopener noreferrer">
+            <i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter
+          </a>
+        </li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+        <li>
+          <a href="https://stackoverflow.com/users/9172/damageboy" itemprop="sameAs" rel="nofollow noopener noreferrer">
+            <i class="fab fa-fw fa-stack-overflow" aria-hidden="true"></i> Stack Overflow
+          </a>
+        </li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Hacking CoreCLR on Linux with CLion">
+    <meta itemprop="description" content="What/Why?">
+    <meta itemprop="datePublished" content="May 01, 2019">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">Hacking CoreCLR on Linux with CLion
+</h1>
+          
+            <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  14 minute read
+
+</p>
+          
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <h2 id="whatwhy">What/Why?</h2>
+
+<p>Being a regular Linux user, when I can, I was looking for a decent setup for myself to grok then hack on CoreCLR’s C++ code.</p>
+
+<p>CoreCLR, namely the C++ code that implements the runtime (GC, JIT and more) is a BIG project, and trying to peel through its layers for the first time is no easy task for sure. While there are many great resources available for developers that want to read about the runtime such as the <a href="https://github.com/dotnet/coreclr/blob/master/Documentation/botr/README.md">BotR</a>, for me, there really is no replacement for reading the code and trying to reason about what/how it gets stuff done, preferably during a debug session, with a very focused task/inquiry at hand. For this reason, I really wanted a proper IDE for the huge swaths of C++ code, and I couldn’t think of anything else but <a href="https://www.jetbrains.com/clion/">JetBrains’ own CLion IDE</a> under Linux (and macOS, which I’m not a user of).<br />
+With my final setup, I really can do non-trivial navigation on the code base such as:</p>
+
+<video width="900" controls="">
+    <source src="../assets/images/clion-coreclr.webm" type="video/webm" />
+</video>
+
+<h2 id="loading-coreclr-with-clion-navigation">Loading CoreCLR with CLion Navigation</h2>
+
+<p>CoreCLR is a beast of a project, and getting it to parse properly under CLion, moreover, it requires some non-trivial setup, so I thought I’d disclose my process here, for other people to see and maybe even improve upon…</p>
+
+<p>Generally speaking, all the puzzle pieces should fit since the CoreCLR build-system is 95% made of running <code class="highlighter-rouge">cmake</code> to generate standard GNU makefiles, and then builds the whole thing using said makefiles, where the other 5% is made of some scripts wrapping the <code class="highlighter-rouge">cmake</code> build-system. At the same time, CLion builds upon <code class="highlighter-rouge">cmake</code> to bootstrap its own internal project representation, <em>provided</em> that it can invoke <code class="highlighter-rouge">cmake</code> just like the normal build would.</p>
+
+<p>Here’s what I did to get everything working:</p>
+
+<ol>
+  <li>First, We’ll clone and perform a single build of CoreCLR by <a href="https://github.com/dotnet/coreclr/blob/master/Documentation/building/linux-instructions.md#environment">following the instructions</a>, What I did on my Ubuntu machine consisted of:
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td><td class="rouge-code"><pre><span class="nv">$ </span><span class="nb">sudo </span>apt <span class="nb">install </span>cmake llvm-3.9 clang-3.9 lldb-3.9 liblldb-3.9-dev libunwind8 libunwind8-dev gettext libicu-dev liblttng-ust-dev libcurl4-openssl-dev libssl-dev libnuma-dev libkrb5-dev
+<span class="nv">$ </span>./build.sh checked
+</pre></td></tr></tbody></table></code></pre></div>    </div>
+  </li>
+  <li>Once the build is over, you should have everything under the <code class="highlighter-rouge">bin/Product/Linux.x64.Checked</code> like so:
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+</pre></td><td class="rouge-code"><pre><span class="nv">$ </span><span class="nb">ls </span>bin/Product/Linux.x64.Checked
+bin           libcoreclr.so                  netcoreapp2.0
+coreconsole   libcoreclrtraceptprovider.so   PDB
+corerun       libdbgshim.so                  sosdocsunix.txt
+createdump    libmscordaccore.so             SOS.NETCore.dll
+crossgen      libmscordbi.so                 SOS.NETCore.pdb
+gcinfo        libprotononjit.so              superpmi
+IL            libsosplugin.so                System.Globalization.Native.a
+ilasm         libsos.so                      System.Globalization.Native.so
+ildasm        libsuperpmi-shim-collector.so  System.Private.CoreLib.dll
+inc           libsuperpmi-shim-counter.so    System.Private.CoreLib.ni.<span class="o">{</span>fe21e59b-7903-49b4-b2d3-67de152c1d7d<span class="o">}</span>.map
+lib           libsuperpmi-shim-simple.so     System.Private.CoreLib.xml
+libclrgc.so   Loader
+libclrjit.so  mcs
+</pre></td></tr></tbody></table></code></pre></div>    </div>
+    <p>Now that an initial build is over, we can be sure that some scripts that were crucial to generate a few headers essential for the rest of the compilation process were generated and CLion will be able to find all the necessary source code once we teach it how to…</p>
+  </li>
+  <li>
+    <p>CLion needs to invoke <code class="highlighter-rouge">cmake</code> with the same arguments that the build scripts use. To sniff out the <code class="highlighter-rouge">cmake</code> command-line we’ll use an *nix old-timer’s trick to generate traces for <code class="highlighter-rouge">build.sh</code> run: use <code class="highlighter-rouge">bash -x</code>. Unfortunately, nothing is ever so simple in life, and CoreCLR’s <code class="highlighter-rouge">build.sh</code> script doesn’t directly invoke <code class="highlighter-rouge">cmake</code>, so we will need to make this <code class="highlighter-rouge">-x</code> parameter sticky or recursive. There is no better way to do this than the following somewhat convoluted procedure:<br />
+First we need to generate a wrapper-script for <code class="highlighter-rouge">build.sh</code>, we’ll call it <code class="highlighter-rouge">build-wrapper.sh</code>:</p>
+
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre><span class="nb">echo</span> <span class="s2">"export SHELLOPTS &amp;&amp; ./build.sh </span><span class="se">\$</span><span class="s2">@"</span> <span class="o">&gt;</span> build-wrapper.sh
+</pre></td></tr></tbody></table></code></pre></div>    </div>
+
+    <p>After we have our wrapper in place. we run it instead of <code class="highlighter-rouge">build.sh</code> like this:</p>
+
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td><td class="rouge-code"><pre><span class="nv">$ </span>bash <span class="nt">-x</span> ./build-wrapper.sh checked
+... <span class="c"># omitted</span>
++ /usr/bin/cmake <span class="nt">-G</span> <span class="s1">'Unix Makefiles'</span> <span class="nt">-DCMAKE_BUILD_TYPE</span><span class="o">=</span>CHECKED <span class="nt">-DCMAKE_INSTALL_PREFIX</span><span class="o">=</span>/home/dmg/projects/public/coreclr/bin/Product/Linux.x64.Checked <span class="nt">-DCMAKE_USER_MAKE_RULES_OVERRIDE</span><span class="o">=</span> <span class="nt">-DCLR_CMAKE_PGO_INSTRUMENT</span><span class="o">=</span>0 <span class="nt">-DCLR_CMAKE_OPTDATA_PATH</span><span class="o">=</span>/home/dmg/.nuget/packages/optimization.linux-x64.pgo.coreclr/99.99.99-master-20190716.1 <span class="nt">-DCLR_CMAKE_PGO_OPTIMIZE</span><span class="o">=</span>1 <span class="nt">-S</span> /home/dmg/projects/public/coreclr <span class="nt">-B</span> /home/dmg/projects/public/coreclr/bin/obj/Linux.x64.Checked
+</pre></td></tr></tbody></table></code></pre></div>    </div>
+
+    <p>Boom! We’ve hit that jackpot. For folks following this that are feeling a bit shaky, I’ve isolated the exact part we’re after below:</p>
+
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre><span class="nt">-G</span> <span class="s1">'Unix Makefiles'</span> <span class="nt">-DCMAKE_BUILD_TYPE</span><span class="o">=</span>CHECKED <span class="nt">-DCMAKE_INSTALL_PREFIX</span><span class="o">=</span>/home/dmg/projects/public/coreclr/bin/Product/Linux.x64.Checked <span class="nt">-DCMAKE_USER_MAKE_RULES_OVERRIDE</span><span class="o">=</span> <span class="nt">-DCLR_CMAKE_PGO_INSTRUMENT</span><span class="o">=</span>0 <span class="nt">-DCLR_CMAKE_OPTDATA_PATH</span><span class="o">=</span>/home/dmg/.nuget/packages/optimization.linux-x64.pgo.coreclr/99.99.99-master-20190716.1 <span class="nt">-DCLR_CMAKE_PGO_OPTIMIZE</span><span class="o">=</span>1 <span class="nt">-S</span> /home/dmg/projects/public/coreclr <span class="nt">-B</span> /home/dmg/projects/public/coreclr/bin/obj/Linux.x64.Checked
+</pre></td></tr></tbody></table></code></pre></div>    </div>
+  </li>
+  <li>
+    <p>The “hard” part is over. It’s a series of boring clicks from here on. it’s time to open up CLion and get this show on the road:
+We’ll start with defining a clang-3.9 based toolchain, since on Linux Clion defaults to using the gcc toolchain (at least on Linux), while CoreCLR needs clang-3.9 to build itself:<img src="/assets/images/clion-toolchains-coreclr.png" alt="clion-toolchains-coreclr" /></p>
+  </li>
+  <li>
+    <p>With a toolchain setup, we need to tell <code class="highlighter-rouge">cmake</code> about our build configuration, so we set it up like so:
+<img src="/assets/images/clion-cmake-coreclr.png" alt="clion-cmake-coreclr" /></p>
+
+    <p>I’ve highlighted all the text boxes you’ll need to set. I’ll go over the less trivial stuff:</p>
+
+    <ul>
+      <li>The command line option we just set aside in (3) goes into the <code class="highlighter-rouge">CMake options</code> field.<br />
+Unfortunately CLion doesn’t like single quotes (weird…), so I’ve had to change the <code class="highlighter-rouge">-G 'Unix Makefiles'</code> into <code class="highlighter-rouge">-G "Unix Makrfiles"</code> (notice the use of double quotes).</li>
+      <li>It would be a wise idea to share the same build folder as our initial command line build used, more over, we might end up going back and forth between CLion and the command line, so I override the “Generation Path” setting with the value <code class="highlighter-rouge">bin/obj/Linux.x64.Checked</code>. This is again extracted from the same command line we set-aside before. You’ll find it in my case towards the end, specified right after the <code class="highlighter-rouge">-B</code> switch.</li>
+      <li>For the build options, I’ve specified <code class="highlighter-rouge">-j 8</code>. This option controls how many parallel builds (compilers) are launched during the build process. A good default is to set it to 2x the number of physical cores your machine has, so in my case that means using <code class="highlighter-rouge">-j 8</code>.</li>
+    </ul>
+  </li>
+  <li>That’s it, let CLion do it’s thing while grinding your machine to a halt, and once it’s done you can start navigating and building the CoreCLR project like a first class citizen of the civilized world :)</li>
+</ol>
+
+<h2 id="debugging-coreclr-from-clion">Debugging CoreCLR from CLion</h2>
+
+<p>Once we have CLion understanding the CoreCLR project structure we can take it up a notch and try to debug CoreCLR by launching “something” while setting a breakpoint.</p>
+
+<p>Let’s try to debug the JIT as an example for a useful scenario.</p>
+
+<ol>
+  <li>First we need a console application:
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+</pre></td><td class="rouge-code"><pre> <span class="nv">$ </span><span class="nb">cd</span> /tmp/
+ <span class="nv">$ </span>dotnet new console <span class="nt">-n</span> clion_dbg_sample
+ The template <span class="s2">"Console Application"</span> was created successfully.
+ Processing post-creation actions...
+ Running <span class="s1">'dotnet restore'</span> on clion_dbg_sample/clion_dbg_sample.csproj...
+ Restore completed <span class="k">in </span>54.39 ms <span class="k">for</span> /tmp/clion_dbg_sample/clion_dbg_sample.csproj.
+
+ Restore succeeded.
+
+ <span class="nv">$ </span><span class="nb">cd </span>clion_dbg_sample
+ <span class="nv">$ </span>dotnet publish <span class="nt">-c</span> release <span class="nt">-o</span> linux-x64 <span class="nt">-r</span> linux-x64
+ Microsoft <span class="o">(</span>R<span class="o">)</span> Build Engine version 16.3.0+0f4c62fea <span class="k">for</span> .NET Core
+ Copyright <span class="o">(</span>C<span class="o">)</span> Microsoft Corporation. All rights reserved.
+
+ Restore completed <span class="k">in </span>66.26 ms <span class="k">for</span> /tmp/clion_dbg_sample/clion_dbg_sample.csproj.
+ clion_dbg_sample -&gt; /tmp/clion_dbg_sample/bin/release/netcoreapp3.0/linux-x64/clion_dbg_sample.dll
+ clion_dbg_sample -&gt; /tmp/clion_dbg_sample/linux-x64/
+</pre></td></tr></tbody></table></code></pre></div>    </div>
+
+    <p>Now we have a console application published in some folder, in my case it’s <code class="highlighter-rouge">/tmp/clion_dbg_sample/linux-x64</code></p>
+  </li>
+  <li>
+    <p>Next we will setup a new configuration under CLion:<br />
+ <img src="/assets/images/clion-edit-configurations-coreclr.png" alt="" /></p>
+  </li>
+  <li>
+    <p>Now we define a <strong>new</strong> configuration:<br />
+ <img src="/assets/images/clion-select-executable-coreclr.png" alt="" />
+ We provide some name, I’ve decided to use the same name as my test program: <code class="highlighter-rouge">clion_dbg_sample</code>, We select “All targets” as the Target, and under executable we need to choose “Select other…” to provide a custom path to <code class="highlighter-rouge">corerun</code>. The reason behind this is that we need to run <code class="highlighter-rouge">corerun</code> from a directory that actually contains the entire product: jit, gc and everything else.</p>
+  </li>
+  <li>
+    <p>The path we provide is to the <code class="highlighter-rouge">corerun</code> executable that resides in the <code class="highlighter-rouge">bin/Product/Linux.x64.Checked</code> folder:
+ <img src="/assets/images/clion-custom-executable-coreclr.png" alt="" /></p>
+  </li>
+  <li>
+    <p>Finally we provide our sample project from before to the <code class="highlighter-rouge">corerun</code> executable. This is how my final configuration looks like:<br />
+ <img src="/assets/images/clion-sample-configuration-final-coreclr.png" alt="" /></p>
+  </li>
+  <li>
+    <p>It’s time to set a break-point and launch. As a generic sample I will navigate to <code class="highlighter-rouge">compiler.cpp</code> and find the <code class="highlighter-rouge">jitNativeCode</code> method. It’s pretty much one of the top-level functions in the JIT, and therefore a good candidate for us. If we set a breakpoint in that method and launch our newly created configuration, we should hit it in no time:
+<img src="/assets/images/clion-debug-jit-coreclr.png" alt="" /></p>
+  </li>
+  <li>We’re done! If you really want to figure out what to do next, it’s probably a good time to hit the <a href="https://github.com/dotnet/coreclr/blob/master/Documentation/botr/README.md">BotR</a>, namely the <a href="https://github.com/dotnet/coreclr/blob/master/Documentation/botr/ryujit-overview.md">RyuJit Overview</a> and <a href="https://github.com/dotnet/coreclr/blob/master/Documentation/botr/ryujit-tutorial.md">RyuJit Tutorial</a> pages that contain a more detailed overview of the JIT. Alternatively, if you’re a “get your hands dirty” sort of person, you can also do some warm-up exercises for your fingers and start hitting that step-into keyboard shortcut. You’re debugging the JIT as we speak!</li>
+</ol>
+
+<p>I hope this end up helping someone wanting to get started digging into the JIT not on Windows. I also personally have a strong preference for CLion as I really think it’s much more faster and powerful option than all the other stuff I’ve tried this far. At any rate, it’s the only viable option for Linux/macOs people.</p>
+
+<p>Have fun! Let me know on <a href="https://twitter.com/damageboy">twitter</a> if you’re encountering any difficulties or you think I can make anything clearer…</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+
+
+        
+          <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2019-05-01T05:26:28+00:00">May 01, 2019</time></p>
+        
+      </footer>
+
+      <section class="page__share">
+  
+
+  <a href="https://twitter.com/intent/tweet?text=Hacking+CoreCLR+on+Linux+with+CLion%20https%3A%2F%2Fbits.houmus.org%2F2019-05-01%2Fhacking-coreclr-on-linux-with-clion" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fbits.houmus.org%2F2019-05-01%2Fhacking-coreclr-on-linux-with-clion" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Fbits.houmus.org%2F2019-05-01%2Fhacking-coreclr-on-linux-with-clion" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2018-08-20/netcoreapp3.0-intrinsics-in-real-life-pt3" class="pagination--pager" title=".NET Core 3.0 Intrinsics in Real Life - (Part 3/3)
+">Previous</a>
+    
+    
+      <a href="/2019-11-08/unsafe-bounds-checking" class="pagination--pager" title="Unsafe Bounds Checking
+">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h4 class="page__related-title">You May Also Enjoy</h4>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/2020-02-02/this-goes-to-eleven-pt5" rel="permalink">This Goes to Eleven (Pt. 5/∞)
+</a>
+      
+    </h2>
+    
+      <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  71 minute read
+
+</p>
+    
+    <p class="archive__item-excerpt" itemprop="description">Decimating Array.Sort with AVX2. I ended up going down the rabbit hole re-implementing array sorting with AVX2 intrinsics. There’s no reason I should go down...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/2020-02-01/this-goes-to-eleven-pt4" rel="permalink">This Goes to Eleven (Pt. 4/∞)
+</a>
+      
+    </h2>
+    
+      <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  56 minute read
+
+</p>
+    
+    <p class="archive__item-excerpt" itemprop="description">Decimating Array.Sort with AVX2. I ended up going down the rabbit hole re-implementing array sorting with AVX2 intrinsics. There’s no reason I should go down...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/2020-01-30/this-goes-to-eleven-pt3" rel="permalink">This Goes to Eleven (Part. 3/∞)
+</a>
+      
+    </h2>
+    
+      <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  79 minute read
+
+</p>
+    
+    <p class="archive__item-excerpt" itemprop="description">Decimating Array.Sort with AVX2. I ended up going down the rabbit hole re-implementing array sorting with AVX2 intrinsics. There’s no reason I should go down...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/2020-01-29/this-goes-to-eleven-pt2" rel="permalink">This Goes to Eleven (Part. 2/∞)
+</a>
+      
+    </h2>
+    
+      <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  32 minute read
+
+</p>
+    
+    <p class="archive__item-excerpt" itemprop="description">Decimating Array.Sort with AVX2. I ended up going down the rabbit hole re-implementing array sorting with AVX2 intrinsics. There’s no reason I should go down...</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><div class="search-searchbar"></div>
+  <div class="search-hits"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+
+    
+
+    <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2020 damageboy. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+<!-- Including InstantSearch.js library and styling -->
+<script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.3.3/dist/instantsearch.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.3.3/dist/instantsearch.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.3.3/dist/instantsearch-theme-algolia.min.css">
+
+<script>
+// Instanciating InstantSearch.js with Algolia credentials
+const search = instantsearch({
+  appId: 'CMJJV3VL7A',
+  apiKey: 'f1673463105fd4295fbbeffc415b5934',
+  indexName: 'bits.houmus.org',
+  searchParameters: {
+    restrictSearchableAttributes: [
+      'title',
+      'content'
+    ]
+  }
+});
+
+const hitTemplate = function(hit) {
+  const url = hit.url;
+  const title = hit._highlightResult.title.value;
+  const content = hit._highlightResult.html.value;
+
+  return `
+    <div class="list__item">
+      <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+        <h2 class="archive__item-title" itemprop="headline"><a href="${url}">${title}</a></h2>
+        <div class="archive__item-excerpt" itemprop="description">${content}</div>
+      </article>
+    </div>
+  `;
+}
+
+// Adding searchbar and results widgets
+search.addWidget(
+  instantsearch.widgets.searchBox({
+    container: '.search-searchbar',
+    poweredBy: true,
+    placeholder: 'Enter your search term...'
+  })
+);
+search.addWidget(
+  instantsearch.widgets.hits({
+    container: '.search-hits',
+    templates: {
+      item: hitTemplate
+    }
+  })
+);
+
+// Starting the search
+search.start();
+</script>
+
+
+
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-124434205-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-124434205-1', { 'anonymize_ip': false});
+</script>
+
+
+
+
+
+
+
+
+<div class="top-scroll-progress-bar"></div>
+
+
+<script>
+jQuery( document ).ready(function() {
+    jQuery('table.datatable').each(function(){
+        jQuery(this).datatable();
+    });
+});
+</script>
+
+<script>
+  var element = document.documentElement,
+    body = document.body,
+    scrollTop = 'scrollTop',
+    scrollHeight = 'scrollHeight',
+    progress = document.querySelector('.top-scroll-progress-bar'),
+    scroll;
+  
+  document.addEventListener('scroll', function() {
+    scroll = (element[scrollTop]||body[scrollTop]) / ((element[scrollHeight]||body[scrollHeight]) - element.clientHeight) * 100;
+    progress.style.setProperty('--scroll', scroll + '%');
+  });
+  </script>
+
+
+  </body>
+</html>

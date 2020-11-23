@@ -1,0 +1,1154 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.17.2 by Michael Rose
+  Copyright 2013-2019 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>.NET Core 3.0 Intrinsics in Real Life - (Part 3/3) - damageboy</title>
+<meta name="description" content="As I’ve described in part 1 &amp; part 2 of this series, I’ve recently overhauled an internal data structure we use at Work® to start using platform dependent intrinsics.">
+
+
+  <meta name="author" content="damageboy">
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="damageboy">
+<meta property="og:title" content=".NET Core 3.0 Intrinsics in Real Life - (Part 3/3)">
+<meta property="og:url" content="https://bits.houmus.org/2018-08-20/netcoreapp3.0-intrinsics-in-real-life-pt3">
+
+
+  <meta property="og:description" content="As I’ve described in part 1 &amp; part 2 of this series, I’ve recently overhauled an internal data structure we use at Work® to start using platform dependent intrinsics.">
+
+
+
+  <meta property="og:image" content="https://bits.houmus.org/assets/images/intrinsics-header.jpg">
+
+
+
+
+
+  <meta property="article:published_time" content="2018-08-20T15:26:28+00:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://bits.houmus.org/2018-08-20/netcoreapp3.0-intrinsics-in-real-life-pt3">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": null,
+      "url": "https://bits.houmus.org/"
+    
+  }
+</script>
+
+
+  <meta name="google-site-verification" content="wcrvaF3e88-Vb6y-9eUTqYaXDMOukzl4c-IdKByS0Xc" />
+
+
+  <meta name="msvalidate.01" content="6D5AE23298671D95A20FAD7FA3430ABB">
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+<link href="/feed.xml" type="application/atom+xml" rel="alternate" title="damageboy Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+
+<!--[if IE]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+
+
+    <!-- start custom head snippets -->
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/favicons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicons/favicon-16x16.png">
+<link rel="manifest" href="/assets/favicons/site.webmanifest">
+<link rel="mask-icon" href="/assets/favicons/safari-pinned-tab.svg" color="#ba0000">
+<link rel="shortcut icon" href="/assets/favicons/favicon.ico">
+<meta name="apple-mobile-web-app-title" content="damageboy">
+<meta name="application-name" content="damageboy">
+<meta name="msapplication-TileColor" content="#ba0000">
+<meta name="msapplication-config" content="/assets/favicons/browserconfig.xml">
+<meta name="theme-color" content="#ba0000ff">
+
+<!-- <link rel="stylesheet" type="text/css" href="/assets/css/inlineDisqussions.css" /> -->
+<script src="/assets/scripts/webfont.js"></script>
+<script>
+WebFont.load({
+  google: {
+    families: ['Lato', 'Indie Flower']
+  },
+  custom: {
+    families: ['Cascadia Code'],
+    urls: ['/assets/css/cascadia.css']
+  }
+});
+</script>
+
+
+<script defer src="/assets/scripts/jquery.min.js"></script>
+<script defer src="/assets/scripts/polyfill.min.js"></script>
+<script defer src="/assets/scripts/config-mathjax.js"></script>
+<script defer src="/assets/scripts/tex-chtml-full.js"></script>
+<!-- <script defer src="/assets/scripts/inlineDisqussions.js"></script> -->
+<script defer src="/assets/scripts/uikit.min.js"></script>
+<script defer src="/assets/scripts/uikit-icons.min.js"></script>
+<script defer src="/assets/scripts/roughjs@3.1.0"></script>
+<script defer src="/assets/scripts/Chart.bundle.min.js"></script>
+<script defer src="/assets/scripts/chartjs-plugin-rough@0.2.0"></script>
+<script defer src="/assets/scripts/chartjs-plugin-annotation.js"></script>
+<!-- <script defer src="/assets/scripts/applyInlineDisqussions.js"></script> -->
+<script defer src="/assets/scripts/inline-chartjs.js"></script>
+
+<link href="/assets/css/chardinjs.css" rel="stylesheet">
+<script defer src="/assets/scripts/chardinjs.min.js"></script>
+
+<!-- This is entirely for the  datatable.js -->
+<link rel="stylesheet" href="/assets/css/bootstrap.css">
+<link rel="stylesheet" href="/assets/css/bootstrap-table.min.css"> 
+<link rel="stylesheet" href="/assets/css/bootstrap-table-filter-control.min.css">
+<link rel="stylesheet" href="/assets/css/datatable.css">
+
+<script defer src="/assets/scripts/bootstrap.min.js"></script>
+<script defer src="/assets/scripts/bootstrap-table.min.js"></script>
+<script defer src="/assets/scripts/bootstrap-table-filter-control.min.js"></script>
+<script defer src="/assets/scripts/moment.min.js"></script>
+<script defer type="text/javascript" src="/assets/scripts/datatable.js"></script>
+
+  </head>
+
+  <body class="layout--single wide">
+    <nav class="skip-links">
+  <h2 class="screen-reader-text">Skip links</h2>
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          damageboy
+          
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/" >Posts</a>
+            </li><li class="masthead__menu-item">
+              <a href="/talks/" >Talks</a>
+            </li><li class="masthead__menu-item">
+              <a href="/about/" >About</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <svg class="icon" width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15.99 16">
+            <path d="M15.5,13.12L13.19,10.8a1.69,1.69,0,0,0-1.28-.55l-0.06-.06A6.5,6.5,0,0,0,5.77,0,6.5,6.5,0,0,0,2.46,11.59a6.47,6.47,0,0,0,7.74.26l0.05,0.05a1.65,1.65,0,0,0,.5,1.24l2.38,2.38A1.68,1.68,0,0,0,15.5,13.12ZM6.4,2A4.41,4.41,0,1,1,2,6.4,4.43,4.43,0,0,1,6.4,2Z" transform="translate(-.01)"></path>
+          </svg>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+  
+
+
+
+
+
+
+
+
+
+
+
+<div class="page__hero"
+  style=" "
+>
+  
+    <img src="/assets/images/intrinsics-header.jpg" alt=".NET Core 3.0 Intrinsics in Real Life - (Part 3/3)" class="page__hero-image">
+  
+  
+</div>
+
+
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+    <div class="author__avatar">
+      
+
+      
+        <img src="/assets/images/atari.svg" alt="damageboy" itemprop="image">
+      
+    </div>
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name">damageboy</h3>
+    
+    
+      <div class="author__bio" itemprop="description">
+        <p>What did I do this time?</p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+        <li>
+          <a href="https://bits.houmus.org" itemprop="url">
+            <i class="fas fa-fw fa-link" aria-hidden="true"></i> Website
+          </a>
+        </li>
+      
+
+      
+        <li>
+          <a href="mailto:dans@houmus.org">
+            <meta itemprop="email" content="dans@houmus.org" />
+            <i class="fas fa-fw fa-envelope-square" aria-hidden="true"></i> Email
+          </a>
+        </li>
+      
+
+      
+
+      
+        <li>
+          <a href="https://twitter.com/damageboy" itemprop="sameAs" rel="nofollow noopener noreferrer">
+            <i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter
+          </a>
+        </li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+        <li>
+          <a href="https://stackoverflow.com/users/9172/damageboy" itemprop="sameAs" rel="nofollow noopener noreferrer">
+            <i class="fab fa-fw fa-stack-overflow" aria-hidden="true"></i> Stack Overflow
+          </a>
+        </li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content=".NET Core 3.0 Intrinsics in Real Life - (Part 3/3)">
+    <meta itemprop="description" content="As I’ve described in part 1 &amp; part 2 of this series, I’ve recently overhauled an internal data structure we use at Work® to start using platform dependent intrinsics.">
+    <meta itemprop="datePublished" content="August 20, 2018">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">.NET Core 3.0 Intrinsics in Real Life - (Part 3/3)
+</h1>
+          
+            <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  46 minute read
+
+</p>
+          
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <p>As I’ve described in <a href="/2018-08-18/netcoreapp3.0-intrinsics-in-real-life-pt1">part 1</a> &amp; <a href="/2018-08-19/netcoreapp3.0-intrinsics-in-real-life-pt2">part 2</a> of this series, I’ve recently overhauled an internal data structure we use at Work<sup>®</sup> to start using <a href="https://github.com/dotnet/designs/blob/master/accepted/platform-intrinsics.md">platform dependent intrinsics</a>.</p>
+
+<p>If you’ve not read the previous posts, I suggest you do so, as a lot of what is discussed here relies on the code and issues presented there…</p>
+
+<p>As a reminder, this series is made in 3 parts:</p>
+
+<ul>
+  <li><a href="/2018-08-18/netcoreapp3.0-intrinsics-in-real-life-pt1">The data-structure/operation that we’ll optimize and basic usage of intrinsics</a>.</li>
+  <li><a href="/2018-08-19/netcoreapp3.0-intrinsics-in-real-life-pt2">Using intrinsics more effectively</a></li>
+  <li>The C++ version(s) of the corresponding C# code, and what I learned from them (this post).</li>
+</ul>
+
+<p>All of the code (C# &amp; C++) is published under the <a href="https://github.com/damageboy/bitgoo">bitgoo github repo</a>.</p>
+
+<h2 id="c-vs-c">C++ vs. C#</h2>
+
+<p>I think I’ve mentioned this somewhere before: I started working on better versions of my bitmap search function way before CoreCLR intrinsics were even imagined. This led me to start to tinkering with C++ code where I tried out most of my ideas. When CoreCLR 3.0 became real enough, I ported the C++ code back to C# (which surprisingly consisted of a couple of search and replace operations, no more…).</p>
+
+<p>As such, having two close implementations begs performing a head-to-head comparison.
+After some additional work, I had basic <a href="https://github.com/google/benchmark">google benchmark</a> and <a href="https://github.com/google/googletest">google test</a> suites up and running<sup id="fnref:1" role="doc-noteref"><a href="#fn:1" class="footnote">1</a></sup><br />
+I’ll cut right to the chase and present a relative comparison between C++ and C# for the last version we ran in our previous post, The C# method is <code class="highlighter-rouge">POPCNTAndBMI2Unrolled</code> and the C++ one is <code class="highlighter-rouge">POPCNTAndBMI2Unrolled2</code>:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>N</th>
+      <th>C# Mean (ns)</th>
+      <th>C++ Mean (ns)</th>
+      <th>C++/C# Ratio</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>POPCNTAndBMI2Unrolled</td>
+      <td>1</td>
+      <td>2.249</td>
+      <td>3.338</td>
+      <td>148.42%</td>
+    </tr>
+    <tr>
+      <td>POPCNTAndBMI2Unrolled</td>
+      <td>4</td>
+      <td>10.904</td>
+      <td>11.037</td>
+      <td>101.22%</td>
+    </tr>
+    <tr>
+      <td>POPCNTAndBMI2Unrolled</td>
+      <td>16</td>
+      <td>50.368</td>
+      <td>43.786</td>
+      <td>86.93%</td>
+    </tr>
+    <tr>
+      <td>POPCNTAndBMI2Unrolled</td>
+      <td>64</td>
+      <td>208.272</td>
+      <td>202.366</td>
+      <td>97.16%</td>
+    </tr>
+    <tr>
+      <td>POPCNTAndBMI2Unrolled</td>
+      <td>256</td>
+      <td>1,580.026</td>
+      <td>1,493.020</td>
+      <td>94.49%</td>
+    </tr>
+    <tr>
+      <td>POPCNTAndBMI2Unrolled</td>
+      <td>1024</td>
+      <td>21,282.905</td>
+      <td>11,520.900</td>
+      <td>54.13%</td>
+    </tr>
+    <tr>
+      <td>POPCNTAndBMI2Unrolled</td>
+      <td>4096</td>
+      <td>255,186.977</td>
+      <td>133,976.543</td>
+      <td>52.50%</td>
+    </tr>
+    <tr>
+      <td>POPCNTAndBMI2Unrolled</td>
+      <td>16384</td>
+      <td>3,730,420.068</td>
+      <td>1,754,421.485</td>
+      <td>47.03%</td>
+    </tr>
+    <tr>
+      <td>POPCNTAndBMI2Unrolled</td>
+      <td>65536</td>
+      <td>56,939,817.593</td>
+      <td>26,613,731.568</td>
+      <td>46.74%</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>There are a few things that stand out from this comparison:</p>
+
+<ul>
+  <li>The percentage differences in the low bit counts (1,4) should be ignored, they are minuscule in absolute terms and within the margin of error.</li>
+  <li>C# is doing pretty well up to 256 bits when we <strong>don’t</strong> execute the unrolled loop, it’s basically neck to neck with C++.</li>
+  <li>Sweet mercy, what is going on with 1024 bits an onwards, inside the unrolled loop? Why is there such a big difference for what is a relatively optimized (and equivalent) piece of code between the two languages?</li>
+</ul>
+
+<p>I’ll cut to the chase and answer this last question directly, then, proceed to explain the underlying relevant basics (<em>tl;dr</em>: it’s not so basic) of CPU pipelining and register renaming in order for the explanation to stick for people reading this that are not familiar with those terms/concepts.</p>
+
+<p>The bottom line is: there is a bug in the CPU! There is a well known (even if very cryptic) <a href="https://www.intel.com/content/dam/www/public/us/en/documents/specification-updates/4th-gen-core-family-desktop-specification-update.pdf">erratum</a> about this bug, and compiler developers are more or less generally aware of this issue and have been <em>working around</em> it for the better part of the last 5 years.</p>
+
+<h3 id="false-dependencies">False Dependencies</h3>
+
+<p>So what is this mysterious CPU bug all about? The JIT was producing what should be, according to the processor documentation, pretty good code:</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+</pre></td><td class="rouge-code"><pre><span class="nl">BEGIN_POPCNT_UROLLED_LOOP:</span>
+<span class="nf">popcnt</span>   <span class="nb">rsi</span><span class="p">,</span> <span class="kt">qword</span> <span class="nv">ptr</span> <span class="p">[</span><span class="nb">rcx</span><span class="p">]</span>
+<span class="nf">sub</span>      <span class="nb">rdx</span><span class="p">,</span> <span class="nb">esi</span>
+<span class="nf">popcnt</span>   <span class="nb">rsi</span><span class="p">,</span> <span class="kt">qword</span> <span class="nv">ptr</span> <span class="p">[</span><span class="nb">rcx</span><span class="o">+</span><span class="mi">8</span><span class="p">]</span>
+<span class="nf">sub</span>      <span class="nb">rdx</span><span class="p">,</span> <span class="nb">esi</span>
+<span class="nf">popcnt</span>   <span class="nb">rsi</span><span class="p">,</span> <span class="kt">qword</span> <span class="nv">ptr</span> <span class="p">[</span><span class="nb">rcx</span><span class="o">+</span><span class="mi">16</span><span class="p">]</span>
+<span class="nf">sub</span>      <span class="nb">rdx</span><span class="p">,</span> <span class="nb">esi</span>
+<span class="nf">popcnt</span>   <span class="nb">rsi</span><span class="p">,</span> <span class="kt">qword</span> <span class="nv">ptr</span> <span class="p">[</span><span class="nb">rcx</span><span class="o">+</span><span class="mi">24</span><span class="p">]</span>
+<span class="nf">sub</span>      <span class="nb">rdx</span><span class="p">,</span> <span class="nb">esi</span>
+<span class="nf">add</span>      <span class="nb">rcx</span><span class="p">,</span> <span class="mi">32</span>
+<span class="nf">cmp</span>      <span class="nb">rdx</span><span class="p">,</span> <span class="mi">256</span>
+<span class="nf">jge</span> <span class="nv">SHORT</span> <span class="nv">BEGIN_POPCNT_UROLLED_LOOP</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>What we see above is an excerpt from <code class="highlighter-rouge">POPCNTAndBMI2Unrolled</code> method’s assembly code, and more specifically the unrolled loop that does 4 <code class="highlighter-rouge">POPCNT</code> instructions in succession.</p>
+
+<p>Even if you are not an assembly guru, it’s pretty clear we have 4 pairs of <code class="highlighter-rouge">POPCNT</code> + <code class="highlighter-rouge">SUB</code> instructions, where:</p>
+
+<ul>
+  <li>Each <code class="highlighter-rouge">POPCNT</code> instruction is <strong>reading</strong> from successive memory addresses and <strong>writing</strong> their result temporarily into a register <em>named</em> <code class="highlighter-rouge">rsi</code>.</li>
+  <li>This temporary value is then subtracted using <code class="highlighter-rouge">SUB</code> from another register which represents our good old C# variable <code class="highlighter-rouge">n</code> (the target-bit count).</li>
+</ul>
+
+<p>The <em>high-level</em> explanation of the bug goes like this:</p>
+
+<ol>
+  <li>The CPU <em>should</em> have <strong>detected</strong> that each <code class="highlighter-rouge">POPCNT</code> + <code class="highlighter-rouge">SUB</code> instruction <em>pair</em> is effectively <em>independent</em> of the previous pair (inside our unrolled loop and <em>between</em> the loop’s iterations). In other words: although all 4 pairs are using the same destination register (<code class="highlighter-rouge">rsi</code>), each such pair is really not dependent on the previous value of <code class="highlighter-rouge">rsi</code>.</li>
+  <li>This dependency analysis, performed by the CPU, <em>should</em> have <em>enabled</em> it to use an internal optimization called register-renaming (more on that later).</li>
+  <li><em>Had</em> register renaming been triggered the CPU could have processed our <code class="highlighter-rouge">POPCNT</code> instructions with a higher degree of parallelism: In other words, our CPU, would run a few <code class="highlighter-rouge">POPCNT</code> instructions in <strong>parallel</strong> at any given moment. This would lead to better perf or better IPC (Instruction-Per-Cycle ratio).</li>
+  <li>In reality, the bug is causing the CPU to delay the processing of each such pair of instructions for a few cycles, per pair, introducing a lot of “garbage time” inside the CPU, where it’s stalling, doing less work than it should, leading to the slowdown we are seeing.</li>
+</ol>
+
+<p>Terminology wise, this sort of bug is called a <em>false-dependency</em> bug: In our case, the CPU wrongfully introduces a dependency between the different <code class="highlighter-rouge">POPCNT</code> instructions on their destination register, it <em>thinks</em> each <code class="highlighter-rouge">POPCNT</code> instruction is <strong>not only writing</strong> into <code class="highlighter-rouge">rsi</code> but <strong>also reading</strong> from it! (it does no such thing)<br />
+Given that this false dependency now exists, it is preventing the CPU from using register-renaming to execute the code more efficiently.</p>
+
+<p>I will first focus on describing how compilers have been working around this, and afterward, I will describe in much more detail how the CPU employs register renaming to improve the throughput of the pipeline when the bug does not exist <em>or</em> is worked around.</p>
+
+<h3 id="working-around-false-dependencies">Working Around False Dependencies</h3>
+
+<p>As I’ve mentioned, this bug has been around for quite some time: It was reported <a href="https://gcc.gnu.org/bugzilla/show_bug.cgi?id=62011">somewhere in 2014</a> and is unfortunately still persistent to this day on most Intel CPUs, at least when it comes to the <code class="highlighter-rouge">POPCNT</code> instruction<sup id="fnref:2" role="doc-noteref"><a href="#fn:2" class="footnote">2</a></sup>.</p>
+
+<p>Luckily, compiler developers have been able to work around this issue with relative ease by generating <em>extra code</em> that <strong><em>breaks</em></strong> the aforementioned false-dependency. As far as I can tell, the people who originally wrote the workarounds were Intel developers, so they had a very good understanding of the exact nature of this false-dependency. What they opted to do was make compilers introduce a single-byte instruction that clears the lower 32-bits of the <em>destination</em> register. In our case, this comes in the form of a <code class="highlighter-rouge">xor esi, esi</code> instruction. This is the shortest way (instruction length-wise) in x86 CPUs to zero out a register. This instruction is a well known special case in the CPU since it “knows” the future value of the destination register (0) even without executing it, or knowing what its original value ever was. It appears the Intel engineers <em>knew</em> that the dependency is not the entire 64-bit register (<code class="highlighter-rouge">rsi</code>) but only on the lower 32-bit part of that register (<code class="highlighter-rouge">esi</code><sup id="fnref:3" role="doc-noteref"><a href="#fn:3" class="footnote">3</a></sup>) and took advantage of this understanding to introduce a single byte fix into the instruction stream, which is relatively very cheap.</p>
+
+<p>The correct x86 assembly, generated by a fixed JIT or compiler should look like this:</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+</pre></td><td class="rouge-code"><pre><span class="nl">BEGIN_POPCNT_UROLLED_LOOP:</span>
+<span class="nf">xor</span>      <span class="nb">esi</span><span class="p">,</span> <span class="nb">esi</span>				<span class="c1">; This breaks the dependency</span>
+<span class="nf">popcnt</span>   <span class="nb">rsi</span><span class="p">,</span> <span class="kt">qword</span> <span class="nv">ptr</span> <span class="p">[</span><span class="nb">rcx</span><span class="p">]</span>
+<span class="nf">sub</span>      <span class="nb">rdx</span><span class="p">,</span> <span class="nb">esi</span>
+<span class="nf">xor</span>      <span class="nb">esi</span><span class="p">,</span> <span class="nb">esi</span>				<span class="c1">; This breaks the dependency</span>
+<span class="nf">popcnt</span>   <span class="nb">rsi</span><span class="p">,</span> <span class="kt">qword</span> <span class="nv">ptr</span> <span class="p">[</span><span class="nb">rcx</span><span class="o">+</span><span class="mi">8</span><span class="p">]</span>
+<span class="nf">sub</span>      <span class="nb">rdx</span><span class="p">,</span> <span class="nb">esi</span>
+<span class="nf">xor</span>      <span class="nb">esi</span><span class="p">,</span> <span class="nb">esi</span>				<span class="c1">; This breaks the dependency</span>
+<span class="nf">popcnt</span>   <span class="nb">rsi</span><span class="p">,</span> <span class="kt">qword</span> <span class="nv">ptr</span> <span class="p">[</span><span class="nb">rcx</span><span class="o">+</span><span class="mi">16</span><span class="p">]</span>
+<span class="nf">sub</span>      <span class="nb">rdx</span><span class="p">,</span> <span class="nb">esi</span>
+<span class="nf">xor</span>      <span class="nb">esi</span><span class="p">,</span> <span class="nb">esi</span>				<span class="c1">; This breaks the dependency</span>
+<span class="nf">popcnt</span>   <span class="nb">rsi</span><span class="p">,</span> <span class="kt">qword</span> <span class="nv">ptr</span> <span class="p">[</span><span class="nb">rcx</span><span class="o">+</span><span class="mi">24</span><span class="p">]</span>
+<span class="nf">sub</span>      <span class="nb">rdx</span><span class="p">,</span> <span class="nb">esi</span>
+<span class="nf">add</span>      <span class="nb">rcx</span><span class="p">,</span> <span class="mi">32</span>
+<span class="nf">cmp</span>      <span class="nb">rdx</span><span class="p">,</span> <span class="mi">256</span>
+<span class="nf">jge</span> <span class="nv">SHORT</span> <span class="nv">BEGIN_POPCNT_UROLLED_LOOP</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>This short piece of code is the sort of code that gcc/clang would generate for <code class="highlighter-rouge">POPCNT</code> to work-around the bug. When read out of context, it looks silly… it appears like the compiler generated useless code, to begin with, and you’ll find people wondering about this publicly in stackoverflow and other forums from time to time, or worse yet: trying to “fix” it. But for most in-production x86 CPUs (e.g. all the ones that suffer from this false-dependency) this code will substantially outperform the original code we saw above…</p>
+
+<h2 id="update-coreclr-does-the-right-thing">Update: CoreCLR does the right thing</h2>
+
+<p>I originally started writing part 3 after I found this issue with the JIT, and submitting <a href="https://github.com/dotnet/coreclr/issues/19555">an issue</a>, thinking I would finish writing this post before anyone would fix the underlying issue. I was wrong on both counts: Writing this post became an ever-growing challenge as I attempted to explain pipelines and register-renaming for the uninitiated (below), while <a href="https://github.com/dotnet/coreclr/pull/19772">Fei Peng fixed the issue</a> in a matter of two weeks (Thanks!).</p>
+
+<p>What CoreCLR now does (since commit <a href="https://github.com/dotnet/coreclr/pull/19772/commits/6957b4f44f0917209df89499b7c4071bb0bc1941">6957b4f</a>) is <strong>always</strong> introduce the <code class="highlighter-rouge">xor dest, dest</code> workaround/dependency breaker for the 3 affected instructions <code class="highlighter-rouge">LZCNT</code>, <code class="highlighter-rouge">TZCNT</code>, <code class="highlighter-rouge">POPCNT</code>. This is <em>not the optimal</em> solution since the JIT will introduce this both for CPUs afflicted with this bug (specific Intel CPUs) as well as CPUs that <strong>don’t</strong> have this bug (All AMD CPUs and newer Intel CPUs).<br />
+From the discussion, it’s clear that this path was chosen for simplicity’s sake: it would require more infrastructure both to detect the correct CPU family inside the JIT, and introduce questions around what should the JIT do in case of AOT (Ahead Of Time) compilation, as well as require more testing infrastructure than what is currently in place on the one hand, while the one byte fix is very cheap even for CPUs that are not affected.</p>
+
+<p>Let’s see if this CoreCLR fix does anything to our unmodified piece of code…:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>N</th>
+      <th style="text-align: right">Mean (ns)</th>
+      <th style="text-align: right">Scaled To “buggy” CoreCLR</th>
+      <th style="text-align: right">Scaled to C++</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>POPCNTAndBMI2Unrolled</td>
+      <td>1</td>
+      <td style="text-align: right">2.170</td>
+      <td style="text-align: right">0.96</td>
+      <td style="text-align: right">0.65</td>
+    </tr>
+    <tr>
+      <td>POPCNTAndBMI2Unrolled</td>
+      <td>4</td>
+      <td style="text-align: right">11.910</td>
+      <td style="text-align: right">1.09</td>
+      <td style="text-align: right">1.08</td>
+    </tr>
+    <tr>
+      <td>POPCNTAndBMI2Unrolled</td>
+      <td>16</td>
+      <td style="text-align: right">55.016</td>
+      <td style="text-align: right">1.09</td>
+      <td style="text-align: right">1.26</td>
+    </tr>
+    <tr>
+      <td>POPCNTAndBMI2Unrolled</td>
+      <td>64</td>
+      <td style="text-align: right">225.156</td>
+      <td style="text-align: right">1.08</td>
+      <td style="text-align: right">1.11</td>
+    </tr>
+    <tr>
+      <td>POPCNTAndBMI2Unrolled</td>
+      <td>256</td>
+      <td style="text-align: right">1,637.336</td>
+      <td style="text-align: right">1.04</td>
+      <td style="text-align: right">1.10</td>
+    </tr>
+    <tr>
+      <td>POPCNTAndBMI2Unrolled</td>
+      <td>1024</td>
+      <td style="text-align: right">11,698.421</td>
+      <td style="text-align: right">0.55</td>
+      <td style="text-align: right">1.02</td>
+    </tr>
+    <tr>
+      <td>POPCNTAndBMI2Unrolled</td>
+      <td>4096</td>
+      <td style="text-align: right">149,247.146</td>
+      <td style="text-align: right">0.58</td>
+      <td style="text-align: right">1.11</td>
+    </tr>
+    <tr>
+      <td>POPCNTAndBMI2Unrolled</td>
+      <td>16384</td>
+      <td style="text-align: right">1,904,945.748</td>
+      <td style="text-align: right">0.51</td>
+      <td style="text-align: right">1.09</td>
+    </tr>
+    <tr>
+      <td>POPCNTAndBMI2Unrolled</td>
+      <td>65536</td>
+      <td style="text-align: right">27,712,720.427</td>
+      <td style="text-align: right">0.49</td>
+      <td style="text-align: right">1.04</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>It sure does! It appears now that the unrolled version is running roughly 85-101% faster for higher bit counts than it did with the previous, unfixed CoreCLR!. When compared to C++, performance is now pretty close and consistent for the important parts of the benchmark. If you consider, for a moment, that we got here by making the JIT spill out <em>an extra, supposedly useless</em> instruction, this makes the achievement that much more impressive :), as before, <a href="https://gist.github.com/damageboy/0266018efbbf0a8478aa4d50de1c894f">here is the JITDump</a> with the newly fixed JIT in place.</p>
+
+<p>Now, we can really see just how much of a profound effect this false-dependency had on performance. In theory, this might be the right time to finish this post, however, I couldn’t let it go without attempting to explain the underlying CPU internals of <em>how and why</em> the false-dependency had such a deep effect on performance. For readers well aware of how CPU pipelines operate and how they interact with the register renaming functionality on a modern super-scalar out-of-order CPU this is a good time to stop reading.<br />
+What follows is me trying to explain how the CPU tries to handle loops of code effectively, and how register renaming plays an important role in that.</p>
+
+<h2 id="the-lovehate-story-that-is-tight-loops-in-cpus">The love/hate story that is tight loops in CPUs</h2>
+
+<p>It takes very little imagination to realize that CPUs spend a lot their processing time executing loops (or the same machine code multiple times, in this context). <br />
+We need to remember that CPUs achieve remarkable throughput (e.g. instructions per cycles, or IPC) even though the table, in some ways, is set <strong>against</strong> them:</p>
+
+<ul>
+  <li>A modern CPU will often have a dozen or so stages in their pipeline (examples: 14 in Skylake, 19 in AMD Ryzen)
+    <ul>
+      <li>This means a single instruction will take about 14 cycles on my cpu from start to finish if we were only executing that instruction and waiting for it to complete!</li>
+    </ul>
+  </li>
+  <li>The CPU attempts to handle multiple instructions in different stages of the pipeline, but it may become <em>stalled</em> (i.e. do no work) when it needs to wait for a previous instruction to advance through the pipeline enough to have its result ready (this is generally referred to as instruction dependencies).</li>
+  <li>To improve the utilization of CPU caches (L1/2/3 caches) and memory bus utilization, most modern processors artificially limit the number of register <strong>names</strong> they support for instructions (seems like in 2018 everyone has settled on 16 general purpose registers, except for PowerPC at 32)
+    <ul>
+      <li>That way instructions take up fewer bits and can be read more quickly over these highly subscribed resources (caches and memory bus).</li>
+      <li>The flip side of this design decision is that compilers do not have the ability to generate code that uses many different registers, which in turn leads them to generate more code fragments that are dependent of each other because of the limited register names available for them.</li>
+    </ul>
+  </li>
+</ul>
+
+<p>With that in mind, let’s take the same, short piece of assembly code, which was generated by the JIT for our last unrolled attempt at, and see how it theoretically executes on a Skylake CPU.</p>
+
+<h2 id="visualizing-our-loop">Visualizing our loop</h2>
+
+<p>Without any additional fanfare, lets introduce the following visualization:</p>
+
+<p><img src="/assets/images/iaca-popcnt-retirement.svg" alt="iaca-popcnt" /></p>
+
+<p>I created this diagram by prettifying a trace file generated by a little known tool made by Intel called  <a href="https://software.intel.com/en-us/articles/intel-architecture-code-analyzer">IACA</a>, which stands for <strong>I</strong>ntel <strong>A</strong>rchitecture <strong>C</strong>ode <strong>A</strong>nalyzer. IACA takes a piece of machine code + target CPU family and produces a textual trace file that can help us see better what the CPU does, at every cycle of a relatively short loop.<br />
+If you dislike having to use commercial (non-OSS) tools, please note that there is a similar tool by the LLVM project called <a href="https://llvm.org/docs/CommandGuide/llvm-mca.html">llvm-mca</a>, and you can even use it from the <a href="https://godbolt.org/z/baOZWy">infamous compiler-explorer</a>.</p>
+
+<p>Let’s try to break this diagram down:</p>
+
+<ul>
+  <li>The leftmost column contains the loop counter, I’ve limited the trace to 2 [0, 1] iterations of that loop, to keep everything compact.</li>
+  <li>Next, the instruction counter <em>within</em> its respective loop. Clearly we have 11 instructions per loop.</li>
+  <li>Next, the disassembly, where we can see 4 <code class="highlighter-rouge">POPCNT</code> instructions and they are interleaved with 4 subtractions of each <code class="highlighter-rouge">POPCNT</code> result from the register <code class="highlighter-rouge">rdx</code></li>
+  <li>Next we see how the instructions are broken down to µops<sup id="fnref:4" role="doc-noteref"><a href="#fn:4" class="footnote">4</a></sup>:<br />
+For now, we will simply make note that every <code class="highlighter-rouge">POPCNT</code> we have , having been encoded as an instruction that reads from memory AND calculates the population count, was broken down to two µops:
+    <ul>
+      <li>A load µop (<code class="highlighter-rouge">TYPE_LOAD</code>) loading the data from its respective pointer.</li>
+      <li>An operation µop (<code class="highlighter-rouge">TYPE_OP</code>) performing the actual <code class="highlighter-rouge">POPCNT</code>ing into our destination register (<code class="highlighter-rouge">rsi</code>).</li>
+    </ul>
+  </li>
+  <li>Then comes the real kicker: IACA <strong>simulates</strong> what a Skylake CPU (specifically) <em>should</em> be doing at every cycle of those two loop iterations and provides us with critical insight into the state that each instruction is at every cycle (relative to the beginning of the first loop). These states are described by the coded symbols in each box, which I will shortly describe in more detail.</li>
+</ul>
+
+<p class="notice--warning">It is important to note that IACA, while being Intel’s <em>own tool</em> is <strong>not</strong> aware of the Intel CPU bug I just described. It is simulating what that processor <em>should have</em> done with NO false dependency…</p>
+
+<p>While all the various states of the instruction within the pipeline are interesting I will give some more meaning to specific states:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>mnemonic</th>
+      <th>Meaning</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>d</td>
+      <td>Dispatched to execution: The CPU has completed decoding and waiting for the instruction’s dependencies to be ready. Execution will begin in the next cycle</td>
+    </tr>
+    <tr>
+      <td>e</td>
+      <td>Executing: The instruction is being executed, often in multiple cycles within a specific execution port (unit) inside the CPU</td>
+    </tr>
+    <tr>
+      <td>w</td>
+      <td>Writeback: The instruction’s result is being written back to a register in the register-file (more on this below), where it will be available for other instructions that might have a dependency on that instruction</td>
+    </tr>
+    <tr>
+      <td>R</td>
+      <td>Retired: The temporary register used during the execution/writeback has to be written back to the “real” destination register, according to the original order of the program code, this is called retirement, after which the CPUs internal, temporary register is free again (more on this below)</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>I encourage you to try to follow this execution trace for a couple of instructions. I like to stare at these things for hours, trying to tell a story in my own head in the form of “what is the CPU thinking now” for each and every cycle. There is much we could say about this, but I will highlight a few remarkable things:</p>
+
+<ul>
+  <li>I’ve highlighted the <code class="highlighter-rouge">R</code> symbol/stage with a <span style="color:red"><strong>red-ellipse</strong></span>. For our purposes here, this represents the final stage of each instruction. To me, it’s very impressive to see how all of these instructions terminate execution either 0 or 1 cycles apart of each other.</li>
+  <li>By the time the first instruction (<code class="highlighter-rouge">POPCNT</code>) reaches the <code class="highlighter-rouge">R</code> (retired) state at cycle 14, when it’s done, we are <em>already</em> executing, in some pipeline stage or another, all instructions from the next 4 iterations of this unrolled loop (I’ve limited the visualization to only 2 iterations for brevity, but you get the hang of it).
+    <ul>
+      <li>The processor is already (speculatively) executing loads from memory to satisfy our <code class="highlighter-rouge">POPCNT</code> instructions in loop iterations 1,2,3 before the first iteration has even completed running, and without even knowing for sure our loop would actually execute for that amount of iterations.</li>
+      <li>Quantitatively speaking: We have roughly 4 iterations of an 11 instruction loop (&gt; 40 instructions) all running in parallel inside one core(!) of our processor. This is possible both because of the length of the pipeline (14 stages for this specific processor) and the fact that internally, the processor has multiple units or ports capable of running various instructions in parallel. This is often referred to as a super-scalar CPU.</li>
+    </ul>
+  </li>
+</ul>
+
+<p>In case you are interested in digging much more deeper than I can afford to go into this within this post, I suggest you read <a href="http://www.lighterra.com/papers/modernmicroprocessors/">Modern Microprocessors: A 90-Minute Guide!</a> to get more detailed information about pipelines, super-scalar CPUs, everything I try to cover here, and more.</p>
+
+<p>For this post, I will focus on one key aspect that lies in the root of how the CPU manages to do so many things at the same time: register renaming.</p>
+
+<h3 id="instruction-dependencies">Instruction Dependencies</h3>
+
+<p>Let’s look at the code again, this time adding arrows between the various instructions, marking their interdependencies.</p>
+
+<p><img src="/assets/images/popcnt-dependencies.svg" alt="popcnt-deps" /></p>
+
+<p>If we interpret this code naively (and wrongly), we see that <code class="highlighter-rouge">rsi</code> is being used in each and every instruction of this code fragment, this could lead us to assume that the heavy usage of <code class="highlighter-rouge">rsi</code> is generating a long dependency chain:</p>
+
+<ul>
+  <li>The <code class="highlighter-rouge">POPCNT</code> is writing into <code class="highlighter-rouge">rsi</code>.</li>
+  <li><code class="highlighter-rouge">rsi</code> is then used as a source for the subtraction from <code class="highlighter-rouge">rdx</code>, so naturally, the <code class="highlighter-rouge">sub</code> instruction cannot proceed before <code class="highlighter-rouge">rsi</code> has the value of <code class="highlighter-rouge">POPCNT</code>.</li>
+  <li>The next <code class="highlighter-rouge">POPCNT</code> is again writing to <code class="highlighter-rouge">rsi</code> but would seemingly be unable to write before the previous <code class="highlighter-rouge">sub</code> has finished.</li>
+  <li>After four such operations, we loop (in turquoise) again and we are again taking a dependency on <code class="highlighter-rouge">rsi</code> at the beginning of the loop.</li>
+</ul>
+
+<p>This naive dependency analysis pretty much contradicts the output we saw come out of IACA in the previous diagram without further explanation. It would seem impossible for the CPU to run so many things in parallel where every instruction here seems to have a dependency through the use of the <code class="highlighter-rouge">rsi</code> register.<br />
+Moreover, both our original C# and C++ code did not force the JIT/compiler to re-use the same register over and over. It could have allocated 4 different registers and used them to generate code where each <code class="highlighter-rouge">POPCNT</code> + <code class="highlighter-rouge">SUB</code> pair would be independent of the previous one, so why didn’t it do so?<br />
+Well, it turns out there is no need to! The JIT/compiler is doing exactly what it needs to be doing, it is just us, that need to learn about a very important concept in modern processors called register renaming.</p>
+
+<h3 id="register-renaming">Register Renaming</h3>
+
+<p>To understand why anyone would need something like register renaming, we first need to understand that CPU designers are stuck between a rock and a hard place:</p>
+
+<ul>
+  <li>On one hand they want to be able to read our program code as fast as possible, from memory 🡒 cache 🡒 instruction decoder (a.k.a CPU front end), this requirement leads down a path where they have to severely <em>limit</em> the number of register <em>names</em> available for machine code, since fewer register names leads to more compact instructions (fewer bits) in memory and more efficient utilization of memory buses and caches.</li>
+  <li>On the other hand, they would like to give compilers / JIT engines as much flexibility as possible in using as many registers as they want (possibly hundreds) without needing to move their contents into memory (or more realistically: CPU cache) just because they ran out of registers names.</li>
+</ul>
+
+<p>These contradicting requirements led CPU designers to decouple the idea of register names and register storage: modern CPUs have many more (hundreds) or physical registers (storage) in their register-file than they have names for our software to use. This is where register renaming enters the scene.</p>
+
+<p>What CPU designers have been doing, for quite a long time now (<a href="https://ieeexplore.ieee.org/document/5392015">before 1967</a>, believe it or not!) is really remarkable: they have been employing a really neat trick that effectively gets the best of both worlds (i.e. satisfy both requirements) at the cost of more complexity, more power usage, and more stages in the pipeline (hence also a little slowdown in the execution of a single instruction) to achieve better pipeline utilization at the global scale.</p>
+
+<p>This optimization, named “Register renaming”, accomplishes just that: by analyzing <em>when</em> a register is being <strong>written</strong> (write-only, not read-write) to, the CPU “understands” that the previous value of that register is <em>no longer required</em> for the execution of instructions reading/writing to that same register from that moment onwards, even if previous instructions have not completed (or started) execution! What this really means, is that if we go back to the naive (now you see why) dependency analysis we did in the previous section, it’s clear that each <code class="highlighter-rouge">POPCNT</code> + <code class="highlighter-rouge">SUB</code> pair are actually completely <strong>independent</strong> of each other because they begin with overwriting <code class="highlighter-rouge">rsi</code>! In other words, each <code class="highlighter-rouge">POPCNT</code> having written to <code class="highlighter-rouge">rsi</code> is considered to be breaking the dependency chain from that moment onwards. 
+What the CPU does, therefore, is continuously re-map <em>named</em> registers to different register <em>locations</em> on the register-file, according to the real dependency chain, and use that newly <strong>allocated</strong> location within the register file (hence the initial “Allocation” stage at the IACA diagram above) until the dependency chain is broken again (e.g. the same register is written to again).<br />
+I cannot emphasize how important of a tool this is for the CPU. Register renaming allows it to schedule multiple instructions to execute concurrently, either at different stages of the same pipeline or in parallel in different execution ports (pipelines) that exist in a super-scalar CPU. Moreover, this optimization achieves this while keeping the machine code small and easy to decode, since there are very few bits allocated for register names!</p>
+
+<p class="notice--info">How big of a deal is this? How good is the CPU in using this renaming trick? To best answer this from a practical standpoint, I think, we can take a look into the disparity between how many register <em>names</em> exist, for example, in the x64 architecture, that number being 16, and how <em>many physical register</em> storage space there is on the register-file, for example, on an Intel Skylake CPU: 180 (!).</p>
+
+<p>After the temporary (renamed) register has finished its job for a given instruction chain, we are still, unfortunately, not <em>entirely</em> done with it. Understand, that the CPU cannot look too far into the incoming instruction stream (mostly a few dozen bytes), and it can not know, with certainty, if the last written value it just wrote to a renamed register will not be required by some future part of the code it hasn’t seen yet, hundreds of instructions in the future. This brings us to the last phase of register renaming, which is retirement: The CPU must still write the last value for our <em>symbolic</em> register (<code class="highlighter-rouge">rsi</code>) back to the canonical location of that register (a.k.a the “real” register), in case future instructions that have not been loaded/decoded will attempt to read that value.<br />
+Moreover, this retirement phase must be performed exactly in program order for the program to continue operating as its original intention was.</p>
+
+<h3 id="wrapping-up-clearing-the-register-for-the-rescue">Wrapping up: clearing the register for the rescue</h3>
+
+<p>So going back to our false-dependency bug, we can now hopefully understand the underlying issue and the fix armed with our new knowledge:</p>
+
+<p>Our Intel CPU wrongly misunderstands our <code class="highlighter-rouge">POPCNT</code> instruction, when it comes to its dependency analysis: It <strong>“thinks”</strong> our usage of <code class="highlighter-rouge">rsi</code> is not only writing to it but also reading from it.<br />
+This is the false-dependency at the root of this issue. We cannot see this with IACA, but we can understand it conceptually: If the CPU (wrongfully) “thinks” that our second <code class="highlighter-rouge">POPCNT</code> has to READ the previous <code class="highlighter-rouge">rsi</code> value, then no register renaming can occur at that point, and the second <code class="highlighter-rouge">POPCNT</code> instruction cannot execute in parallel to the first one, it needs to wait for the completion of the first <code class="highlighter-rouge">POPCNT</code> and basically stall for a few precious cycles, in order for the previous <code class="highlighter-rouge">rsi</code> to be written back somewhere. Naturally this is true for every unrolled <code class="highlighter-rouge">POPCNT</code> in our loop and <em>also</em> between loop iterations.<br />
+This alone is enough to cause the perf drop we saw originally with the C# code before CoreCLR was patched. Once the <code class="highlighter-rouge">xor esi,esi</code> dependency breaker is added to the instruction stream, we are basically “informing” the CPU that we really are not dependent on the previous value of <code class="highlighter-rouge">rsi</code> and we allow it to perform register renaming from that point onwards. It still wrongfully thinks that <code class="highlighter-rouge">POPCNT</code> reads from <code class="highlighter-rouge">rsi</code> but thanks to our otherwise seemingly superfluous <code class="highlighter-rouge">xor</code>, this is an <em>already renamed</em> <code class="highlighter-rouge">rsi</code> and the pipeline stall is averted.</p>
+
+<p>I think it is pretty clear by now, although we barely scratched the surface of CPU internals, that CPUs are very complex, and that in the race to extract more performance out of code, today’s out-of-order, super-scalar CPUs go into extreme lengths to find ways to parallelize machine code execution.<br />
+It should be also clear that it’s important to be able to <a href="https://mechanical-sympathy.blogspot.com/2011/07/why-mechanical-sympathy.html">empathize with the machine</a> and understand the true nature of its inner workings to really be able to deal the weirdness we experience as we try to make stuff go faster.</p>
+
+<p>It would be great if all we needed to do was keep compiler and hardware developers well fed and well paid so we could do our job without needing to know any of this, and to a great extent, this statement is true. But more often than not, extreme performance requires deeper understanding.</p>
+
+<div class="footnotes" role="doc-endnotes">
+  <ol>
+    <li id="fn:1" role="doc-endnote">
+      <p>As a side note, after not doing serious C++ work for years, coming back to it and discovering sanitizers, cmake, google test &amp; benchmark was a very pleasant surprise. I distinctly remember the surprise of writing C++ and not having violent murderous thoughts at the same time. <a href="#fnref:1" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+    <li id="fn:2" role="doc-endnote">
+      <p>Apparently Intel has fixed the bug (according to reports) for the <code class="highlighter-rouge">LZCNT</code> and <code class="highlighter-rouge">TZCNT</code> instructions on Skylake processors, but not so for the <code class="highlighter-rouge">POPCNT</code> instruction for reasons unknown to practically anyone. <a href="#fnref:2" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+    <li id="fn:3" role="doc-endnote">
+      <p>yes, x86 registers are weird in that way, where <em>some</em> 64 bit registers have additional symbolic names referring to their lower 32, 16, and both 8 bit parts of their lower 16 bits, don’t ask. <a href="#fnref:3" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+    <li id="fn:4" role="doc-endnote">
+      <p>µop or micro-op, is a low-level hardware operation. The CPU Front-End is responsible for reading the x86 machine code and decoding them into one or more µops. <a href="#fnref:4" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+  </ol>
+</div>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+
+
+        
+          <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2018-08-20T15:26:28+00:00">August 20, 2018</time></p>
+        
+      </footer>
+
+      <section class="page__share">
+  
+
+  <a href="https://twitter.com/intent/tweet?text=.NET+Core+3.0+Intrinsics+in+Real+Life+-+%28Part+3%2F3%29%20https%3A%2F%2Fbits.houmus.org%2F2018-08-20%2Fnetcoreapp3.0-intrinsics-in-real-life-pt3" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fbits.houmus.org%2F2018-08-20%2Fnetcoreapp3.0-intrinsics-in-real-life-pt3" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Fbits.houmus.org%2F2018-08-20%2Fnetcoreapp3.0-intrinsics-in-real-life-pt3" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/2018-08-19/netcoreapp3.0-intrinsics-in-real-life-pt2" class="pagination--pager" title=".NET Core 3.0 Intrinsics in Real Life - (Part 2/3)
+">Previous</a>
+    
+    
+      <a href="/2019-05-01/hacking-coreclr-on-linux-with-clion" class="pagination--pager" title="Hacking CoreCLR on Linux with CLion
+">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h4 class="page__related-title">You May Also Enjoy</h4>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/2020-02-02/this-goes-to-eleven-pt5" rel="permalink">This Goes to Eleven (Pt. 5/∞)
+</a>
+      
+    </h2>
+    
+      <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  71 minute read
+
+</p>
+    
+    <p class="archive__item-excerpt" itemprop="description">Decimating Array.Sort with AVX2. I ended up going down the rabbit hole re-implementing array sorting with AVX2 intrinsics. There’s no reason I should go down...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/2020-02-01/this-goes-to-eleven-pt4" rel="permalink">This Goes to Eleven (Pt. 4/∞)
+</a>
+      
+    </h2>
+    
+      <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  56 minute read
+
+</p>
+    
+    <p class="archive__item-excerpt" itemprop="description">Decimating Array.Sort with AVX2. I ended up going down the rabbit hole re-implementing array sorting with AVX2 intrinsics. There’s no reason I should go down...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/2020-01-30/this-goes-to-eleven-pt3" rel="permalink">This Goes to Eleven (Part. 3/∞)
+</a>
+      
+    </h2>
+    
+      <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  79 minute read
+
+</p>
+    
+    <p class="archive__item-excerpt" itemprop="description">Decimating Array.Sort with AVX2. I ended up going down the rabbit hole re-implementing array sorting with AVX2 intrinsics. There’s no reason I should go down...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/2020-01-29/this-goes-to-eleven-pt2" rel="permalink">This Goes to Eleven (Part. 2/∞)
+</a>
+      
+    </h2>
+    
+      <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  32 minute read
+
+</p>
+    
+    <p class="archive__item-excerpt" itemprop="description">Decimating Array.Sort with AVX2. I ended up going down the rabbit hole re-implementing array sorting with AVX2 intrinsics. There’s no reason I should go down...</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><div class="search-searchbar"></div>
+  <div class="search-hits"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+
+    
+
+    <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2020 damageboy. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+<!-- Including InstantSearch.js library and styling -->
+<script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.3.3/dist/instantsearch.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.3.3/dist/instantsearch.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.3.3/dist/instantsearch-theme-algolia.min.css">
+
+<script>
+// Instanciating InstantSearch.js with Algolia credentials
+const search = instantsearch({
+  appId: 'CMJJV3VL7A',
+  apiKey: 'f1673463105fd4295fbbeffc415b5934',
+  indexName: 'bits.houmus.org',
+  searchParameters: {
+    restrictSearchableAttributes: [
+      'title',
+      'content'
+    ]
+  }
+});
+
+const hitTemplate = function(hit) {
+  const url = hit.url;
+  const title = hit._highlightResult.title.value;
+  const content = hit._highlightResult.html.value;
+
+  return `
+    <div class="list__item">
+      <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+        <h2 class="archive__item-title" itemprop="headline"><a href="${url}">${title}</a></h2>
+        <div class="archive__item-excerpt" itemprop="description">${content}</div>
+      </article>
+    </div>
+  `;
+}
+
+// Adding searchbar and results widgets
+search.addWidget(
+  instantsearch.widgets.searchBox({
+    container: '.search-searchbar',
+    poweredBy: true,
+    placeholder: 'Enter your search term...'
+  })
+);
+search.addWidget(
+  instantsearch.widgets.hits({
+    container: '.search-hits',
+    templates: {
+      item: hitTemplate
+    }
+  })
+);
+
+// Starting the search
+search.start();
+</script>
+
+
+
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-124434205-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-124434205-1', { 'anonymize_ip': false});
+</script>
+
+
+
+
+
+
+
+
+<div class="top-scroll-progress-bar"></div>
+
+
+<script>
+jQuery( document ).ready(function() {
+    jQuery('table.datatable').each(function(){
+        jQuery(this).datatable();
+    });
+});
+</script>
+
+<script>
+  var element = document.documentElement,
+    body = document.body,
+    scrollTop = 'scrollTop',
+    scrollHeight = 'scrollHeight',
+    progress = document.querySelector('.top-scroll-progress-bar'),
+    scroll;
+  
+  document.addEventListener('scroll', function() {
+    scroll = (element[scrollTop]||body[scrollTop]) / ((element[scrollHeight]||body[scrollHeight]) - element.clientHeight) * 100;
+    progress.style.setProperty('--scroll', scroll + '%');
+  });
+  </script>
+
+
+  </body>
+</html>

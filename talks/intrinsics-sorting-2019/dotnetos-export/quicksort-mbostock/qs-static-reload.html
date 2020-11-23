@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+body {
+  padding: 10px 0;
+}
+
+svg {
+  float: left;
+}
+
+.line {
+  stroke: #000;
+  stroke-linecap: round;
+}
+
+.line--pivot {
+  stroke: #f00;
+  stroke-width: 3px;
+}
+
+.line--inactive {
+  stroke: #0f0;
+  stroke-width: 3px;
+}
+
+#reload-button {
+  position: absolute;
+  top: 15px;
+  left: 25px;
+  background: #e32c19;
+  padding-right: 26px;
+  border-radius: 3px;
+  border: none;
+  color: white;
+  margin: 0;
+  font-weight: bold;
+  padding: 0 12px;
+  width: 80px;
+  cursor: pointer;
+  height: 30px;
+}
+
+#reload-button:hover {
+  background-color: #696969;
+}    
+
+
+</style>
+<body>
+<script src="d3.v3.min.js"></script>
+<div id="vis">
+    <button id="reload-button">Reload</button>
+</div>
+
+<script>
+
+var reloadButton = d3.select("#reload-button");
+
+function visualizeQuickSort()
+{
+  var n = 200,
+      array = d3.shuffle(d3.range(n)),
+      levels = quicksort(array);
+
+  var margin = {top: 2, right: 50, bottom: 2, left: 50},
+      width = window.innerWidth- margin.left - margin.right,
+      height = 85 - margin.top - margin.bottom;
+
+  var x = d3.scale.ordinal()
+      .domain(d3.range(n))
+      .rangePoints([0, width]);
+
+  var a = d3.scale.linear()
+      .domain([0, n - 1])
+      .range([-45, 45]);
+
+  d3.select("body").append("svg").attr("width", window.innerWidth).attr("height", 50);
+
+  svg = d3.select("body").selectAll("svg")
+    .data(levels)
+    .enter().append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  svg = svg.append("g")
+      .attr("class", "line")
+    .selectAll("line")
+      .data(function(d) { return d; })
+    .enter().append("line")
+      .attr("transform", function(d, i) { return "translate(" + x(i) + "," + height + ")rotate(" + a(d == null ? i : d) + ")"; })
+      .attr("class", function(d, i) { return d == null ? "line--inactive" : i in this.parentNode.__data__.pivots ? "line--pivot" : null; })
+      .attr("y2", -height);
+
+  function quicksort(array) {
+    var levels = [];
+
+    function partition(left, right, pivot) {
+      var v = array[pivot];
+      swap(pivot, --right);
+      for (var i = left; i < right; ++i) if (array[i] <= v) swap(i, left++);
+      swap(left, right);
+      return left;
+    }
+
+    function swap(i, j) {
+      var t = array[i];
+      array[i] = array[j];
+      array[j] = t;
+    }
+
+    function recurse(left, right, depth) {
+      var pivot = (left + right) >> 1;
+
+      if (!levels[depth]) levels[depth] = new Array(array.length), levels[depth].pivots = {};
+      for (var i = left; i < right; ++i) levels[depth][i] = array[i];
+      levels[depth].pivots[pivot] = 1;
+
+      pivot = partition(left, right, pivot);
+      if (left < pivot - 1) recurse(left, pivot, depth + 1);
+      if (pivot + 1 < right - 1) recurse(pivot + 1, right, depth + 1);
+    }
+
+    if (array.length > 1) recurse(0, array.length, 0);
+    return levels;
+  }
+
+  d3.select(self.frameElement).style("height", (height + margin.top + margin.bottom) * levels.length + 20 + "px");
+}
+
+reloadButton.on("click", function() {
+    d3.selectAll("svg").remove();
+    visualizeQuickSort();
+});
+
+visualizeQuickSort();
+
+
+</script>
