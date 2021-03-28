@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+	<title>SORTING</title>
+	
+	<meta name="description" content="A visualization of the most famous Sorting Algorithms." >
+	<meta name="author" content="Carlo Zapponi"/>
+	<link rel="Shortcut Icon" href="/img/favicon.ico" type="image/x-icon" />
+	
+	<meta property="og:title" content="SORTING - Visualizing sorting algorithms">
+	<meta property="og:url" content="http://sorting.at/">
+	<meta property="og:type" content="website">
+	<meta property="og:description" content="A visualization of the most famous Sorting Algorithms." >
+	<meta property="og:image" content="http://www.sorting.at/img/sorting.png">
+
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:site" content="@littleark">
+	<meta name="twitter:title" content="SORTING">
+	<meta name="twitter:description" content="A visualization of the most famous Sorting Algorithms.">
+	<meta name="twitter:creator" content="@littleark">
+	<meta name="twitter:image:src" content="http://www.sorting.at/img/sorting.png">
+	<meta name="twitter:domain" content="http://sorting.at">
+
+	<link href='http://fonts.googleapis.com/css?family=Raleway:300' rel='stylesheet' type='text/css'>
+	<link href='http://fonts.googleapis.com/css?family=PT+Sans:400' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="css/normalize.css">
+	<link rel="stylesheet" href="css/s.css">
+	<link rel="stylesheet" href="css/afun.css">
+	<script data-main="js/main" src="js/require.js"></script>
+</head>
+<body class="fixed">
+	<div id="header">
+			<h1 class="init"><div id="logo"><span class="s1">&bull;</span><span class="s2">&bull;</span><span class="s3">&bull;</span></div>Sorting</h1>
+			<ul id="layout">
+				<li>
+					<a href="#" class="size" id="x1" rev="1" title="Change layout"><span>1x1</span></a>
+				</li>
+				<li>
+					<a href="#" class="size selected" id="x2" rev="2" title="Change layout"><span>2x2</span></a>
+				</li>
+				<li>
+					<a href="#" class="size" rev="3" id="x3" title="Change layout"><span>3x3</span></a>
+				</li>
+				<li class="sep"><span></span></li>
+				<li>
+					<a href="#" class="items selected" title="Show/Hide items"><i class="icon-dot-3"></i></a>
+				</li>
+				<li class="sep"><span></span></li>
+				<li>
+					<a href="#" class="share" title="Share SORTING"><i class="icon-share"></i></a>
+					<div id="social">
+						<a href="https://twitter.com/intent/tweet?hashtags=dataviz,algorithm&original_referer=http%3A%2F%2Fsorting.at&text=SORTING+-+A+visualization+of+the+most+famous+sorting+algorithms&url=http%3A%2F%2Fsorting.at%2F&via=littleark" target="_blank" title="Share on Twitter"><i class="icon-twitter"></i></a>
+						<span class="count twt"></span>
+						<a href="https://plus.google.com/share?url=sorting.at" target="_blank" title="Share on Google+"><i class="icon-gplus"></i></a>
+						<span class="count gp"></span>
+						<a href="http://facebook.com/sharer.php?u=http%3A%2F%2Fsorting.at" target="_blank" title="Share on Facebook"><i class="icon-facebook"></i></a>
+						<span class="count fb"></span>
+						<a href="http://pinterest.com/pin/create/button/?url=http%3A//sorting.at&media=http%3A//sorting.at/img/sorting.png&description=SORTING+-+A+visualization+of+the+most+famous+sorting+algorithms" target="_blank" title="Pin it!"><i class="icon-pinterest"></i></a>
+					</div>
+				</li>
+			</ul>
+
+
+	</div>
+	<div id="overlay">
+		<div id="howtoread">
+			<span style="left: 185px;top: 120px;" class="right">TRACE OF ITEM MOVED FORWARD&sup1;</span>
+			<span style="left: 257px;top: 295px;" class="left bottom">TRACE OF ITEM MOVED BACKWARD&sup1;</span>
+			<span style="left:522px;top:138px;" class="left">ITEM IN MEMORY</span>
+			<span style="left:87px;top:182px;" class="right">COMPARISON INDICATOR</span>
+			<span style="left: 104px;top: 458px;" class="left bottom">CURRENT OPERATION</span>
+			<span style="left:369px;top: 442px;" class="left bottom high">END / SEQUENCE SORTED</span>
+			<span style="left: 417px;top: 365px;" class="right">MAX NUMBER OF INVERSIONS</span>
+			<span style="left:51px;top: 393px;" class="left">STARTING NUMBER OF INVERSIONS</span>
+			<span style="left:0px;top: 520px;">&sup1;COLOR OF TRACE = COLOR OF MOVED ITEM</span>
+		</div>
+		<a href="#" class="close">close <span>X</span></a>
+	</div>
+	<div id="wrapper">
+		<div id="algorithms" class="clearfix">
+			<div id="add" class="algorithm">
+				<a href="#" class="plus" title="Add new algorithm">
+					<div>
+						<span>+</span>
+						<h4>Add new algorithm</h4>
+					</div>
+				</a>
+			</div>
+		</div>
+		<div id="active_margin"></div>
+		<div id="controls">
+			<div>
+				<ul id="c1">
+					<li class="c2">
+						<a href="#" id="fastback"><i class="icon-fast-backward"></i><span>unsorted</span></a>
+					</li>
+					<li>
+						<a href="#" id="back"><i class="icon-left-open"></i><span>backward</span></a>
+					</li>
+					<li>
+						<a href="#" id="play"><i class="icon-play"></i><i class="icon-pause"></i><span class="play">play</span><span class="pause">pause</span></a>
+					</li>
+					<li>
+						<a href="#" id="forward"><i class="icon-right-open"></i><span>forward</span></a>
+					</li>
+					<li class="c2">
+						<a href="#" id="fastforward"><i class="icon-fast-forward"></i><span>sorted</span></a>
+					</li>
+				</ul>
+			</div>
+		</div>
+
+		<div id="formContainer" class="collapsed">
+			
+			<div id="form">
+				<div>
+					<h5>Algorithm <span>(with average case performance)</span></h5>
+					<ul id="algs" class="clearfix"></ul>
+					<br/>
+					<h5>Color</h5>
+					<ul id="colors" class="clearfix">
+					</ul>
+					<h5>Size</h5>
+					<ul id="items" class="clearfix"></ul>
+					<h5>Initial Condition</h5>
+					<ul id="initial" class="clearfix">
+						<li><a href="#" rel="0" class="selected">Random</a></li>
+						<li><a href="#" rel="1">Nearly sorted</a></li>
+						<li><a href="#" rel="2">Reversed</a></li>
+						<li><a href="#" rel="3">Few unique</a></li>
+					</ul>
+					<a href="#" class="generate" title="Generate algorithm">
+						<span>+</span>
+						<h4>Visualize algorithm</h4>
+					</a>
+					<a href="#" class="close">close <span>X</span></a>
+				</div>
+			</div>
+		</div>
+		<!--<div id="footer">
+			<h5>Visual Sorting</h5>
+		</div>-->
+
+		<div id="contents">
+			<h3>ABOUT SORTING</h3>
+			<p>
+				Sorting a sequence of items is one of the pillar of Computer Science.
+				<br/>
+				A sorting algorithm is an algorithm that organizes elements of a sequence in a certain order.
+				Since the early days of computing, the sorting problem has been one of the main battlefields for researchers. The reason behind this is not only the need of solving a very common task but also the challenge of solving a complex problem in the most efficient way.
+				<br/><br/>
+				<b>SORTING</b> is an attempt to visualize and help to understand how some of the most famous sorting algorithms work.
+				This project provides two standpoints to look at algorithms, one is more <i>artistic</i> (apologies to any real artist out there), the other is more <i>analytical</i> aiming at explaining algorithm step by step.
+				<br/><br/>
+				This project does not want to teach the theory of sorting algorithms, there are amazing resources, books and courses for this purpose. <b>SORTING</b> is for the ones who want to see these algorithms under a different ligth and hopefully appreciate the processing and brain power behind these piece of genius that in many ways have changed the way we live.
+			</p>			
+
+			<h3>Sorting Algorithms as Artwork</h3>
+			<p>
+				Generative Art is one of the ways to represent computational processes. Transforming the data generated by an autonomous system into the features of an artwork can lead to unexpected results.
+				<br/><br/>
+				<b>SORTING</b> was born to create visual representations of sorting algorithms with the hope of finding visual patterns. It turned out that the visual footprints of algorithms are unique and differ from each other and they look gorgeous.
+			</p>
+			<h3>Analyzing Sorting Algorithms</h3>
+			<p>
+				Another way of looking at this project is as an analytical tool to study how sorting algorithms work. Beside generating visuals representations, <b>SORTING</b> provides a walk-through that guides the reader step after step along the process of ordering a lists of integer numbers.
+				<br/>
+				All the steps are tracked: comparison operations happening behind the scene through the use of animated indicators, changes of position of items through animations and arcs, and temporary storing of items.
+				<br/><br/>
+				<b>SORTING</b> makes it possible to compare how different algorithms behave with different initial set of items.
+				<br/><br/>
+				The inversions chart adds a measure of the <i>distance</i> from the final goal both in terms of inversions and operations(comparisons and exchanges) that can be tracked during the execution of the algorithm.
+			</p>
+			<h3>Inversion Count</h3>
+			<p>
+				The Inversion count for a sequence of items indicates the distance of that sequence from being sorted.
+				Simply put if the sequence is already sorted then the inversion count is equal to 0, instead if the sequence is sorted in reverse order than the count is the maximum.
+				<br/><br/>
+				An inversion is a pair of positions in a sequence where the elements there located are out of their natural order.
+				<br/>
+				<br/>
+				Formally, a pair of elements (A[ i ] , A[ j ]) of a sequence A is called an inversion if i&lt;j and A[ i ]&gt;A[ j ].
+			</p>
+			<h3>Aknowledgments</h3>
+			<p>
+				There have been many attempts to visualize sorting algorithms. Some of them have been great resources for the completion of <b>SORTING</b>, among them <a href="http://www.sorting-algorithms.com/" target="_blank">Sorting Algorithm Animations</a> (D. R. Martin), <a href="http://sortvis.org/" target="_blank">sortvis.org</a> (A. Cortesi) and <a href="http://www.codeproject.com/Articles/132757/Visualization-and-Comparison-of-sorting-algorithms" target="_blank">Visualization and comparison of sorting algorithms in C#</a> (R. Kanasz).
+				<br/>
+				Huge thanks go to <a href="https://twitter.com/aconconi" target="_blank">Alex Conconi</a> for reviewing the project and giving invaluable suggestions and feedback.
+			</p>
+		</div>
+
+
+		<div id="footer">
+
+			<h1 class="logo">
+				<div id="logo"><span class="s1">&bull;</span><span class="s2">&bull;</span><span class="s3">&bull;</span></div>
+				SORTING<br/>
+				<span><a href="http://www.makinguse.com" target="_blank" title="">Carlo Zapponi</a>, 2014</span>
+			</h1>
+			<div class="social">
+				<a href="https://twitter.com/intent/tweet?hashtags=dataviz,algorithm&original_referer=http%3A%2F%2Fsorting.at&text=SORTING+-+A+visualization+of+the+most+famous+sorting+algorithms&url=http%3A%2F%2Fsorting.at%2F&via=littleark" target="_blank" title="Share on Twitter"><i class="icon-twitter"></i><span class="count twt"></span></a>
+				<a href="https://plus.google.com/share?url=sorting.at" target="_blank" title="Share on Google+"><i class="icon-gplus"></i><span class="count gp"></span></a>
+				<a href="http://facebook.com/sharer.php?u=http%3A%2F%2Fsorting.at" target="_blank" title="Share on Facebook"><i class="icon-facebook"></i><span class="count fb"></span></a>
+				<a href="http://pinterest.com/pin/create/button/?url=http%3A//sorting.at&media=http%3A//sorting.at/img/sorting.png&description=SORTING+-+A+visualization+of+the+most+famous+sorting+algorithms" target="_blank" title="Pin it!"><i class="icon-pinterest"></i></a>
+			</div>
+			<div id="licence"><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/4.0/" class="cc" target="_blank"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a><div>This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">Creative Commons BY-NC-SA License</a>.</div></div>
+		</div>
+
+	</div>
+	<script>
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-364839-34', 'sorting.at');
+		ga('send', 'pageview');
+
+	</script>
+</body>
+</html>
