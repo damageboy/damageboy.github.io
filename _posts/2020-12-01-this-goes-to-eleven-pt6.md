@@ -35,7 +35,7 @@ Since there’s a lot to go over here, I’ll split it up into a few parts:
 
 ## And now for something completely different
 
-So far, in this never ending series, we started off with a non-vectorized version of Introspective-sort, for benchmark/reference purposes, and gone all the way to having a pretty decently vectorized and sped-up partitioning function. All this work was solely focused on the *partitioning* aspect of out sorter. If you recall, any decent quick-sort-ish function (e.g. .NET own `Array.Sort`, C++'s `std::sort`) is normally built as a hybrid sorter: mixing up various approaches depending on the sort problem size. While its been quite a journey for the partitioning part of this sorter thus far: if you recall, we've started with a very impressive 2.7x speed up in the end of part 3 of this series, while managing to squeeze a lot of perf our of this one partitioning function, just by staring at it really hard (and then some...), and managed to speed the whole thing up to roughly 3.5x by doing so. But we should remember, that even for our first vectorized version, insertion-sort, which was our small-array sorting apparatus was already taking a very considerable amount of our total runtime. It was already around 23% of the total runtime for sorting 1 million elements before we started hammering out the partitioning function. What about now? Lets fire up our trusty linux `perf` tool to figure out what we're dealing with:
+So far, in this never ending series, we started off with a non-vectorized version of Introspective-sort, for benchmark/reference purposes, and went all the way to having a decently vectorized and sped-up partitioning function. All this work was solely focused on the *partitioning* aspect of out sorter. If you recall, any decent quick-sort-ish function (e.g. .NET own `Array.Sort`, C++'s `std::sort`) is really a hybrid sorter: mixing various approaches depending on the problem size. For the partitioning part of this sorter, its been quite a ride: What started off as an impressive 2.7x speed up for vectorized patitioning by the end of part 3 turned into a 3.5x speed up by the end of part 5 with some blood, sweat and spit. All this time we were solely focused on partitioning, it was insertion-sort, our small-array sorting apparatus, started eating away increasingly large chunks of the total time we spend sorting. It was 23% of the total runtime for sorting 1 million elements before the heroic optimizations, what about now? Lets fire up our trusty linux `perf` tool to figure out what we're dealing with:
 
 ```bash
 $ COMPlus_PerfMapEnabled=1  perf record -F max -e instructions ./Example \
@@ -50,20 +50,20 @@ $ perf report --stdio -F overhead,sym | head -15
      4.00%  [.] ... ::Memmove(uint8&,uint8&,uint64)[OptimizedTier1]
 ```
 
-As fun as focusing on vectorizing the partitioning aspect of the sort was, it is important to remember the law of diminishing returns, or alternatively [Amdhal's Law](https://en.wikipedia.org/wiki/Amdahl%27s_law) which reminds us, in the case of our sorting algorithm, that even if we end up improving the partitioning more and more, we will still be limited by the speed of the insertion sort. We've neglected, thus far, to pay any substantial attention to the small-sorting aspect of our algorithm, and it has become a relative weight on our necks.
+As rewarding as focusing on vectorizing the partitioning aspect has been, lets not forget law of diminishing returns, or alternatively [Amdhal's Law](https://en.wikipedia.org/wiki/Amdahl%27s_law) that reminds us, in this case of our sorting algorithm, that as we improve the partitioning ever more, we will be limited by the speed of the *insertion-sort* that  we've neglected, thus far, to pay any substantial attention to. Its about time we change this.
 
 ## Vectorizing Small-Sorting
 
-Thankfully, there are quite a lot of options if "all" we want to do if sort a small set of numbers, with a final/maximal size. For one, we're not hand-cuffed anymore the the harsh memory-allocation constraints of having to implement in-place sorting. We can always weasel our way out of it, by allocating a small set of elements (tens-few thousands) if we have to, for pure speed. Let's consider our options here:
+There are quite a lot of algorithmic options if "all" we want is to sort a small set of numbers, with a final/maximal size. For one, we're not hand-cuffed anymore the the harsh memory-allocation constraints of having to implement in-place sorting. We can always weasel our way out of it, allocating a small temporary buffer (tens to few thousands of elements) and reusing it throughout the sort. Let's consider some of our options here:
 
 * [Counting Sort](https://en.wikipedia.org/wiki/Counting_sort)
 * [Radix Sort](https://en.wikipedia.org/wiki/Radix_sort)
 * [Bitonic Sort](https://en.wikipedia.org/wiki/Bitonic_sorter)
 
-For simplicity reasons, I've decided to forgo using Counting Sort and Radix Sort: The former might be perfect for sorting multiple types very quickly, but would only be applicable for small **ranges** of small numbers, rather than small array; in other words, we not only need to ensure we have a small number of elements to keep the allocation size reasonable, we have to also ensure the range between the smallest and largest number is low to begin with. That's asking quite a lot. As for Radix-Sort, I'm a great fan of the algorithm, but it has it's own set of unique problems when it comes to generalized sorting: Dealing with floating point numbers is [not trivial](http://codercorner.com/RadixSortRevisited.htm), to begin with, and while it does not impose limitations on the range within the array we are sorting, there is a common step to both Radix and Counting Sort that would mean we need to have the ability to issue scattered writes to memory.  
-Unfortunately, scattered writes are not a part of AVX2 at all! AVX2 does support [scattered reading](https://software.intel.com/sites/landingpage/IntrinsicsGuide/#!=undefined&techs=AVX2&text=_mm_i32gather_epi32) from memory, but nothing when it comes to writing. For scattered writing we'd need to use AVX512, which means that in 2020, a large number of x86 machines simply don't have it (All of AMD, and most of the Intel product line in pure market-share numbers). Now in true fairness, we implement the relevant part of Radix/Couting sort with scalar code, but my gut told me I should go look elsewhere, if my minimal target is AVX2, and so we arrive at...
+For simplicity reasons, I've decided to forgo using Counting Sort and Radix Sort: The former might be perfect for sorting multiple types very quickly, but would only be applicable for small **ranges** of small numbers, rather than small array; in other words, we would need to ensure that we both have a small number of elements and that they are not too far apart to keep the allocation size reasonable. As for Radix-Sort, I'm a great fan of the algorithm, but it has it's own set of unique warts when it comes to generalized sorting: Dealing with floating point numbers is [not trivial](http://codercorner.com/RadixSortRevisited.htm), to begin with, and while it does not impose limitations on the range within the array we are sorting, to fully vectorize it we would need to use scattered vectorized reads.  
+Unfortunately, scattered writes are not a supported in AVX2 at all! AVX2 does support [gathered reading](https://software.intel.com/sites/landingpage/IntrinsicsGuide/#!=undefined&techs=AVX2&text=_mm_i32gather_epi32) from memory, but nothing when it comes to writing. For scattered writing we'd need to use AVX512, which means that in 2020, a large number of x86 machines simply don't have it (All of AMD, and most of the Intel product line in pure market-share numbers). Now in true fairness, we could implement the relevant part of Radix/Couting sort with scalar code, but my gut told me I should go look elsewhere, if my minimal target is AVX2, and so we arrive at...
 
-## Bitonic Sorting
+## Sorting Networks & Bitonic Sorting
 
 ### Sorting Networks
 
@@ -72,44 +72,40 @@ But what is a sorting network? To quote the great Donald E. Knuth, from his 1968
 
 > ...to insist on an *oblivious* sequence of comparisons, in the sense that whenever we compare K<sub>i</sub> versus K<sub>j</sub>, the subsequent comparisons for the case K<sub>i</sub> < K<sub>j</sub> are exactly the same as for the case K<sub>i</sub> > K<sub>j</sub>, but with *i* and <u>j</u> interchanged
 
-While the definition: a sequence (network) of independent comparisons (and swaps) may seem deceivingly simple, the theory behind constructing such a network is very deep and complex. More to the point, testing a sorting network is indeed a working sorting network is known to be a co-NP-complete problem. More to the point, since some of the comparisons in a given network can be parallelized, while other have to be serialized, for sorting networks, two optimization "targets" can be considered: 
+While the definition: a sequence (network) of independent comparisons (and swaps) may seem deceivingly simple, the theory behind constructing such networks is very deep and complex. More to the point, since some of the comparisons in a given network can be parallelized, while others have to be serialized, two optimization "targets" can be considered: 
 
-* The optimal size target: attempting to find a network with the minimum number of comparators
-* The optimal depth target: attempting to find a network with the minimum number of layers, e.g.
+* The optimal size target: attempting to find a network with the minimum *number of comparators*.
+* The optimal depth target: attempting to find a network with the minimum *layers of dependencies*.
 
-Here is table, from this [excellent paper](https://arxiv.org/pdf/1507.01428.pdf), from 2015, giving the depth (e.g. # of layers of independent comparators required) and the number of comparisons required to sort a given
+Here is table, from this [excellent paper](https://arxiv.org/pdf/1507.01428.pdf), from 2015, giving the depth (e.g. # of layers of independent comparators required) and the number of comparisons required to sort a given problem:
 
 | *n*                                                    | 1    | 2    | 3    | 4    | 5    | 6    | 7    | 8    | 9    | 10   | 11   | 12   | 13           | 14           | 15           | 16           | 17           |
 | :----------------------------------------------------- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ------------ | ------------ | ------------ | ------------ | ------------ |
 | Depth                                                  | 0    | 1    | 3    | 3    | 5    | 5    | 6    | 6    | 7    | 7    | 8    | 8    | 9            | 9            | 9            | 9            | 10           |
 | Size, upper bound<br />*(lower bound, when different)* | 0    | 1    | 3    | 5    | 9    | 12   | 16   | 19   | 25   | 29   | 35   | 39   | 45<br />*43* | 51<br />*47* | 56<br />*51* | 60<br />*55* | 71<br />*60* |
 
+
 {: .notice--info}
 
-It should be noted, that it was only in December 7th, 2019, that [Jannis Harder](https://twitter.com/jix_) [proved](https://github.com/jix/sortnetopt) the lower-bound for n=11 and improved the lower-bound for n=12.
+It is quite humbling to learn that as soon as we go to a problem size of 13, we already see there is a gap between the minimal sorting network known to human-kind right now vs. the minimal theoretical one! Constructing optimal sorting networks is truly that hard.  
+Furthermore, that it was only in December 7th, 2019, that [Jannis Harder](https://twitter.com/jix_) [proved](https://github.com/jix/sortnetopt) the lower-bound for n=11 and improved[^1] the lower-bound for n=12.
+
 
 It is common practice to represent comparator networks graphically as a Knuth diagram, as shown in the animated figure below. Inputs enter from the left following their respective channels, depicted as horizontal lines, with values traveling from left to right, and comparators as vertical lines connecting two channels, performing a compare and swap operation from the top dot to the bottom one. The layers are made explicit, separated by dashed vertical lines. 
 
-<object class="animated-border" width="100%" type="image/svg+xml" data="/assets/images/sorting-network-5-31415-as-paths.svg"></object>
+<object class="animated-border" width="100%" type="image/svg+xml" data="../assets/images/sorting-network-5-31415-as-paths.svg"></object>
 
-In the above figure, as the sequence `3, 1, 4, 1, 5` enters the sorting network from the left, comparisons resulting in a swap are marked with the numbers swapped appearing in <span style="color:red"><b>red</b></span>, while comparison not resulting in a swap appear with the color <span style="color:#00aa00"><b>green</b></span>. The sorting network in above, constructed in 5 layers with a total of 9 comparators, is both size optimal and depth-optimal. However, in general, there is not always a single network that is optimal for both criteria.
+In the above figure, as the sequence `3, 1, 4, 1, 5` enters the sorting network from the left, comparisons resulting in a swap are marked with the numbers swapped appearing in <span style="color:red"><b>red</b></span>, while comparison not resulting in a swap appear with the color <span style="color:#00aa00"><b>green</b></span>. The sorting network above, constructed in 5 layers with a total of 9 comparators, is both size and depth optimal. However, in general, there is not always a single network that is optimal for both criteria.
 
 ### Bitonic Merge Sort
 
-Bitonic Merge Sorting is an algorithm that *creates* efficient (even if *not the most* efficient) sorting networks. The resulting sorting network consists of $$ O(n\log ^{2}(n))$$ comparators and have a depth of $$O(\log ^{2}(n))$$, where is $$n$$ the number of items to be sorted. In other words, we can use this algorithm to *create* a sequence of comparisons, with a very high degree of parallelism to completely sort an input array. For example, for an input size of 1,024 elements, the depth of the sorting network can be as low as $$ \log ^{2}(n) = \log ^{2}(1024) = 10$$. This has made Bitonic sorting extremely popular on GPUs where performing 1024 and more comparisons completely in parallel is not in the realm of pure imagination. Even though we are not writing GPU code here, but merely vectorized CPU code, Bitonic sorting is still a very beneficial scheme for us too: We can perform `X` vector wide comparisons in a single cycle (where for 32-bit elements `X` is  `8` or `16` elements with AVX2 and AVX512 respectively on an Intel vectorized CPU). Beyond that, there is still additional instruction-level parallelism to be squeezed here: since Bitonic sort networks *ensure* that we have $$ n $$ parallel comparisons to be perform at every level of the network, this makes the life of a pipelined architecture performing instruction scheduling for such an algorithm especially easy: all those comparisons, even when they do not fit within a single vectorized CPU register can *still* be issued and dispatched completely independently within the CPU with no data dependencies whatsoever; this means that our processor is free to process these operations with no bubbles in its pipeline at all!
+Bitonic Merge Sorting is an algorithm that *constructs* efficient sorting networks. The resulting sorting network consists of $$ O(n\log ^{2}(n))$$ comparators and have a depth of $$O(\log ^{2}(n))$$, where is $$n$$ the number of items to be sorted. We can use this algorithm to *create* a sequence of comparisons, with a very high degree of parallelism to completely sort an input array. For example, for an input size of 1,024 elements, the depth of the sorting network can be as low as $$ \log ^{2}(n) = \log ^{2}(1024) = 10$$. This has made Bitonic sorting extremely popular on GPUs where performing 1024 and more comparisons completely in parallel is not in the realm of pure imagination. Even though we are not writing GPU code here, but "merely" vectorized CPU code, Bitonic sorting is still a very beneficial scheme for us too: We can perform `X` vector wide comparisons in a single cycle (where for 32-bit elements `X` is  `8` or `16` elements with AVX2 and AVX512 respectively on an Intel vectorized CPU). Beyond that, modern CPUs instruction-level parallelism to be squeezed here: since Bitonic sort networks *ensure* that we have $$ n $$ parallel comparisons to be perform at every level of the network, this makes the life of a pipelined architecture performing instruction scheduling for such an algorithm especially easy: all those comparisons, even when they do not fit within a single vectorized CPU register can *still* be issued and dispatched completely independently within the CPU with no data dependencies whatsoever; this means that our processor is free to process these operations with no bubbles in its pipeline at all!
 
 Bitonic Merge Sorting was invented by [Ken Batcher](https://en.wikipedia.org/wiki/Ken_Batcher) in 1964, while he worked on a parallel computer for the... Goodyear Aerospace corporation (yes, the Goodyear that made that... Zeppelin...). Unfortunately for me, I could only find a [later paper]() is from 1968, where the basic idea is discussed:
 
 > We will call a sequence of numbers bitonic if it is the juxtaposition of two monotonic sequences, one ascending, the other descending. We also say it re-mains bitonic if it is split anywhere and the two parts interchanged. Since any two monotonic sequences can be put together to form a bitonic sequence a network which rearranges a bitonic sequence into monotonic order (a bitonic sorter) can be used as a merging network.
 
 Let's try to reconstruct this in plain(er) English: A bitonic sorter works by getting a list of numbers split into two *monotonic sequences*, or two sub-lists of ascending numbers. Once we have two such lists, it can merge them (hence the name: Bitonic Merge Sorting)
-
-
-
-
-
-
-
 
 
 I thought it would be nice to show a bunch of things I ended up trying to improve performance.
@@ -427,5 +423,5 @@ To sum this up, as C# developers, we get access to 16 architectural 256-bit wide
 
 ---
 
-[^0]: Most modern Intel CPUs can actually address the L1 cache units twice per cycle, that means they can actually ask it to read two cache-line as the same time. But this still causes more load on the cache and bus, and we must not forget that we will be reading an additional cache-line for our permutation block...
+[^0]: Improved is perhaps an odd choice of words here: He managed to prove that the minimal sotring network was larger than what was thought before. So the "improvement" here is that the lower-bound is now known.
 [^1]: This specific AVX2 intrinsic will actually fail if/when used on non-aligned addresses. But it is important to note that it seems it won’t actually run faster than the previous load intrinsic we’ve used: `AVX2.LoadDquVector256` as long as the actual addresses we pass to both instructions are 32-byte aligned. In other words, it’s very useful for debugging alignment issues, but not that critical to actually call that intrinsic! 
