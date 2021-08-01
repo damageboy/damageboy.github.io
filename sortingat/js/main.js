@@ -2,20 +2,13 @@ if(typeof(console) === 'undefined') {
     var console = {}
     console.log = console.error = console.info = console.debug = console.warn = console.trace = console.dir = console.dirxml = console.group = console.groupEnd = console.time = console.timeEnd = console.assert = console.profile = function() {};
 }
-console.log("Welcome to SORTING.");
-console.log("Ver 0.1");
-console.log("Thanks for playing with SORTING!");
-console.log("carlo zapponi");
-console.log("me@carlo.im");
 require.config({
-    //urlArgs: "t=" + (new Date()).getTime(),
 	paths: {
-		//d3: "http://d3js.org/d3.v3.min"
-		d3: "vendors/d3.v3.min"
-		//d3: "//cdnjs.cloudflare.com/ajax/libs/d3/3.4.1/d3.min"
+		d3: "vendors/d3.v3.min",
+		rough: "vendors/rough"
 	}
 });
-require(["d3","Sorting","support"], function(d3,Sorting,support) {
+require(["d3", "rough", "Sorting","support"], function(d3, rough, Sorting,support) {
 
 	(function () {
 	  function CustomEvent ( event, params ) {
@@ -74,9 +67,6 @@ require(["d3","Sorting","support"], function(d3,Sorting,support) {
 
 	})
 
-
-
-
 	data={
 		"rnd":random,
 		"nrl":nearly_sorted,
@@ -84,8 +74,6 @@ require(["d3","Sorting","support"], function(d3,Sorting,support) {
 		"few":few_uniques
 	}
 	
-	//console.log(data)
-
 	window.sorting=new Sorting({
 		container:"#algorithms"
 	});
@@ -107,7 +95,7 @@ require(["d3","Sorting","support"], function(d3,Sorting,support) {
 			name:"Heap Sort",
 			file:"HeapSort",
 			O:"O(n log n)",
-			active:true
+			active:false
 		},
 		{
 			name:"Smooth Sort",
@@ -201,11 +189,6 @@ require(["d3","Sorting","support"], function(d3,Sorting,support) {
 		items:10,
 		initial_condition:"rnd"
 	};
-
-	
-	
-	
-
 
 	sorting.detectScrollTop();
 	d3.select("#algorithms").style("min-height",(window.innerHeight-25)+"px")
@@ -503,11 +486,5 @@ require(["d3","Sorting","support"], function(d3,Sorting,support) {
 			);
 		}
 	})
-
-	// d3.json("http://carlo.im/support/sorting/getPlus.php",function(d){
-	// 	d3.selectAll(".fb").text(d.fb);
-	// 	d3.selectAll(".twt").text(d.t+d.t2);
-	// 	d3.selectAll(".gp").text(d.gp);		
-	// })
 
 });
