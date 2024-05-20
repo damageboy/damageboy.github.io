@@ -35,7 +35,21 @@ Since there’s a lot to go over here, I’ll split it up into a few parts:
 
 ## And now for something completely different
 
-So far, in this never ending series, we started off with a non-vectorized version of Introspective-sort, for benchmark/reference purposes, and went all the way to having a decently vectorized and sped-up partitioning function. All this work was solely focused on the *partitioning* aspect of out sorter. If you recall, any decent quick-sort-ish function (e.g. .NET own `Array.Sort`, C++'s `std::sort`) is really a hybrid sorter: mixing various approaches depending on the problem size. For the partitioning part of this sorter, its been quite a ride: What started off as an impressive 2.7x speed up for vectorized patitioning by the end of part 3 turned into a 3.5x speed up by the end of part 5 with some blood, sweat and spit. All this time we were solely focused on partitioning, it was insertion-sort, our small-array sorting apparatus, started eating away increasingly large chunks of the total time we spend sorting. It was 23% of the total runtime for sorting 1 million elements before the heroic optimizations, what about now? Lets fire up our trusty linux `perf` tool to figure out what we're dealing with:
+So far, in this series, we started off with a non-vectorized version of Introspective-sort,
+for benchmark/reference purposes, and went all the way to having a decently
+vectorized and sped-up partitioning function. All this work was solely focused on
+the *partitioning* aspect of out sorter. If you recall, any decent quick-sort-ish
+function (e.g. .NET's own `Array.Sort`, C++'s `std::sort`) is really a *hybrid sorter*:
+mixing various approaches depending on the problem size.
+For the partitioning aspect of *this* sorter, its been quite a ride: What started off
+as an impressive 2.7x speed up for vectorized patitioning by the end of part 3
+turned into a 3.5x speed up by the end of part 5 with some blood, sweat and spit.
+
+As we improved partitioning, it was insertion-sort, our small-array sorting apparatus,
+that started eating away large chunks of the total time we spend sorting.
+It was 23% of the total runtime for sorting 1 million elements
+before the heroic optimizations, what about now? Lets fire up our trusty linux
+`perf` tool to figure out what we're dealing with:
 
 ```bash
 $ COMPlus_PerfMapEnabled=1  perf record -F max -e instructions ./Example \
@@ -50,39 +64,82 @@ $ perf report --stdio -F overhead,sym | head -15
      4.00%  [.] ... ::Memmove(uint8&,uint8&,uint64)[OptimizedTier1]
 ```
 
-As rewarding as focusing on vectorizing the partitioning aspect has been, lets not forget law of diminishing returns, or alternatively [Amdhal's Law](https://en.wikipedia.org/wiki/Amdahl%27s_law) that reminds us, in this case of our sorting algorithm, that as we improve the partitioning ever more, we will be limited by the speed of the *insertion-sort* that  we've neglected, thus far, to pay any substantial attention to. Its about time we change this.
+As rewarding as focusing on vectorizing the partitioning aspect has been, lets not
+forget law of diminishing returns, or alternatively [Amdhal's Law](https://en.wikipedia.org/wiki/Amdahl%27s_law)
+that reminds us, in this case of our sorting algorithm, that as we improve the
+partitioning even more, we will be limited by the speed of the *insertion-sort*
+that we've neglected, thus far, to pay any substantial attention to.
+Its about time we change this.
 
 ## Vectorizing Small-Sorting
 
-There are quite a lot of algorithmic options if "all" we want is to sort a small set of numbers, with a final/maximal size. For one, we're not hand-cuffed anymore the the harsh memory-allocation constraints of having to implement in-place sorting. We can always weasel our way out of it, allocating a small temporary buffer (tens to few thousands of elements) and reusing it throughout the sort. Let's consider some of our options here:
+There are quite a lot of algorithmic options if "all" we want is to sort a small
+set of numbers, with a final/maximal size. For one, we're not hand-cuffed anymore
+the the harsh memory-allocation constraints of having to implement in-place sorting.
+We can always weasel our way out of it, allocating a small temporary buffer
+(tens to few thousands of elements) and reusing it throughout the sort. Let's
+consider some of our options here:
 
 * [Counting Sort](https://en.wikipedia.org/wiki/Counting_sort)
 * [Radix Sort](https://en.wikipedia.org/wiki/Radix_sort)
 * [Bitonic Sort](https://en.wikipedia.org/wiki/Bitonic_sorter)
 
-For simplicity reasons, I've decided to forgo using Counting Sort and Radix Sort: The former might be perfect for sorting multiple types very quickly, but would only be applicable for small **ranges** of small numbers, rather than small array; in other words, we would need to ensure that we both have a small number of elements and that they are not too far apart to keep the allocation size reasonable. As for Radix-Sort, I'm a great fan of the algorithm, but it has it's own set of unique warts when it comes to generalized sorting: Dealing with floating point numbers is [not trivial](http://codercorner.com/RadixSortRevisited.htm), to begin with, and while it does not impose limitations on the range within the array we are sorting, to fully vectorize it we would need to use scattered vectorized reads.  
-Unfortunately, scattered writes are not a supported in AVX2 at all! AVX2 does support [gathered reading](https://software.intel.com/sites/landingpage/IntrinsicsGuide/#!=undefined&techs=AVX2&text=_mm_i32gather_epi32) from memory, but nothing when it comes to writing. For scattered writing we'd need to use AVX512, which means that in 2020, a large number of x86 machines simply don't have it (All of AMD, and most of the Intel product line in pure market-share numbers). Now in true fairness, we could implement the relevant part of Radix/Couting sort with scalar code, but my gut told me I should go look elsewhere, if my minimal target is AVX2, and so we arrive at...
+For simplicity reasons, I've decided to forgo using Counting Sort and Radix Sort:
+The former might be perfect for sorting multiple types very quickly, but would only
+be applicable for small **ranges** of small numbers, rather than small array; in
+other words, we would need to ensure that we both have a small number of elements
+and that they are not too far apart to keep the allocation size reasonable.
+As for Radix-Sort, I'm a great fan of the algorithm, but it has it's own set of
+unique warts when it comes to generalized sorting: Dealing with floating point
+numbers is [not trivial](http://codercorner.com/RadixSortRevisited.htm), to begin
+with, and while it does not impose limitations on the range within the array we
+are sorting, to fully vectorize it we would need to use scattered vectorized reads.
+
+Unfortunately, scattered writes are not a supported in AVX2 at all! AVX2 does
+support [gathered reading](https://software.intel.com/sites/landingpage/IntrinsicsGuide/#!=undefined&techs=AVX2&text=_mm_i32gather_epi32)
+from memory, but nothing when it comes to writing. For scattered writing we'd
+need to use AVX512, which is not quite generally available even in 2024!.  
+Now in true fairness, we could implement the relevant part of Radix/Couting sort
+with scalar code, but my gut told me I should go look elsewhere, if my minimal
+target is AVX2, and so we arrive at...
 
 ## Sorting Networks & Bitonic Sorting
 
 ### Sorting Networks
 
-Bitonic Merge Sort is a parallel sorting algorithm that can be used to construct a sorting network, which is fascinating topic on its own; first studied in 1954, and filed as [patent US3029413A](https://patents.google.com/patent/US3029413A/en) in 1957 by [Daniel G O'connor](https://patents.google.com/?inventor=Daniel+G+O'connor) & [Raymond J Nelson](https://patents.google.com/?inventor=Raymond+J+Nelson).  
-But what is a sorting network? To quote the great Donald E. Knuth, from his 1968 book "The Art of Computer Programming, Volume 3", where on section 5.4.3 the concept of "Networks for Sorting" is succinctly defined:
+Bitonic Merge Sort is a parallel sorting algorithm that can be used to construct
+a sorting network, which is fascinating topic on its own; first studied in 1954,
+and filed as [patent US3029413A](https://patents.google.com/patent/US3029413A/en)
+in 1957 by [Daniel G O'connor](https://patents.google.com/?inventor=Daniel+G+O'connor)
+& [Raymond J Nelson](https://patents.google.com/?inventor=Raymond+J+Nelson).  
+But what is a sorting network? To quote the great Donald E. Knuth, from his 1968
+book "The Art of Computer Programming, Volume 3", where on section 5.4.3 the
+concept of "Networks for Sorting" is succinctly defined:
 
-> ...to insist on an *oblivious* sequence of comparisons, in the sense that whenever we compare K<sub>i</sub> versus K<sub>j</sub>, the subsequent comparisons for the case K<sub>i</sub> < K<sub>j</sub> are exactly the same as for the case K<sub>i</sub> > K<sub>j</sub>, but with *i* and <u>j</u> interchanged
+> ...to insist on an *oblivious* sequence of comparisons, in the sense that whenever
+> we compare K<sub>i</sub> versus K<sub>j</sub>, the subsequent comparisons for
+> the case K<sub>i</sub> < K<sub>j</sub> are exactly the same as for the case
+> K<sub>i</sub> > K<sub>j</sub>, but with *i* and <u>j</u> interchanged
 
-While the definition: a sequence (network) of independent comparisons (and swaps) may seem deceivingly simple, the theory behind constructing such networks is very deep and complex. More to the point, since some of the comparisons in a given network can be parallelized, while others have to be serialized, two optimization "targets" can be considered: 
+While the definition: a sequence (network) of independent comparisons (and swaps)
+may seem deceivingly simple, the theory behind constructing such networks is very
+deep and complex. More to the point, since some of the comparisons in a given network
+can be parallelized, while others have to be serialized, two optimization "targets"
+can be considered:
 
-* The optimal size target: attempting to find a network with the minimum *number of comparators*.
-* The optimal depth target: attempting to find a network with the minimum *layers of dependencies*.
+* The optimal size target: attempting to find a network with the minimum
+  *number of comparators*.
+* The optimal depth target: attempting to find a network with the minimum
+  *layers of dependencies*.
 
-Here is table, from this [excellent paper](https://arxiv.org/pdf/1507.01428.pdf), from 2015, giving the depth (e.g. # of layers of independent comparators required) and the number of comparisons required to sort a given problem:
+Here is table, from this [excellent paper](https://arxiv.org/pdf/1507.01428.pdf),
+from 2015, showing the depth (e.g. # of layers of independent comparators required)
+and the number of comparisons required to sort a given problem:
 
-| *n*                                                    | 1    | 2    | 3    | 4    | 5    | 6    | 7    | 8    | 9    | 10   | 11   | 12   | 13           | 14           | 15           | 16           | 17           |
-| :----------------------------------------------------- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ------------ | ------------ | ------------ | ------------ | ------------ |
-| Depth                                                  | 0    | 1    | 3    | 3    | 5    | 5    | 6    | 6    | 7    | 7    | 8    | 8    | 9            | 9            | 9            | 9            | 10           |
-| Size, upper bound<br />*(lower bound, when different)* | 0    | 1    | 3    | 5    | 9    | 12   | 16   | 19   | 25   | 29   | 35   | 39   | 45<br />*43* | 51<br />*47* | 56<br />*51* | 60<br />*55* | 71<br />*60* |
+| *n*                                                 | 1  | 2  | 3  | 4  | 5  | 6  | 7  | 8  | 9  | 10 | 11 | 12 | 13          | 14          | 15          | 16          | 17           |
+|:----------------------------------------------------|----|----|----|----|----|----|----|----|----|----|----|----|-------------|-------------|-------------|-------------|--------------|
+| Depth                                               | 0  | 1  | 3  | 3  | 5  | 5  | 6  | 6  | 7  | 7  | 8  | 8  | 9           | 9           | 9           | 9           | 10           |
+| Size, upper bound<br/>*(lower bound, if different)* | 0  | 1  | 3  | 5  | 9  | 12 | 16 | 19 | 25 | 29 | 35 | 39 | 45<br/>*43* | 51<br/>*47* | 56<br/>*51* | 60<br/>*55* | 71<br />*60* |
 
 
 {: .notice--info}

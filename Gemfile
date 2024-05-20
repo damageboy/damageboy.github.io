@@ -8,8 +8,10 @@ source "https://rubygems.org"
 #
 # This will help ensure the proper Jekyll version is running.
 # Happy Jekylling!
-gem "jekyll"
+gem 'jekyll'
 gem 'kramdown'
+gem 'webrick'
+
 
 gem "html-proofer"
 

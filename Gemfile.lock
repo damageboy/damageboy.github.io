@@ -154,6 +154,7 @@ GEM
       concurrent-ruby (~> 1.0)
     unicode-display_width (1.7.0)
     verbal_expressions (0.1.5)
+    webrick (1.8.1)
     yell (2.2.2)
     zeitwerk (2.4.2)
 
@@ -175,6 +176,7 @@ DEPENDENCIES
   jemoji
   kramdown
   tzinfo-data
+  webrick
 
 BUNDLED WITH
    2.1.4

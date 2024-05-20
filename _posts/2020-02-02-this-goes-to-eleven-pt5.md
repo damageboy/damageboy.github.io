@@ -496,7 +496,7 @@ The whole attempt ends up as a mediocre improvement, so it would seem:
 * We're are seeing a speedup/improvement, in the high counts.
 * We seem to be slowing down due to the higher scalar operation count, in the low problem sizes.
 
-It's kind of a mixed bad, and perhaps slightly unimpressive at first glance. However, when we stop to remember that we somehow managed both to speed up the function while doubling the amount of scalar work done, the interpretation of the results becomes more nuanced: The pure benefit from alignment itself is larger than what the results are showing right now since it's being masked, to some extent, by the extra scalar work we tacked on. If only there was a way we could skip that scalar work all together... If only there was a way... If only...
+It's kind of a mixed bag, and perhaps slightly unimpressive at first glance. However, when we stop to remember that we somehow managed both to speed up the function while doubling the amount of scalar work done, the interpretation of the results becomes more nuanced: The pure benefit from alignment itself is larger than what the results are showing right now since it's being masked, to some extent, by the extra scalar work we tacked on. If only there was a way we could skip that scalar work all together... If only there was a way... If only...
 </div>
 
 ### (Re-)Partitioning overlapping regions: :+1: :+1:
@@ -920,7 +920,22 @@ PartitionBlock(nextPtr, P, pBase, ref writeLeft, ref writeRight);
 
 </div>
 
-Long story short: We ended up sneaking up a data-based branch into our code in the form of this side-selection logic. Whenever we try to pick a side, we would read from next is where we put the CPU in a tough spot. We're asking it to speculate on something it *can't possibly speculate on successfully*. Our question is: "Oh CPU, CPU in the socket, Which side is closer to being over-written of them all?", to which the answer is completely data-driven. In other words, it depends on how the last round(s) of partitioning mutated the pointers involved in the comparison. It might sound like an easy thing for the CPU to check, but we have to remember it is attempting to execute ~100 or so instructions into the future, as it is required to speculate on the result: the previous rounds of partitioning have not yet been fully-executed, internally. The CPU guesses, at best, based on stale data, and we know, as the grand designers of this mess, that its best guess is no better here than flipping a coin. Quite sad. You have to admit it is ironic we managed to do this whole big circle around our own tails just to come-back to having a branch misprediction based on the random array data. Mis-predicting here seems unavoidable. Or is it?
+Long story short: We ended up sneaking up a data-based branch into our code in
+the form of this side-selection logic. Whenever we try to pick a side we would
+read from next is where we put the CPU in a tough spot. We're asking it to speculate
+on something it *can't possibly speculate on successfully*. Our question is:
+"Oh CPU, CPU in the socket, Which side is closer to being over-written of them all?",
+to which the answer is completely data-driven. In other words, it depends on how
+the last round(s) of partitioning mutated the pointers involved in the comparison.
+It might sound like an easy thing for the CPU to check, but we have to remember
+it is attempting to execute ~100 or so instructions into the future, as it is required
+to speculate on the result: the previous rounds of partitioning have not yet been
+fully-executed, internally. The CPU guesses, at best, based on stale data, and we
+know, as the grand designers of this mess, that its best guess is no better here
+than flipping a coin. Quite sad. You have to admit it is ironic we managed to do
+this whole big circle around our own tails just to come-back to having a branch
+misprediction based on the random array data. Mis-predicting here seems unavoidable.
+Or is it?
 
 #### Replacing the branch with arithmetic: :-1:
 
